@@ -1,0 +1,169 @@
+// ==============================================================================
+// PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
+// MÓDULO: Persistencia de Datos (PostgreSQL 16+ / Prisma ORM 6)
+// ARCHIVO: prisma/schema.prisma
+// ------------------------------------------------------------------------------
+// DESCRIPCIÓN:
+// Esquema canónico de la base de datos de SAFE. Modela la relación estricta
+// 1:1 entre el motociclista y su kit físico (NFC/QR), la ficha médica de
+// emergencia, el historial inmutable de alertas despachadas y las ventanas de
+// protección anti-abuso (rate limiting) persistidas en PostgreSQL.
+//
+// Todas las columnas DateTime se almacenan en UTC mediante TIMESTAMPTZ, los
+// identificadores son UUID v4 nativos y las búsquedas críticas de emergencia
+// se resuelven con índices B-Tree únicos y compuestos.
+//
+// LEYES DE INGENIERÍA:
+// - Límite estricto < 450 líneas.
+// - Cero datos mock, demos o textos clínicos localizados por defecto.
+// - Relación 1:1 estricta (un chip = una cuenta) y 1:N para alertas.
+// - Borrado seguro: Cascade en datos clínicos/alertas, SetNull en hardware.
+// ==============================================================================
+
+// Conexión a PostgreSQL; la URL se inyecta desde el entorno del servidor.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Cliente tipado de Prisma para el runtime Node.js del App Router.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Roles de acceso: motociclista (RIDER) y administrador (ADMIN).
+enum Role {
+  RIDER
+  ADMIN
+}
+
+// Ciclo de vida físico del kit: virgen, activo o dado de baja.
+enum DeviceStatus {
+  UNCLAIMED
+  ACTIVE
+  DISABLED
+}
+
+// Cuenta de acceso del motociclista o del administrador.
+// Custodia credenciales, el estado del Modo Ruta y sus marcas de tiempo UTC.
+model User {
+  id             String    @id @default(uuid()) @db.Uuid
+  email          String    @unique
+  passwordHash   String
+  role           Role      @default(RIDER)
+  liveRideActive Boolean   @default(false)
+  lastKnownLat   Float?
+  lastKnownLng   Float?
+  lastGpsAt      DateTime? @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(3)
+
+  // Relación 1:1 con el hardware del casco y 1:1 con la ficha clínica.
+  device         Device?
+  medicalProfile MedicalProfile?
+}
+
+// Kit físico SAFE (chip NTAG216 + código QR) identificado por su folio público.
+// Conserva el PIN de activación en hash y en formato cifrado reversible, además
+// de la última posición de alerta real para la ventana de cooldown.
+model Device {
+  id                     String       @id @default(uuid()) @db.Uuid
+  code                   String       @unique
+  activationPinHash      String
+  activationPinEncrypted String
+  batchName              String
+  nfcSerialNumber        String?
+  isNfcEncoded           Boolean      @default(false)
+  isLockedReadOnly       Boolean      @default(false)
+  status                 DeviceStatus @default(UNCLAIMED)
+  userId                 String?      @unique @db.Uuid
+  lastAlertAt            DateTime?    @db.Timestamptz(3)
+  lastAlertLat           Float?
+  lastAlertLng           Float?
+  encodedAt              DateTime?    @db.Timestamptz(3)
+  activatedAt            DateTime?    @db.Timestamptz(3)
+  createdAt              DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime     @updatedAt @db.Timestamptz(3)
+
+  // Vínculo 1:1 reciclable: al borrar la cuenta el hardware queda libre.
+  user   User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  alerts EmergencyAlert[]
+
+  // Índices operativos para el panel de lotes y la auditoría de fabricación.
+  @@index([batchName])
+  @@index([createdAt])
+  @@index([status])
+}
+
+// Ficha médica de emergencia: datos vitales, fotografía y contactos familiares.
+// Los campos clínicos son opcionales para representar "no declarado" sin
+// depender de textos localizados almacenados en la base de datos.
+model MedicalProfile {
+  id                String    @id @default(uuid()) @db.Uuid
+  userId            String    @unique @db.Uuid
+  fullName          String
+  nationalId        String
+  photoUrl          String
+  photoPublicId     String?
+  birthDate         DateTime? @db.Timestamptz(3)
+  bloodType         String
+  allergies         String?
+  chronicConditions String?
+  medications       String?
+  insuranceInfo     String?
+  emergencyNumber   String?
+  emergencyContacts Json      @default("[]")
+  consentAcceptedAt DateTime  @db.Timestamptz(3)
+  consentVersion    String
+  consentIpHash     String?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(3)
+
+  // Al eliminar la cuenta se purgan de inmediato los datos clínicos (Habeas Data).
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Registro inmutable de cada escaneo y despacho de auxilio.
+// Almacena coordenadas decimales y DMS, el enlace oficial de Google Maps,
+// la precisión del sensor y el resultado auditable del envío de correos.
+model EmergencyAlert {
+  id              String   @id @default(uuid()) @db.Uuid
+  deviceId        String   @db.Uuid
+  scanSource      String
+  latitude        Float
+  longitude       Float
+  accuracyMeters  Float?
+  dmsFormatted    String
+  googleMapsUrl   String
+  locationOrigin  String
+  emailsSentCount Int      @default(0)
+  emailDelivery   Json?
+  wasThrottled    Boolean  @default(false)
+  scannerIp       String?
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+
+  // Historial ligado al hardware; se elimina junto con el dispositivo.
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  // Consulta de cooldown: última alerta real de un dispositivo en orden inverso.
+  @@index([deviceId, createdAt(sort: Desc)])
+  @@index([createdAt])
+}
+
+// Ventana persistente de protección anti-abuso (PIN, login, alertas y subidas).
+// Sustituye cualquier caché en memoria volátil para sobrevivir a reinicios.
+model RateLimitBucket {
+  id              String    @id @default(uuid()) @db.Uuid
+  key             String    @unique
+  scope           String
+  attempts        Int       @default(0)
+  windowStartedAt DateTime  @db.Timestamptz(3)
+  blockedUntil    DateTime? @db.Timestamptz(3)
+  expiresAt       DateTime  @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(3)
+
+  // Índices para barridos por dominio y purga de ventanas vencidas.
+  @@index([scope])
+  @@index([expiresAt])
+}

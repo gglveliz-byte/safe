@@ -1,0 +1,202 @@
+/**
+ * ==============================================================================
+ * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
+ * MÓDULO: Sistema de Diseño Visual 'Incident' (Technical Broadsheet on Concrete)
+ * ARCHIVO: src/app/globals.css
+ * ------------------------------------------------------------------------------
+ * DESCRIPCIÓN:
+ * Estilos globales, variables de diseño y utilidades ergonómicas móviles.
+ * Implementa la paleta cromática estricta (#efefef, #000000, #ffffff, #f25533, #ff492c),
+ * tipografía bimodal (Times para titulares y lectura, Arial para microetiquetas y botones),
+ * áreas seguras para muescas móviles (safe-area-insets) y eliminación de resaltado táctil.
+ * 
+ * LEYES DE INGENIERÍA:
+ * - Límite estricto < 500 líneas.
+ * - Cero gradientes en cualquier elemento.
+ * - Fondo de página inalterable en #efefef (Concrete).
+ * ==============================================================================
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Paleta cromática canónica Incident */
+  --color-concrete: #efefef;
+  --color-paper: #ffffff;
+  --color-ink: #000000;
+  --color-carbon: #161618;
+  --color-signal-orange: #f25533;
+  --color-alert-red: #ff492c;
+  --color-ember: #f1641e;
+  --color-mist: #dadada;
+  --color-fog: #cccccc;
+  --color-parchment: #e4d9c8;
+
+  /* Tipografía bimodal */
+  --font-times-system-serif: 'Times (system serif)', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+  --font-arial-system-sans: 'Arial (system sans)', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Escala tipográfica */
+  --text-micro: 13px;
+  --text-body: 16px;
+  --text-body-lg: 19px;
+  --text-heading-sm: 24px;
+  --text-heading: 32px;
+}
+
+/* Reset y base global sobre lienzo concreto */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-concrete);
+  color: var(--color-ink);
+  font-family: var(--font-times-system-serif);
+  font-size: var(--text-body);
+  line-height: 1.35;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 100dvh;
+}
+
+/* Contenedor móvil con adaptación a muesca (notch) e indicador de inicio */
+.safe-mobile-container {
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Botón Neutro Canónico Incident */
+.btn-neutral {
+  background-color: var(--color-concrete);
+  border: 1px solid var(--color-ink);
+  border-radius: 4px;
+  padding: 8px 14px;
+  font-family: var(--font-arial-system-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  transition: transform 0.08s ease, background-color 0.1s ease;
+  user-select: none;
+  text-decoration: none;
+}
+
+.btn-neutral:active {
+  transform: scale(0.98);
+  background-color: var(--color-mist);
+}
+
+.btn-neutral:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Botón de Emergencia Primario (Alto Contraste) */
+.btn-emergency {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  border: 1px solid var(--color-ink);
+  border-radius: 4px;
+  padding: 10px 18px;
+  font-family: var(--font-arial-system-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  min-width: 44px;
+  transition: transform 0.08s ease, opacity 0.1s ease;
+  user-select: none;
+  text-decoration: none;
+}
+
+.btn-emergency:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* Tarjeta de papel broadsheet */
+.card-paper {
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-ink);
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0px 4px 6px -2px rgba(22, 22, 24, 0.04), 0px 8px 15px -3px rgba(22, 22, 24, 0.02);
+}
+
+/* Banner de Emergencia Médica Tintado */
+.banner-emergency {
+  background-color: rgba(255, 73, 44, 0.08);
+  border: 1px solid var(--color-alert-red);
+  border-radius: 8px;
+  padding: 14px 18px;
+}
+
+/* Banner de Advertencia Tintado */
+.banner-warning {
+  background-color: rgba(241, 100, 30, 0.08);
+  border: 1px solid var(--color-ember);
+  border-radius: 8px;
+  padding: 14px 18px;
+}
+
+/* Línea divisoria capilar (Hairline rule) */
+.hairline {
+  border: 0;
+  height: 1px;
+  background-color: var(--color-ink);
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.hairline-subtle {
+  border: 0;
+  height: 1px;
+  background-color: var(--color-mist);
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+/* Clases de utilidad tipográfica */
+.font-serif-reading {
+  font-family: var(--font-times-system-serif);
+}
+
+.font-sans-micro {
+  font-family: var(--font-arial-system-sans);
+  font-size: 13px;
+}
+
+/* Estilo para impresión de stickers QR (admin) */
+@media print {
+  body {
+    background-color: #ffffff !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}

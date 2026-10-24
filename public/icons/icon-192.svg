@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" fill="#efefef" rx="24"/>
+  <rect x="8" y="8" width="176" height="176" fill="none" stroke="#000000" stroke-width="4" rx="20"/>
+  <!-- Baliza Signal Orange de SAFE -->
+  <circle cx="96" cy="68" r="28" fill="#f25533"/>
+  <!-- Cruz médica en blanco -->
+  <rect x="91" y="52" width="10" height="32" fill="#ffffff" rx="2"/>
+  <rect x="80" y="63" width="32" height="10" fill="#ffffff" rx="2"/>
+  <!-- Tipografía Times Serif Broadhseet -->
+  <text x="96" y="142" font-family="'Times New Roman', Times, serif" font-size="34" font-weight="bold" fill="#000000" text-anchor="middle" letter-spacing="2">SAFE</text>
+  <text x="96" y="162" font-family="Arial, sans-serif" font-size="10" font-weight="600" fill="#000000" text-anchor="middle" letter-spacing="1">MEDICAL LEDGER</text>
+</svg>
