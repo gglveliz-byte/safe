@@ -14,11 +14,11 @@
 | Dominio / Módulo | IA Asignada / Agente | Estado del Bloqueo | Archivos Bajo Custodia |
 | :--- | :--- | :--- | :--- |
 | **Gobernanza y Reglas Core** | Antigravity Orchestrator | ACTIVO (Establecido) | `.agents/rules/SAFE_CORE_RULES.md`, `.agents/skills/*`, `.agents/SKILLS_MASTER_MANIFEST.md` |
-| **Agente 1: Backend, BD y Gateway** | **AGENTE 1** | ASIGNADO Y ACTIVO | `prisma/*`, `src/lib/*`, `src/services/*`, `src/app/api/*`, `src/middleware.ts`, `src/app/r/[code]/*` |
-| **Agente 2: Frontend, PWA y UI** | **AGENTE 2** | ASIGNADO Y ACTIVO | `public/*` (PWA/SW), `src/app/globals.css`, `src/components/*`, `src/hooks/*`, `src/locales/*`, Vistas (`/`, `/activate`, `/emergency`, `/login`, `/dashboard`, `/admin`, `/terms`, `/privacy`) |
+| **Backend Parte 1: BD, Gateway y Emergencia** | **AGENTE 1 (Director Backend 1)** | ASIGNADO Y ACTIVO | `prisma/*`, `src/lib/db.ts`, `src/lib/env.ts`, `src/lib/api-response.ts`, `src/services/gps-maps.service.ts`, `src/services/cooldown.service.ts`, `src/services/mail.service.ts`, `src/app/r/[code]/*`, `/api/emergency/alert`, `/api/devices/activate` |
+| **Backend Parte 2: Auth, Ruta, Admin y Media** | **AGENTE 2 (Director Backend 2)** | ASIGNADO Y ACTIVO | `src/lib/auth.ts`, `src/middleware.ts`, `src/services/ratelimit.service.ts`, `src/services/cloudinary.service.ts`, `src/services/qr-generator.service.ts`, `/api/auth/*`, `/api/gps/heartbeat`, `/api/profile`, `/api/upload/cloudinary`, `/api/admin/*` |
 
 ### Solicitudes Pendientes entre IAs (`Inter-Agent Change Requests`):
-*Actualmente no hay solicitudes de cambio pendientes entre agentes. Los contratos de API entre Agente 1 y Agente 2 están congelados.*
+*Actualmente no hay solicitudes de cambio pendientes entre agentes. Ambos agentes construyen exclusivamente el Backend sin tocar Frontend y sin colisionar en archivos.*
 
 ---
 
@@ -41,10 +41,10 @@
 | `.agents/skills/README.md` | ~20 | Aprobado | Índice rápido de skills y redirección al manifiesto maestro. |
 | `docs/SAFE_Arquitectura_Backend_2026.md` | ~272 | Aprobado | Arquitectura pura de Backend: Route Handlers, Zod Schemas, Servicios DMS/SMTP/Cloudinary. |
 | `docs/SAFE_Arquitectura_BaseDatos_2026.md` | ~272 | Aprobado | Arquitectura pura de Base de Datos: PostgreSQL 16+, ERD, Prisma, Índices y JSONB. |
-| `docs/SAFE_Plan_Agente_1_Backend_DB.md` | ~135 | Aprobado | Guía y límites de custodia para Agente 1 (Backend, Base de Datos y Gateway). |
-| `docs/SAFE_Plan_Agente_2_Frontend_PWA.md` | ~135 | Aprobado | Guía y límites de custodia para Agente 2 (Frontend, PWA, UI Incident y Vistas). |
-| `docs/PROMPT_DIRECTOR_AGENTE_1_BACKEND.md` | ~115 | Aprobado | Prompt maestro para Agente 1 como Director General al mando de 20 subagentes (Backend). |
-| `docs/PROMPT_DIRECTOR_AGENTE_2_FRONTEND.md` | ~115 | Aprobado | Prompt maestro para Agente 2 como Director General al mando de 20 subagentes (Frontend). |
+| `docs/SAFE_Plan_Agente_1_Backend_Parte1.md` | ~85 | Aprobado | Guía y límites de custodia para Agente 1 (Backend Parte 1: BD, Gateway y Emergencia). |
+| `docs/SAFE_Plan_Agente_2_Backend_Parte2.md` | ~85 | Aprobado | Guía y límites de custodia para Agente 2 (Backend Parte 2: Auth, Ruta, Admin y Media). |
+| `docs/PROMPT_DIRECTOR_AGENTE_1_BACKEND.md` | ~90 | Aprobado | Prompt maestro para Agente 1 (Director de Backend Parte 1 con 20 subagentes). |
+| `docs/PROMPT_DIRECTOR_AGENTE_2_BACKEND.md` | ~90 | Aprobado | Prompt maestro para Agente 2 (Director de Backend Parte 2 con 20 subagentes). |
 
 ---
 
