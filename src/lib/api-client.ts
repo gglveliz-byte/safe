@@ -33,9 +33,17 @@ import type {
   AdminDeviceItem,
   AdminBatchSummary,
   AdminBatchDetail,
+  AdminRiderItem,
   CreatedBatchResult,
 } from "./api-types";
-import { lanzarErrorHttp, normalizarContactos } from "./api-client-helpers";
+import {
+  lanzarErrorHttp,
+  normalizarContactos,
+  ensureContactUuid,
+  HttpApiError,
+} from "./api-client-helpers";
+
+export { HttpApiError, ensureContactUuid };
 
 export type {
   EmergencyContact,
@@ -47,6 +55,7 @@ export type {
   AdminDeviceItem,
   AdminBatchSummary,
   AdminBatchDetail,
+  AdminRiderItem,
   CreatedBatchResult,
 };
 
@@ -279,6 +288,34 @@ export const apiClient = {
     }
   },
 
+  /** Solicita el correo con el enlace de recuperación de contraseña */
+  async requestPasswordReset(email: string, locale?: string): Promise<{ success: boolean; message?: string }> {
+    const res = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, locale }),
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return { success: true, message: json.data?.message };
+  },
+
+  /** Restablece la contraseña usando el token criptográfico temporal */
+  async resetPassword(payload: {
+    token: string;
+    password: string;
+    confirmPassword: string;
+  }): Promise<{ success: boolean; message?: string }> {
+    const res = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return { success: true, message: json.data?.message };
+  },
+
   /** Consulta el expediente completo del piloto autenticado */
   async getDashboard(): Promise<DashboardResponse> {
     const res = await fetch("/api/profile", {
@@ -352,7 +389,10 @@ export const apiClient = {
       photoUrl: profile.photoUrl || undefined,
       photoPublicId: profile.photoPublicId || undefined,
       birthDate: profile.birthDate || undefined,
-      bloodType: profile.bloodType,
+      // Cero grupo sanguíneo fabricado: si el piloto no lo ha declarado, la
+      // clave se OMITE (enviar "" rechazaría el enum del backend y antes se
+      // colaba "O+" como valor por defecto, un dato clínico inventado).
+      bloodType: profile.bloodType?.trim() || undefined,
       allergies: profile.allergies?.trim() || undefined,
       chronicConditions: (profile.chronicConditions || profile.conditions || "")?.trim() || undefined,
       medications: profile.medications?.trim() || undefined,
@@ -368,6 +408,18 @@ export const apiClient = {
     });
     if (!res.ok) await lanzarErrorHttp(res);
     return { success: true };
+  },
+
+  /** Lista los usuarios registrados y el chip que tienen vinculado (solo ADMIN) */
+  async getAdminRiders(): Promise<{ riders: AdminRiderItem[] }> {
+    const res = await fetch("/api/admin/riders", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return json.data || { riders: [] };
   },
 
   /** Lista el resumen de todos los lotes de producción */

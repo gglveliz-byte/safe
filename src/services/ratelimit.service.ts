@@ -87,6 +87,9 @@ export const RATE_LIMITS: {
   publicEmergencyIp: RateLimitPolicy;
   uploadIp: RateLimitPolicy;
   gatewayIp: RateLimitPolicy;
+  forgotPasswordIp: RateLimitPolicy;
+  forgotPasswordEmail: RateLimitPolicy;
+  resetPasswordIp: RateLimitPolicy;
 } = {
   /** Verificación de PIN de activación de 6 dígitos: 5 intentos cada 15 min, bloqueo de 15 min. */
   pin: { scope: "pin", maxAttempts: 5, windowSeconds: 900, blockSeconds: 900 },
@@ -108,6 +111,15 @@ export const RATE_LIMITS: {
 
   /** Gateway de casco físico (/r/[code]) por IP: 60 escaneos por minuto. */
   gatewayIp: { scope: "gateway-ip", maxAttempts: 60, windowSeconds: 60, blockSeconds: 120 },
+
+  /** Solicitudes de recuperación de contraseña por IP: 5 peticiones cada 15 min. */
+  forgotPasswordIp: { scope: "forgot-password-ip", maxAttempts: 5, windowSeconds: 900, blockSeconds: 900 },
+
+  /** Solicitudes de recuperación de contraseña por correo: 3 peticiones cada 15 min. */
+  forgotPasswordEmail: { scope: "forgot-password-email", maxAttempts: 3, windowSeconds: 900, blockSeconds: 900 },
+
+  /** Intentos de ejecución de restablecimiento de contraseña por IP: 5 intentos cada 15 min. */
+  resetPasswordIp: { scope: "reset-password-ip", maxAttempts: 5, windowSeconds: 900, blockSeconds: 900 },
 };
 
 /**

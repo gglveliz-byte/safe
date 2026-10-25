@@ -25,6 +25,13 @@
  * - C-16/M-1: banners fuera de paleta erradicados (bg-green-50/border-green-600/
  *   text-green-900 y bg-red-50). Éxito = concrete sobrio con borde ink;
  *   error = clase oficial .banner-emergency de globals.css (lavado alert-red).
+ * - P-1 (2026-10-25): el selector arranca con la opción "aún no lo he
+ *   declarado" en vez de preseleccionar "O+". Un grupo sanguíneo es un dato
+ *   clínico: jamas puede sugerirse por defecto.
+ * - P-6 (2026-10-25): se exponen los dos campos reales del backend que antes
+ *   no eran editables desde el panel: fecha de nacimiento (birthDate) y
+ *   teléfono de auxilio inmediato (emergencyNumber), el número que la ficha
+ *   pública de rescate usa como destino de llamada.
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 500 líneas físicas.
@@ -62,6 +69,20 @@ export interface MedicalRecordFormProps {
   noticeMessage: string;
   /** Mensaje transitorio de error (cadena vacía oculta el banner). */
   errorMessage: string;
+}
+
+/**
+ * Convierte una fecha ISO (TIMESTAMPTZ del backend) al formato YYYY-MM-DD que
+ * exige <input type="date">. Una fecha ausente o ilegible devuelve cadena
+ * vacía: nunca se inventa un nacimiento por defecto.
+ */
+function toInputDate(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const month = `${date.getUTCMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getUTCDate()}`.padStart(2, "0");
+  return `${date.getUTCFullYear()}-${month}-${day}`;
 }
 
 /**
@@ -117,18 +138,43 @@ export function MedicalRecordForm({
             <label className="font-sans text-micro font-bold uppercase text-carbon">
               {t.activate.bloodTypeLabel}
             </label>
-            {/* M-19: catálogo canónico completo del backend (incluye DESCONOCIDO) */}
+            {/* M-19: catálogo canónico completo del backend (incluye DESCONOCIDO).
+                P-1: la primera opción está vacía; el sistema NUNCA preselecciona
+                un grupo sanguíneo, porque sería un dato clínico inventado. */}
             <select
               value={profile.bloodType}
               onChange={(e) => onProfileChange({ ...profile, bloodType: e.target.value })}
+              required
               className="h-11 px-3 bg-concrete border-2 border-ink rounded-[4px] font-serif text-body font-bold text-ink focus:outline-none cursor-pointer"
             >
+              <option value="">{t.dashboard.bloodTypeUnset}</option>
               {BLOOD_TYPES.map((type) => (
                 <option key={type} value={type}>
                   {type}
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="font-sans text-micro font-bold uppercase text-carbon">
+              {t.dashboard.birthDateLabel}
+            </label>
+            {/* P-6: fecha real del piloto; vacía = no declarada (cero inventos) */}
+            <input
+              type="date"
+              value={toInputDate(profile.birthDate)}
+              max={toInputDate(new Date().toISOString())}
+              onChange={(e) =>
+                onProfileChange({
+                  ...profile,
+                  birthDate: e.target.value
+                    ? new Date(`${e.target.value}T00:00:00.000Z`).toISOString()
+                    : null,
+                })
+              }
+              className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+            />
           </div>
 
           <div className="flex flex-col gap-1">
@@ -160,6 +206,25 @@ export function MedicalRecordForm({
               }
               className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
             />
+          </div>
+
+          {/* P-6: teléfono de auxilio inmediato. Es el destino real del botón de
+              llamada de la ficha pública de rescate (EmergencyActionPanel). */}
+          <div className="flex flex-col gap-1 sm:col-span-2">
+            <label className="font-sans text-micro font-bold uppercase text-carbon">
+              {t.dashboard.emergencyNumberLabel}
+            </label>
+            <input
+              type="tel"
+              value={profile.emergencyNumber || ""}
+              onChange={(e) =>
+                onProfileChange({ ...profile, emergencyNumber: e.target.value })
+              }
+              className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+            />
+            <p className="font-sans text-[11px] text-carbon">
+              {t.dashboard.emergencyNumberHelp}
+            </p>
           </div>
         </div>
 

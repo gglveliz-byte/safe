@@ -31,6 +31,7 @@ import nodemailer, { type Transporter } from "nodemailer";
 import { getEnv } from "@/lib/env";
 import { logEvent } from "@/lib/logger";
 import { buildEmergencyEmailContent, type EmergencyEmailPayload } from "@/services/mail/templates";
+import { buildPasswordResetEmailContent } from "@/services/mail/password-reset-template";
 
 /** Contacto de emergencia tal como lo entrega el perfil médico de PostgreSQL. */
 export interface EmergencyMailRecipient {
@@ -276,3 +277,54 @@ export async function sendEmergencyAlertEmail(
 
   return { sentCount, failedCount, deliveries };
 }
+
+/**
+ * Despacha el correo de restablecimiento de contraseña al usuario solicitante.
+ *
+ * @param email Correo electrónico normalizado del usuario.
+ * @param resetUrl URL segura con token criptográfico temporal.
+ * @param locale Idioma principal del correo ("es" | "en").
+ * @param recipientName Nombre visible del usuario (si está disponible).
+ * @returns true si el correo fue aceptado por el transporte SMTP de Gmail.
+ */
+export async function sendPasswordResetEmail(
+  email: string,
+  resetUrl: string,
+  locale: "es" | "en" = "es",
+  recipientName?: string,
+): Promise<boolean> {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!EMAIL_PATTERN.test(normalizedEmail)) {
+    logEvent("warn", "Intento de envío de recuperación con correo inválido", {
+      correoOfuscado: normalizedEmail.slice(0, 3) + "***",
+    });
+    return false;
+  }
+
+  const settings = resolveMailSettings();
+  const transporter = obtainTransporter(settings);
+  const content = buildPasswordResetEmailContent(resetUrl, locale, recipientName);
+
+  try {
+    const info = await transporter.sendMail({
+      from: buildFromAddress(settings),
+      to: normalizedEmail,
+      subject: content.subject,
+      text: content.text,
+      html: content.html,
+    });
+
+    logEvent("info", "Correo de recuperación de contraseña enviado exitosamente", {
+      messageId: info.messageId,
+      correoOfuscado: normalizedEmail.slice(0, 3) + "***",
+    });
+    return true;
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    logEvent("error", "Fallo al enviar correo de recuperación de contraseña", {
+      error: errorMsg.slice(0, MAX_ERROR_LENGTH),
+    });
+    return false;
+  }
+}
+

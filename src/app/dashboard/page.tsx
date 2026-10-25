@@ -6,31 +6,32 @@
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
  * Panel privado del piloto conectado al backend real en Neon PostgreSQL.
- * Integra el 'Modo Ruta' (pantalla encendida continua vía Screen WakeLock API y
- * telemetría satelital GPS cada 20s enviada a POST /api/gps/heartbeat).
+ * Integra el 'Modo Ruta' (pantalla encendida vía Screen WakeLock API y latido
+ * GPS cada 20s contra POST /api/gps/heartbeat) y la edición de la ficha médica
+ * (PUT /api/profile). Es un área cerrada con sesión iniciada: no comparte el
+ * navbar público ni el pie legal (ver src/app/dashboard/layout.tsx).
  *
- * PARTICIÓN OBLIGATORIA C-19 (zona crítica 451-500 líneas): este archivo queda
- * como ORQUESTADOR DELGADO (<380 líneas) que delega la vista en módulos
- * co-ubicados: `DashboardSkeleton` (estado de carga con claves del diccionario),
- * `MedicalRecordForm` (foto + datos clínicos + contactos + guardado) y
- * `LiveRideCard` (conmutador del Modo Ruta).
+ * CORRECCIONES DE PRODUCCIÓN APLICADAS (auditoría 2026-10-25):
+ * - P-1 (CRÍTICO): erradicado el grupo sanguíneo fabricado "O+". El formulario
+ *   arranca SIN declarar y obliga a elegir una opción real del catálogo
+ *   (incluye DESCONOCIDO). Nunca se persiste un dato clínico inventado.
+ * - P-2 (CRÍTICO): los contactos ya no reciben ids artesanales "cnt_...".
+ *   `ensureContactUuid` conserva el UUID real o genera uno válido, porque
+ *   EmergencyContactSchema rechaza cualquier otro formato y el guardado
+ *   devolvía 400 permanente.
+ * - P-3 (CRÍTICO): erradicado el parentesco inventado "Familiar"; si la ficha
+ *   no declara relación, se envía vacía y el backend responde con su mensaje.
+ * - P-4: un fallo de red NO expulsa al piloto a /login. Solo 401/403 (sesión
+ *   inválida o caducada) redirigen; el resto muestra aviso humano y reintento.
+ * - P-5: sin chip vinculado el panel lo dice y enlaza la activación real.
  *
- * CORRECCIONES CRÍTICAS APLICADAS:
- * - C-11: fallback fabricado "SAFE-XXXX" erradicado; sin dispositivo vinculado
- *   se muestra un guión neutro "—" (cero folios inventados, Ley 2).
- * - C-12: la desactivación del Modo Ruta SIEMPRE notifica al servidor (fix GPS
- *   de la sesión → última posición persistida en BD → coordenada neutra 0,0 con
- *   active=false), erradicando el estado fantasma liveRideActive=true.
- * - M-20: la etiqueta de estado conmuta según el status real del dispositivo
- *   (ACTIVE/UNCLAIMED) en vez de afirmar "activo" incondicionalmente.
- * - I4: la comprobación de coordenadas usa `!= null` para no descartar el
- *   valor legítimo 0 (ecuador / meridiano de Greenwich).
+ * PARTIÓN C-19 conservada: orquestador delgado que delega en
+ * `DashboardSkeleton`, `MedicalRecordForm`, `LiveRideCard` y `NoChipNotice`.
  *
  * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas físicas (objetivo de partición < 380).
+ * - Límite estricto < 500 líneas físicas (objetivo de partición < 400).
  * - Cero datos hardcodeados o mocks de demostración.
- * - Integración obligatoria de useWakeLock, useHaptic y useLocale.
- * - Cero jerga técnica visible en la interfaz de usuario.
+ * - Bilingüismo obligatorio: cero texto en duro en el JSX.
  * ==============================================================================
  */
 
@@ -43,6 +44,8 @@ import { useHaptic } from "@/hooks/useHaptic";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import {
   apiClient,
+  HttpApiError,
+  ensureContactUuid,
   type MedicalProfileData,
   type EmergencyContact,
   type DashboardResponse,
@@ -52,6 +55,7 @@ import { IncidentHairline } from "@/components/ui/IncidentHairline";
 import { LiveRideCard } from "@/components/dashboard/LiveRideCard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { MedicalRecordForm } from "@/components/dashboard/MedicalRecordForm";
+import { NoChipNotice } from "@/components/dashboard/NoChipNotice";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -69,17 +73,20 @@ export default function DashboardPage() {
   // Activación de Screen WakeLock para mantener la pantalla despierta en el manillar
   const { isLocked: isScreenLocked } = useWakeLock(isLiveRideActive);
 
-  // Estados del perfil médico (inicializado vacío, poblado dinámicamente)
+  // P-1: ficha clínica SIN valores fabricados. bloodType arranca vacío: el
+  // piloto debe declararlo (o elegir DESCONOCIDO) antes de guardar.
   const [profile, setProfile] = useState<MedicalProfileData>({
     fullName: "",
     nationalId: "",
-    bloodType: "O+",
+    birthDate: null,
+    bloodType: "",
     allergies: "",
     chronicConditions: "",
     conditions: "",
     medications: "",
     insuranceInfo: "",
     insurance: "",
+    emergencyNumber: "",
     photoUrl: "",
     contacts: [],
   });
@@ -88,74 +95,87 @@ export default function DashboardPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [noticeMessage, setNoticeMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [loadError, setLoadError] = useState("");
 
-  // Carga inicial de datos desde PostgreSQL
+  // Ref viva del diccionario: los textos de respaldo no re-disparan efectos.
+  const tRef = useRef(t);
   useEffect(() => {
-    let isMounted = true;
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const data = await apiClient.getDashboard();
-        if (!isMounted) return;
+    tRef.current = t;
+  }, [t]);
 
-        setDashboardData(data);
-        setIsLiveRideActive(Boolean(data.user.liveRideActive));
+  // Carga inicial de datos desde PostgreSQL (reutilizable por el botón reintentar)
+  const loadDashboard = useCallback(async () => {
+    setIsLoading(true);
+    setLoadError("");
+    try {
+      const data = await apiClient.getDashboard();
 
-        // I4: `!= null` acepta la coordenada legítima 0 (ecuador/Greenwich);
-        // el check truthy anterior la descartaba como si fuera ausencia de fix.
-        if (data.user.lastKnownLat != null && data.user.lastKnownLng != null) {
-          setLastCoords({
-            lat: data.user.lastKnownLat,
-            lng: data.user.lastKnownLng,
-          });
-        }
+      setDashboardData(data);
+      setIsLiveRideActive(Boolean(data.user.liveRideActive));
 
-        if (data.profile) {
-          const rawContacts = Array.isArray(data.profile.emergencyContacts)
-            ? data.profile.emergencyContacts
-            : [];
+      // I4: `!= null` acepta la coordenada legítima 0 (ecuador/Greenwich).
+      if (data.user.lastKnownLat != null && data.user.lastKnownLng != null) {
+        setLastCoords({
+          lat: data.user.lastKnownLat,
+          lng: data.user.lastKnownLng,
+        });
+      }
 
-          const formattedContacts: EmergencyContact[] = rawContacts.map((c) => ({
-            id: c.id || `cnt_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      if (data.profile) {
+        const rawContacts = Array.isArray(data.profile.emergencyContacts)
+          ? data.profile.emergencyContacts
+          : [];
+
+        // P-2 y P-3: UUID válido garantizado y parentesco REAL (o vacío).
+        const formattedContacts: EmergencyContact[] = rawContacts.map((c) => {
+          const relation = (c.relation || c.relationship || "").trim();
+          return {
+            id: ensureContactUuid(c.id),
             name: c.name || "",
-            relation: c.relation || c.relationship || "Familiar",
-            relationship: c.relationship || c.relation || "Familiar",
+            relation,
+            relationship: relation,
             phone: c.phone || "",
             email: c.email || "",
             isPrimary: c.isPrimary ?? false,
-          }));
+          };
+        });
 
-          setProfile({
-            fullName: data.profile.fullName || "",
-            nationalId: data.profile.nationalId || "",
-            birthDate: data.profile.birthDate || null,
-            bloodType: data.profile.bloodType || "O+",
-            allergies: data.profile.allergies || "",
-            chronicConditions: data.profile.chronicConditions || "",
-            conditions: data.profile.chronicConditions || "",
-            medications: data.profile.medications || "",
-            insuranceInfo: data.profile.insuranceInfo || "",
-            insurance: data.profile.insuranceInfo || "",
-            emergencyNumber: data.profile.emergencyNumber || "",
-            photoUrl: data.profile.photoUrl || "",
-            contacts: formattedContacts,
-          });
-        }
-      } catch {
-        if (!isMounted) return;
-        router.replace("/login");
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        setProfile({
+          fullName: data.profile.fullName || "",
+          nationalId: data.profile.nationalId || "",
+          birthDate: data.profile.birthDate || null,
+          // P-1: se conserva exactamente lo declarado; nada de "O+" por defecto.
+          bloodType: data.profile.bloodType || "",
+          allergies: data.profile.allergies || "",
+          chronicConditions: data.profile.chronicConditions || "",
+          conditions: data.profile.chronicConditions || "",
+          medications: data.profile.medications || "",
+          insuranceInfo: data.profile.insuranceInfo || "",
+          insurance: data.profile.insuranceInfo || "",
+          emergencyNumber: data.profile.emergencyNumber || "",
+          photoUrl: data.profile.photoUrl || "",
+          contacts: formattedContacts,
+        });
       }
+    } catch (err: unknown) {
+      // P-4: únicamente una sesión inválida o caducada regresa al ingreso.
+      if (err instanceof HttpApiError && (err.status === 401 || err.status === 403)) {
+        router.replace("/login");
+        return;
+      }
+      const humanMessage =
+        err instanceof HttpApiError && err.status > 0
+          ? err.message
+          : tRef.current.dashboard.loadError;
+      setLoadError(humanMessage);
+    } finally {
+      setIsLoading(false);
     }
-
-    loadData();
-    return () => {
-      isMounted = false;
-    };
   }, [router]);
+
+  useEffect(() => {
+    void loadDashboard();
+  }, [loadDashboard]);
 
   // Función atómica para capturar y emitir posición GPS a /api/gps/heartbeat
   const sendCurrentPosition = useCallback(
@@ -220,10 +240,9 @@ export default function DashboardPage() {
 
     if (!nextState) {
       // C-12 (CRITICAL): el cierre del viaje SIEMPRE se notifica al servidor.
-      // Prioridad de coordenada de cierre:
-      // 1) último fix GPS de la sesión; 2) última posición persistida en la BD;
-      // 3) coordenada neutra (0,0) — el backend la acepta (Float válido) y lo
-      //    determinante para apagar el estado fantasma es active=false.
+      // Prioridad de coordenada de cierre: 1) último fix de la sesión;
+      // 2) última posición persistida; 3) coordenada neutra (0,0), porque lo
+      // determinante para apagar el estado fantasma es active=false.
       const closingCoords =
         lastCoords ??
         (dashboardData?.user.lastKnownLat != null &&
@@ -252,6 +271,14 @@ export default function DashboardPage() {
     e.preventDefault();
     setNoticeMessage("");
     setErrorMessage("");
+
+    // P-1: prohibido guardar una ficha sin grupo sanguíneo declarado.
+    if (!profile.bloodType.trim()) {
+      triggerHaptic("error");
+      setErrorMessage(t.dashboard.bloodTypeRequired);
+      return;
+    }
+
     setIsSaving(true);
     triggerHaptic("light");
 
@@ -262,7 +289,11 @@ export default function DashboardPage() {
       setTimeout(() => setNoticeMessage(""), 4000);
     } catch (err: unknown) {
       triggerHaptic("error");
-      const msg = err instanceof Error ? err.message : t.dashboard.updateError;
+      // Mensaje humano del backend; si fue la red, el texto del diccionario.
+      const msg =
+        err instanceof HttpApiError && err.status > 0
+          ? err.message
+          : t.dashboard.updateError;
       setErrorMessage(msg || t.dashboard.updateError);
     } finally {
       setIsSaving(false);
@@ -274,50 +305,68 @@ export default function DashboardPage() {
     return <DashboardSkeleton />;
   }
 
+  // P-4: la ficha no se pudo cargar por un problema de red o del servicio.
+  if (loadError) {
+    return (
+      <div className="safe-mobile-container py-8 sm:py-12 flex flex-col gap-6">
+        <div
+          role="alert"
+          className="banner-emergency text-micro text-alert-red font-sans text-center font-bold"
+        >
+          ⚠️ {loadError}
+        </div>
+        <IncidentButton
+          type="button"
+          variant="emergency"
+          size="lg"
+          onClick={() => void loadDashboard()}
+          className="w-full sm:w-auto self-center min-w-[220px]"
+        >
+          ↻ {t.dashboard.retryButton}
+        </IncidentButton>
+      </div>
+    );
+  }
+
   // C-11: sin dispositivo vinculado se muestra guión neutro (cero folios fabricados)
   const device = dashboardData?.device ?? null;
   const helmetFolio = device?.code ?? "—";
 
   // M-20: etiqueta de estado según el status REAL del dispositivo.
-  // DISABLED u otros estados no afirman protección: se omite el sufijo
-  // (no existe clave de diccionario para "kit deshabilitado"; reportado).
   const deviceStatusLabel =
     device?.status === "ACTIVE"
       ? t.common.statusActive
       : device?.status === "UNCLAIMED"
         ? t.common.statusUnclaimed
-        : "";
+        : device?.status === "DISABLED"
+          ? t.admin.statusDisabled
+          : "";
 
   return (
     <div className="safe-mobile-container py-8 sm:py-12 flex flex-col gap-8">
-      {/* Encabezado del Panel */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-ink pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-signal-orange" />
-            {/* M-4: folio en sans serif con tracking amplio (legibilidad de códigos) */}
-            <span className="font-sans text-micro font-bold uppercase tracking-widest text-carbon">
-              {helmetFolio}
-              {deviceStatusLabel ? ` · ${deviceStatusLabel}` : ""}
-            </span>
-          </div>
-          <h1 className="font-serif text-3xl font-bold text-ink leading-tight mt-0.5">
-            {t.dashboard.title}
-          </h1>
-          <p className="font-sans text-micro text-carbon">
-            {t.dashboard.welcomeBack}:{" "}
-            <strong className="text-ink">{profile.fullName || dashboardData?.user.email}</strong>
-          </p>
+      {/* Encabezado del Panel (el cierre de sesión vive en la barra privada) */}
+      <div className="flex flex-col gap-2 border-b border-ink pb-4">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-signal-orange" />
+          {/* M-4: folio en sans serif con tracking amplio (legibilidad de códigos) */}
+          <span className="font-sans text-micro font-bold uppercase tracking-widest text-carbon">
+            {helmetFolio}
+            {deviceStatusLabel ? ` · ${deviceStatusLabel}` : ""}
+          </span>
         </div>
-
-        <IncidentButton
-          variant="neutral"
-          size="sm"
-          onClick={() => apiClient.logout()}
-        >
-          🚪 {t.dashboard.logoutButton}
-        </IncidentButton>
+        <h1 className="font-serif text-3xl font-bold text-ink leading-tight mt-0.5">
+          {t.dashboard.title}
+        </h1>
+        <p className="font-sans text-micro text-carbon">
+          {t.dashboard.welcomeBack}:{" "}
+          <strong className="text-ink">
+            {profile.fullName || dashboardData?.user.email}
+          </strong>
+        </p>
       </div>
+
+      {/* P-5: sin chip vinculado, el panel lo comunica y enlaza la activación */}
+      {!device && <NoChipNotice />}
 
       {/* BLOQUE ESTRELLA: MODO RUTA EN CARRETERA (WAKELOCK + TELEMETRÍA CADA 20s) */}
       <LiveRideCard

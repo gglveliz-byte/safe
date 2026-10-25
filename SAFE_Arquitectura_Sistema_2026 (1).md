@@ -317,7 +317,7 @@ safe-platform/ (o raíz del proyecto)
     │   ├── dashboard/
     │   │   └── page.tsx                          # 6. Panel del Motociclista + WakeLock Modo Ruta [~280 líneas]
     │   ├── admin/
-    │   │   └── page.tsx                          # 7. Fábrica Móvil: Lotes, QRs y Grabador/Simulador NFC [~290 líneas]
+    │   │   └── page.tsx                          # 7. Consola Admin: Usuarios con Chips, Lotes/QR y Grabador NFC real [~356 líneas]
     │   └── api/
     │       ├── auth/
     │       │   ├── login/route.ts                # POST Login + Cookie JWT [~90 líneas]
@@ -334,6 +334,7 @@ safe-platform/ (o raíz del proyecto)
     │       │   └── alert/route.ts                # POST Captura GPS Accidente + Cooldown + Gmail [~170 líneas]
     │       └── admin/
     │           ├── batches/route.ts              # GET/POST Generación de Lotes y Folios [~120 líneas]
+    │           ├── riders/route.ts               # GET Usuarios registrados con chips vinculados (solo ADMIN) [~41 líneas]
     │           └── encode-nfc/route.ts           # PATCH Confirmación de Grabación Física NFC [~80 líneas]
     ├── components/
     │   ├── ui/
@@ -344,9 +345,14 @@ safe-platform/ (o raíz del proyecto)
     │   │   ├── CloudinaryPhotoUploader.tsx       # Selector de cámara/galería hacia Cloudinary [~120 líneas]
     │   │   └── EmergencyActionButtons.tsx        # Botón 911 + Llamada Directa + WhatsApp con GPS [~140 líneas]
     │   └── admin/
-    │       ├── NfcBurstWriterModal.tsx           # Grabador Web NFC en tira + Switch Read-Only [~210 líneas]
-    │       ├── NfcSimulatorModal.tsx             # Emulador de antena NFC para pruebas en PC/Mac [~130 líneas]
-    │       └── QrPrintSheet.tsx                  # Plancha de impresión de Stickers QR + Tarjetas PIN [~145 líneas]
+    │       ├── AdminTopBar.tsx                    # Barra privada de consola: marca, ES/EN y logout [~91 líneas]
+    │       ├── AdminMetrics.tsx                   # Usuarios, chips vinculados, disponibles y en rodaje [~88 líneas]
+    │       ├── RidersTable.tsx                    # Usuarios registrados + chip vinculado (búsqueda) [~258 líneas]
+    │       ├── BatchGeneratorCard.tsx             # Emisión de lotes con folios/PIN/QR [~142 líneas]
+    │       ├── BatchSelector.tsx                  # Selector real de lotes emitidos [~97 líneas]
+    │       ├── BatchDeviceList.tsx                # Inventario del lote + grabado NFC real [~153 líneas]
+    │       ├── NfcBurstWriterModal.tsx           # Grabador Web NFC en tira + Switch Read-Only [~354 líneas]
+    │       └── QrPrintSheet.tsx                  # Plancha de impresión de Stickers QR + Tarjetas PIN [~164 líneas]
     ├── hooks/
     │   ├── useWakeLock.ts                        # Hook para Screen WakeLock API en Modo Ruta [~50 líneas]
     │   └── useLocale.ts                          # Hook de gestión y conmutación de idioma ES/EN [~45 líneas]

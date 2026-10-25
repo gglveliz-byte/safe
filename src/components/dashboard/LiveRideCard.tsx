@@ -85,21 +85,26 @@ export function LiveRideCard({
           <span className="font-semibold text-ink flex flex-wrap items-center gap-2">
             <span className="text-signal-orange" aria-hidden="true">●</span>
             {t.dashboard.liveRideWarning}
-            {/* C-15: "(Pantalla Despierta)" hardcodeado erradicado. No existe una
-                clave específica de wakeLock; se usa la insignia oficial de estado
-                del diccionario (brecha reportada al custodio de locales). */}
+            {/* P-7: rótulo propio del bloqueo de pantalla. Antes reusaba
+                `common.emergencyBadge` ("Ficha de Auxilio"), que no describe
+                nada de esto; la brecha de diccionario queda cerrada. */}
             {isScreenLocked && (
               <span className="px-2 py-1 bg-ink text-paper rounded-[4px] font-sans text-[11px] font-bold uppercase tracking-widest">
-                {t.common.emergencyBadge}
+                {t.dashboard.wakeLockOn}
               </span>
             )}
           </span>
+          {/* M-4: font-mono erradicado; coordenadas en sans con tracking amplio.
+              P-7: la etiqueta técnica "GPS:" se reemplaza por el rótulo humano
+              del diccionario. */}
           {lastCoords && (
-            /* M-4: font-mono erradicado; coordenadas en sans con tracking amplio */
             <span className="font-sans tracking-widest text-carbon text-[11px]">
-              GPS: {lastCoords.lat.toFixed(5)}, {lastCoords.lng.toFixed(5)}{" "}
+              {t.dashboard.satelliteLabel}:{" "}
+              {lastCoords.lat.toFixed(5)}, {lastCoords.lng.toFixed(5)}
               {lastHeartbeatTime
-                ? `· ${new Date(lastHeartbeatTime).toLocaleTimeString()}`
+                ? ` · ${t.dashboard.lastReportLabel} ${new Date(
+                    lastHeartbeatTime,
+                  ).toLocaleTimeString()}`
                 : ""}
             </span>
           )}

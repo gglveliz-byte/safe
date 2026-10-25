@@ -199,4 +199,28 @@ body {
   .print-only {
     display: block !important;
   }
+
+  /*
+   * Aisla la plancha QR: oculta visualmente la consola completa y deja visible
+   * únicamente la hoja de stickers generada localmente, sin navbar ni footer.
+   */
+  body * {
+    visibility: hidden !important;
+  }
+  .qr-print-sheet,
+  .qr-print-sheet * {
+    visibility: visible !important;
+  }
+  .qr-print-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
 }

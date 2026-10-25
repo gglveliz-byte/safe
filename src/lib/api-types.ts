@@ -114,7 +114,29 @@ export interface AdminBatchSummary {
   totalDevices: number;
   encodedDevices: number;
   activeDevices: number;
+  unclaimedDevices: number;
   createdAt: string;
+}
+
+/** Chip físico vinculado a un motociclista en el panel administrativo. */
+export interface AdminRiderDevice {
+  code: string;
+  status: string;
+  isNfcEncoded: boolean;
+  nfcSerialNumber: string | null;
+  activatedAt: string | null;
+  createdAt: string;
+}
+
+/** Usuario registrado con su eventual chip SAFE vinculado. */
+export interface AdminRiderItem {
+  id: string;
+  email: string;
+  fullName: string | null;
+  photoUrl: string | null;
+  liveRideActive: boolean;
+  registeredAt: string;
+  device: AdminRiderDevice | null;
 }
 
 export interface AdminBatchDetail {

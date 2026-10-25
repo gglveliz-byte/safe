@@ -8,10 +8,12 @@
  * Utilidades puras de cliente para la codificación de chips NFC y la plancha
  * de impresión QR. Resuelven la URL canónica del gateway del casco sin dominios
  * hardcodeados (NEXT_PUBLIC_APP_URL con respaldo dinámico en el origen actual
- * del navegador), construyen UIDs hexadecimales simulados con formato idéntico
- * al de un NTAG216 real, fusionan el dispositivo real devuelto por
+ * del navegador), fusionan el dispositivo real devuelto por
  * PATCH /api/admin/encode-nfc sin fabricar estados y mapean los errores
  * técnicos de la Web NFC API a texto del diccionario con detalle corto.
+ *
+ * NOTA DE PRODUCCIÓN: el generador de UIDs simulados fue erradicado junto con
+ * el simulador de escritorio. Solo se aceptan UIDs físicos leídos por Web NFC.
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 450 líneas físicas.
@@ -61,19 +63,6 @@ export function buildHelmetGatewayClientUrl(
 ): string {
   const cleanCode = encodeURIComponent(code.trim().toUpperCase());
   return `${resolvePublicBaseUrl()}/r/${cleanCode}?v=${source}`;
-}
-
-/**
- * Genera un UID NFC simulado con formato válido: 7 bytes aleatorios en
- * hexadecimal mayúsculo separados por ":" (idéntico a un NTAG216 real,
- * ej. "04:D4:F1:34:C2:2A:81"). Cumple la validación estricta del backend
- * (/^[A-Fa-f0-9:-]+$/ con mínimo 8 caracteres) usando crypto.getRandomValues.
- */
-export function generateSimulatedNfcUid(): string {
-  const bytes = Array.from(crypto.getRandomValues(new Uint8Array(7)));
-  return bytes
-    .map((byte) => byte.toString(16).padStart(2, "0").toUpperCase())
-    .join(":");
 }
 
 /**

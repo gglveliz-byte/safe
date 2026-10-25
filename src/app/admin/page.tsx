@@ -1,28 +1,29 @@
 /**
  * ==============================================================================
  * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
- * MÓDULO: Vistas Oficiales — VISTA 6: Fábrica Móvil y Centro de Emisión Admin
+ * MÓDULO: Vistas Oficiales — Centro de Administración (Usuarios, Chips y QR)
  * ARCHIVO: src/app/admin/page.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Panel de control y manufactura para el administrador y operarios de fábrica.
- * Conectado 100% al backend PostgreSQL en Neon:
- * 1. Emisión atómica de lotes de folios secuenciales (SAFE-XXXX) con PINs de 6 dígitos.
- * 2. Carga y selección de lotes existentes con métricas de grabado y activación.
- * 3. Previsualización e impresión de planchas de stickers QR vectoriales.
- * 4. Grabado continuo en serie de antenas NFC (NTAG216) mediante Web NFC API
- *    o simulador de laboratorio para PC.
+ * Consola privada de operación SAFE. Se organiza en dos áreas claras:
+ * 1. Usuarios y chips: cuentas RIDER reales con el folio SAFE vinculado.
+ * 2. Generador QR: emisión de lotes, plancha QR e inventario de chips con
+ *    grabación de antena NFC mediante Web NFC (sin simuladores de escritorio).
+ *
+ * Todos los datos provienen de PostgreSQL vía /api/admin/riders y
+ * /api/admin/batches. La vista exige sesión con rol ADMIN y no comparte el
+ * navbar ni el footer públicos (ver src/app/admin/layout.tsx y PublicChrome).
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 500 líneas físicas.
- * - Cero datos hardcodeados o mocks de demostración.
- * - Verificación de privilegios de administrador al montar.
+ * - Cero datos hardcodeados, mocks o simuladores en producción.
+ * - Textos 100% del diccionario bilingüe y objetivos táctiles de 44px.
  * ==============================================================================
  */
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
@@ -30,16 +31,20 @@ import {
   apiClient,
   type AdminDeviceItem,
   type AdminBatchSummary,
+  type AdminRiderItem,
 } from "@/lib/api-client";
-import { IncidentCard } from "@/components/ui/IncidentCard";
-import { IncidentButton } from "@/components/ui/IncidentButton";
 import { IncidentHairline } from "@/components/ui/IncidentHairline";
 import { QrPrintSheet } from "@/components/admin/QrPrintSheet";
 import { NfcBurstWriterModal } from "@/components/admin/NfcBurstWriterModal";
-import { NfcSimulatorModal } from "@/components/admin/NfcSimulatorModal";
 import { BatchDeviceList } from "@/components/admin/BatchDeviceList";
+import { BatchGeneratorCard } from "@/components/admin/BatchGeneratorCard";
+import { BatchSelector } from "@/components/admin/BatchSelector";
+import { RidersTable } from "@/components/admin/RidersTable";
+import { AdminMetrics } from "@/components/admin/AdminMetrics";
 import { AdminSkeleton } from "@/components/admin/AdminSkeleton";
-import { ProductionSummary } from "@/components/admin/ProductionSummary";
+
+/** Pestañas operativas de la consola administrativa. */
+type AdminTab = "riders" | "qr";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -48,6 +53,7 @@ export default function AdminPage() {
 
   // Estados de carga y autenticación
   const [isInitializing, setIsInitializing] = useState(true);
+  const [activeTab, setActiveTab] = useState<AdminTab>("riders");
 
   // Estados de generación de lotes
   const [batchName, setBatchName] = useState("");
@@ -64,33 +70,74 @@ export default function AdminPage() {
   const [devices, setDevices] = useState<AdminDeviceItem[]>([]);
   const [isLoadingDevices, setIsLoadingDevices] = useState(false);
 
+  // Usuarios registrados y chips vinculados
+  const [riders, setRiders] = useState<AdminRiderItem[]>([]);
+  const [isLoadingRiders, setIsLoadingRiders] = useState(false);
+  const [ridersError, setRidersError] = useState("");
+
   // Modales interactivos
   const [showPrintSheet, setShowPrintSheet] = useState(false);
-  const [selectedDeviceForNfc, setSelectedDeviceForNfc] = useState<AdminDeviceItem | null>(null);
-  const [selectedDeviceForSimulator, setSelectedDeviceForSimulator] = useState<AdminDeviceItem | null>(null);
+  const [selectedDeviceForNfc, setSelectedDeviceForNfc] =
+    useState<AdminDeviceItem | null>(null);
 
-  // Carga el detalle de dispositivos de un lote específico
-  const loadBatchDevices = useCallback(
-    async (bName: string) => {
-      if (!bName) return;
-      setIsLoadingDevices(true);
-      try {
-        const detail = await apiClient.getAdminBatchDetail(bName, true);
-        setDevices(detail.devices);
-      } catch (err: unknown) {
-        // M-12: fallback humano desde el diccionario (texto en duro erradicado)
-        const msg = err instanceof Error ? err.message : t.common.errorGeneric;
-        setErrorMessage(msg);
-      } finally {
-        setIsLoadingDevices(false);
-      }
-    },
-    [t],
-  );
+  // Ref viva del diccionario: los cargadores leen el texto de respaldo sin
+  // depender de `t`, así conmutar ES/EN NO re-ejecuta la inicialización
+  // (evita el parpadeo del skeleton y recargas innecesarias en la consola).
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
-  // Inicialización y verificación de privilegios de ADMIN
+  /** Carga el detalle real de chips de un lote específico. */
+  const loadBatchDevices = useCallback(async (name: string) => {
+    if (!name) return;
+    setIsLoadingDevices(true);
+    try {
+      const detail = await apiClient.getAdminBatchDetail(name, true);
+      setDevices(detail.devices);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : tRef.current.common.errorGeneric;
+      setErrorMessage(msg);
+    } finally {
+      setIsLoadingDevices(false);
+    }
+  }, []);
+
+  /** Refresca el resumen real de todos los lotes desde PostgreSQL. */
+  const loadBatches = useCallback(async () => {
+    try {
+      const res = await apiClient.getAdminBatches();
+      setBatches(res.batches);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : tRef.current.common.errorGeneric;
+      setErrorMessage(msg);
+    }
+  }, []);
+
+  /** Consulta los usuarios RIDER y su chip vinculado. */
+  const loadRiders = useCallback(async () => {
+    setIsLoadingRiders(true);
+    setRidersError("");
+    try {
+      const res = await apiClient.getAdminRiders();
+      setRiders(res.riders);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error
+          ? err.message
+          : tRef.current.admin.ridersLoadError;
+      setRidersError(msg);
+    } finally {
+      setIsLoadingRiders(false);
+    }
+  }, []);
+
+  // Inicialización: sesión ADMIN, lotes, primer lote y usuarios registrados
   useEffect(() => {
     let isMounted = true;
+
     async function initAdmin() {
       setIsInitializing(true);
       try {
@@ -102,26 +149,31 @@ export default function AdminPage() {
           return;
         }
 
-        // Consultar lotes reales en PostgreSQL
-        const res = await apiClient.getAdminBatches();
-        if (!isMounted) return;
+        void loadRiders();
 
-        setBatches(res.batches);
+        try {
+          const res = await apiClient.getAdminBatches();
+          if (!isMounted) return;
+          setBatches(res.batches);
 
-        if (res.batches.length > 0) {
-          const firstBatch = res.batches[0].batchName;
-          setSelectedBatchName(firstBatch);
-          await loadBatchDevices(firstBatch);
+          if (res.batches.length > 0) {
+            const firstBatch = res.batches[0].batchName;
+            setSelectedBatchName(firstBatch);
+            await loadBatchDevices(firstBatch);
+          }
+        } catch (err: unknown) {
+          if (!isMounted) return;
+          const msg =
+            err instanceof Error
+              ? err.message
+              : tRef.current.common.errorGeneric;
+          setErrorMessage(msg);
         }
-        // M-12: sin lotes previos el campo queda vacío; el placeholder del
-        // diccionario guía al operario ("Lote-Fabrica-01" fabricado erradicado).
       } catch {
         if (!isMounted) return;
         router.replace("/login");
       } finally {
-        if (isMounted) {
-          setIsInitializing(false);
-        }
+        if (isMounted) setIsInitializing(false);
       }
     }
 
@@ -129,23 +181,22 @@ export default function AdminPage() {
     return () => {
       isMounted = false;
     };
-  }, [router, loadBatchDevices]);
+    // tRef es estable: conmutar ES/EN no vuelve a inicializar la consola.
+  }, [router, loadBatchDevices, loadRiders]);
 
-  // Cambio de lote seleccionado
+  /** Cambia el lote abierto en el inventario de chips. */
   const handleSelectBatch = async (name: string) => {
     setSelectedBatchName(name);
     triggerHaptic("light");
     await loadBatchDevices(name);
   };
 
-  // Creación de nuevo lote en Neon PostgreSQL
-  const handleCreateBatch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  /** Emite un lote de folios y PINs reales en PostgreSQL. */
+  const handleCreateBatch = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setNotice("");
     setErrorMessage("");
 
-    // M-6: cero cantidades fabricadas: si el valor no es un entero válido en
-    // el rango oficial 1-100, error humano y NO se inventa un lote (`|| 5` erradicado).
     const qty = parseInt(quantity, 10);
     if (Number.isNaN(qty) || qty < 1 || qty > 100) {
       triggerHaptic("error");
@@ -163,19 +214,12 @@ export default function AdminPage() {
       setNotice(t.admin.batchSuccessNotice);
       setTimeout(() => setNotice(""), 4000);
 
-      // Actualizar listado de dispositivos y seleccionar nuevo lote
-      setDevices(created.devices);
       setSelectedBatchName(created.batchName);
-
-      // Refrescar listado de lotes agregados
-      const res = await apiClient.getAdminBatches();
-      setBatches(res.batches);
-
-      // Limpiar formulario para el siguiente
+      await loadBatches();
+      await loadBatchDevices(created.batchName);
       setBatchName("");
     } catch (err: unknown) {
       triggerHaptic("error");
-      // M-12: fallback humano desde el diccionario (texto en duro erradicado)
       const msg = err instanceof Error ? err.message : t.common.errorGeneric;
       setErrorMessage(msg);
     } finally {
@@ -183,216 +227,163 @@ export default function AdminPage() {
     }
   };
 
-  // Ráfaga en tira (flujo 2.2): refresca cada chip grabado en el listado local
-  // sin cerrar el modal, usando el device REAL devuelto por el backend.
+  /** Actualiza un chip grabado dentro de la tira sin cerrar el modal. */
   const handleStripProgress = (
     _index: number,
     _total: number,
     updated: AdminDeviceItem,
   ) => {
-    setDevices((prev) => prev.map((d) => (d.code === updated.code ? updated : d)));
+    setDevices((prev) =>
+      prev.map((device) => (device.code === updated.code ? updated : device)),
+    );
   };
 
-  // Ráfaga en tira: al concluir la tira cierra el modal y refresca el detalle del
-  // lote desde el servidor (contadores veraces, sin incrementos locales).
+  /** Cierra la tira NFC y refresca los contadores reales del lote. */
   const handleStripComplete = () => {
     setSelectedDeviceForNfc(null);
-    void loadBatchDevices(selectedBatchName ?? "");
+    void loadBatchDevices(selectedBatchName);
+    void loadBatches();
   };
 
-  // Notificación tras grabado exitoso de antena física o simulada
-  const handleDeviceEncoded = (updated: AdminDeviceItem) => {
-    setDevices((prev) =>
-      prev.map((d) => (d.code === updated.code ? updated : d)),
-    );
-    setSelectedDeviceForNfc(null);
-    setSelectedDeviceForSimulator(null);
-
-    // Actualizar contadores locales del lote
-    setBatches((prev) =>
-      prev.map((b) =>
-        b.batchName === selectedBatchName
-          ? { ...b, encodedDevices: b.encodedDevices + 1 }
-          : b,
-      ),
-    );
-  };
-
-  // Contadores métricos dinámicos
-  const totalCount = devices.length;
-  const unclaimedCount = devices.filter((d) => d.status === "UNCLAIMED").length;
-  const activeCount = devices.filter((d) => d.status === "ACTIVE").length;
+  // Recuentos operativos globales (100% derivados de respuestas del backend)
+  const linkedChips = riders.filter((rider) => rider.device !== null).length;
+  const availableChips = batches.reduce(
+    (total, batch) => total + (batch.unclaimedDevices ?? 0),
+    0,
+  );
+  const activeChips = batches.reduce(
+    (total, batch) => total + batch.activeDevices,
+    0,
+  );
 
   if (isInitializing) {
-    // Skeleton extraído a componente propio (partición obligatoria de la zona crítica)
     return <AdminSkeleton title={t.admin.title} subtitle={t.admin.subtitle} />;
   }
 
   return (
-    <div className="safe-mobile-container py-8 sm:py-12 flex flex-col gap-8">
-      {/* Encabezado Broadsheet */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-ink pb-4">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-signal-orange" />
-            {/* C-13: eyebrow desde el diccionario bilingüe (texto en duro erradicado) */}
-            <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-carbon">
-              {t.common.adminPanel} · {t.common.appName}
-            </span>
-          </div>
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold text-ink leading-tight">
-            {t.admin.title}
-          </h1>
-          <p className="font-sans text-micro text-carbon">
-            {t.admin.subtitle}
-          </p>
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-10 flex flex-col gap-6">
+      {/* Encabezado editorial de la consola */}
+      <div className="flex flex-col gap-1 border-b border-ink pb-4">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-signal-orange" />
+          <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-carbon">
+            {t.common.adminPanel} · {t.common.appName}
+          </span>
         </div>
-
-        <IncidentButton
-          variant="neutral"
-          size="sm"
-          onClick={() => apiClient.logout()}
-        >
-          🚪 {t.dashboard.logoutButton}
-        </IncidentButton>
+        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-ink leading-tight">
+          {t.admin.title}
+        </h1>
+        <p className="font-sans text-micro text-carbon">{t.admin.subtitle}</p>
       </div>
 
-      {/* Resumen Métrico de Producción (componente extraído; cifras reales del lote) */}
-      <ProductionSummary
-        totalCount={totalCount}
-        unclaimedCount={unclaimedCount}
-        activeCount={activeCount}
+      {/* Resumen operativo global */}
+      <AdminMetrics
+        registeredRiders={riders.length}
+        linkedChips={linkedChips}
+        availableChips={availableChips}
+        activeChips={activeChips}
       />
 
-      {/* Formulario de Emisión de Lotes */}
-      <IncidentCard padding="md" className="flex flex-col gap-4">
-        <div>
-          <h3 className="font-serif font-bold text-heading-sm text-ink leading-tight">
-            {t.admin.batchTitle}
-          </h3>
-          <p className="font-sans text-micro text-carbon mt-0.5">
-            {t.admin.batchSubtitle}
-          </p>
-        </div>
-
-        <form
-          onSubmit={handleCreateBatch}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end"
+      {/* Navegación interna de la consola: solo dos áreas de trabajo */}
+      <div role="tablist" aria-label={t.admin.consoleLabel} className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          role="tab"
+          id="admin-tab-riders"
+          aria-selected={activeTab === "riders"}
+          aria-controls="admin-panel-riders"
+          onClick={() => setActiveTab("riders")}
+          className={`min-h-[48px] px-4 py-2 inline-flex items-center justify-between gap-2 border rounded-[4px] font-sans text-micro font-bold uppercase tracking-wider transition-all ${
+            activeTab === "riders"
+              ? "bg-ink text-paper border-ink"
+              : "bg-paper text-ink border-ink hover:bg-concrete"
+          }`}
         >
-          <div className="flex flex-col gap-1 sm:col-span-2">
-            <label className="font-sans text-micro font-bold uppercase text-carbon">
-              {t.admin.batchNameLabel}
-            </label>
-            <input
-              type="text"
-              value={batchName}
-              onChange={(e) => setBatchName(e.target.value)}
-              required
-              placeholder={t.admin.batchNamePlaceholder}
-              className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
-            />
-          </div>
+          <span>{t.admin.tabsRiders}</span>
+          <span className="font-normal">({riders.length})</span>
+        </button>
 
-          <div className="flex flex-col gap-1">
-            <label className="font-sans text-micro font-bold uppercase text-carbon">
-              {t.admin.quantityLabel}
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={100}
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              required
-              placeholder={t.admin.quantityPlaceholder}
-              className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
-            />
-          </div>
+        <button
+          type="button"
+          role="tab"
+          id="admin-tab-qr"
+          aria-selected={activeTab === "qr"}
+          aria-controls="admin-panel-qr"
+          onClick={() => setActiveTab("qr")}
+          className={`min-h-[48px] px-4 py-2 inline-flex items-center justify-between gap-2 border rounded-[4px] font-sans text-micro font-bold uppercase tracking-wider transition-all ${
+            activeTab === "qr"
+              ? "bg-ink text-paper border-ink"
+              : "bg-paper text-ink border-ink hover:bg-concrete"
+          }`}
+        >
+          <span>{t.admin.tabsQr}</span>
+          <span className="font-normal">({batches.length})</span>
+        </button>
+      </div>
 
-          <div className="sm:col-span-3 flex flex-wrap items-center gap-3 pt-2">
-            <IncidentButton
-              type="submit"
-              variant="emergency"
-              isLoading={isGenerating}
-              disabled={isGenerating}
-            >
-              {isGenerating
-                ? t.admin.generatingBatch
-                : `+ ${t.admin.createBatchButton}`}
-            </IncidentButton>
-
-            {devices.length > 0 && (
-              <IncidentButton
-                type="button"
-                variant="paper"
-                onClick={() => setShowPrintSheet(true)}
-              >
-                🖨️ {t.admin.printQrsButton}
-              </IncidentButton>
-            )}
-          </div>
-        </form>
-
-        {/* C-16: éxito sobrio en concrete/ink (verdes erradicados) y error con
-            la clase oficial .banner-emergency (bg-red-50 erradicado) */}
-        {notice && (
-          <div role="status" className="p-3 bg-concrete border border-ink rounded-[6px] text-micro text-ink font-sans text-center font-bold">
-            ✓ {notice}
-          </div>
-        )}
-
-        {errorMessage && (
-          <div role="alert" className="banner-emergency text-micro text-alert-red font-sans text-center">
-            ⚠️ {errorMessage}
-          </div>
-        )}
-      </IncidentCard>
-
-      {/* Selector de Lotes Producidos */}
-      {batches.length > 0 && (
-        <div className="flex flex-col gap-2">
-          {/* C-13: etiqueta desde el diccionario (texto en duro erradicado) */}
-          <label className="font-sans text-micro font-bold uppercase text-carbon">
-            {t.admin.generatedBatchesTitle} ({batches.length})
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {batches.map((b) => (
-              <button
-                key={b.batchName}
-                type="button"
-                onClick={() => handleSelectBatch(b.batchName)}
-                title={`${b.totalDevices} ${t.admin.totalKitsLabel}`}
-                className={`min-h-[44px] px-3 py-2 inline-flex items-center border rounded-[4px] font-sans text-micro font-bold transition-all ${
-                  selectedBatchName === b.batchName
-                    ? "bg-ink text-paper border-ink"
-                    : "bg-paper text-ink border-mist hover:border-ink"
-                }`}
-              >
-                {/* C-13: métricas numéricas puras; etiqueta del diccionario vía tooltip */}
-                {b.batchName} ({b.totalDevices} · {b.encodedDevices})
-              </button>
-            ))}
-          </div>
+      {/* Área 1: usuarios registrados y chips vinculados */}
+      {activeTab === "riders" && (
+        <div
+          id="admin-panel-riders"
+          role="tabpanel"
+          aria-labelledby="admin-tab-riders"
+          className="flex flex-col gap-6"
+        >
+          <RidersTable
+            riders={riders}
+            isLoading={isLoadingRiders}
+            errorMessage={ridersError}
+            onRefresh={() => void loadRiders()}
+          />
         </div>
       )}
 
-      <IncidentHairline variant="subtle" />
+      {/* Área 2: generador QR, emisión de lotes e inventario de chips */}
+      {activeTab === "qr" && (
+        <div
+          id="admin-panel-qr"
+          role="tabpanel"
+          aria-labelledby="admin-tab-qr"
+          className="flex flex-col gap-6"
+        >
+          <BatchGeneratorCard
+            batchName={batchName}
+            quantity={quantity}
+            isGenerating={isGenerating}
+            notice={notice}
+            errorMessage={errorMessage}
+            onBatchNameChange={setBatchName}
+            onQuantityChange={setQuantity}
+            onCreate={handleCreateBatch}
+          />
 
-      {/* Lista de Kits Emitidos del Lote Seleccionado */}
-      <BatchDeviceList
-        devices={devices}
-        selectedBatchName={selectedBatchName}
-        isLoadingDevices={isLoadingDevices}
-        onSelectNfc={(dev) => setSelectedDeviceForNfc(dev)}
-        onSelectSimulator={(dev) => setSelectedDeviceForSimulator(dev)}
-      />
+          <BatchSelector
+            batches={batches}
+            selectedBatchName={selectedBatchName}
+            onSelect={(name) => void handleSelectBatch(name)}
+          />
 
-      {/* Modal de Plancha de Impresión QR */}
+          {selectedBatchName && (
+            <>
+              <IncidentHairline variant="subtle" margin="sm" />
+              <BatchDeviceList
+                devices={devices}
+                selectedBatchName={selectedBatchName}
+                isLoadingDevices={isLoadingDevices}
+                onSelectNfc={(device) => setSelectedDeviceForNfc(device)}
+                onPrintQr={() => setShowPrintSheet(true)}
+              />
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Plancha QR del lote seleccionado */}
       {showPrintSheet && (
         <div className="fixed inset-0 z-50 bg-ink/70 flex items-center justify-center p-2 sm:p-6 overflow-y-auto">
           <div className="w-full max-w-4xl my-auto">
             <QrPrintSheet
-              batchName={selectedBatchName || batchName}
+              batchName={selectedBatchName}
               devices={devices}
               onClose={() => setShowPrintSheet(false)}
             />
@@ -400,24 +391,18 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* Modal Grabador NFC Móvil — tira secuencial completa del lote (flujo 2.2):
-          arranca en el folio seleccionado y avanza chip a chip por los pendientes */}
+      {/* Grabador NFC real: arranca en el chip elegido y avanza por pendientes */}
       {selectedDeviceForNfc && (
         <NfcBurstWriterModal
           device={selectedDeviceForNfc}
-          devices={devices.filter((d) => !d.isNfcEncoded)}
+          devices={devices.filter(
+            (device) =>
+              !device.isNfcEncoded ||
+              device.code === selectedDeviceForNfc.code,
+          )}
           onProgress={handleStripProgress}
           onSuccess={handleStripComplete}
           onClose={() => setSelectedDeviceForNfc(null)}
-        />
-      )}
-
-      {/* Modal Simulador de Antena para PC */}
-      {selectedDeviceForSimulator && (
-        <NfcSimulatorModal
-          device={selectedDeviceForSimulator}
-          onSuccess={handleDeviceEncoded}
-          onClose={() => setSelectedDeviceForSimulator(null)}
         />
       )}
     </div>

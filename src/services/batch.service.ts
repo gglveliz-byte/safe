@@ -53,6 +53,8 @@ export interface BatchSummary {
   totalDevices: number;
   encodedDevices: number;
   activeDevices: number;
+  /** Kits vírgenes (UNCLAIMED) disponibles para distribución. */
+  unclaimedDevices: number;
   createdAt: string;
 }
 
@@ -159,6 +161,7 @@ export async function listBatches(): Promise<BatchSummary[]> {
       total: number;
       encoded: number;
       active: number;
+      unclaimed: number;
       createdAt: Date;
     }
   >();
@@ -170,6 +173,7 @@ export async function listBatches(): Promise<BatchSummary[]> {
         total: 0,
         encoded: 0,
         active: 0,
+        unclaimed: 0,
         createdAt: dev.createdAt,
       };
       batchMap.set(dev.batchName, current);
@@ -178,6 +182,7 @@ export async function listBatches(): Promise<BatchSummary[]> {
     current.total++;
     if (dev.isNfcEncoded) current.encoded++;
     if (dev.status === "ACTIVE") current.active++;
+    if (dev.status === "UNCLAIMED") current.unclaimed++;
     if (dev.createdAt < current.createdAt) {
       current.createdAt = dev.createdAt;
     }
@@ -190,6 +195,7 @@ export async function listBatches(): Promise<BatchSummary[]> {
       totalDevices: val.total,
       encodedDevices: val.encoded,
       activeDevices: val.active,
+      unclaimedDevices: val.unclaimed,
       createdAt: val.createdAt.toISOString(),
     });
   });

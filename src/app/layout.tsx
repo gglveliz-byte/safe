@@ -18,8 +18,7 @@
 
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { IncidentNavbar } from "@/components/ui/IncidentNavbar";
-import { IncidentFooter } from "@/components/ui/IncidentFooter";
+import { PublicChrome } from "@/components/layout/PublicChrome";
 
 export const metadata: Metadata = {
   title: "SAFE — Emergency Medical & Real-Time GPS Ledger for Riders",
@@ -28,7 +27,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "SAFE",
   },
   icons: {
@@ -52,42 +51,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="h-full bg-concrete">
-      <head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-      </head>
-      <body className="min-h-full flex flex-col bg-concrete text-ink antialiased selection:bg-signal-orange selection:text-paper">
-        {/* Barra de Navegación Broadsheet */}
-        <IncidentNavbar />
-
-        {/* Contenedor Principal Adaptable */}
-        <main className="flex-1 w-full">
-          {children}
-        </main>
-
-        {/* Pie de Página Institucional */}
-        <IncidentFooter />
-
-        {/* Script de Registro del Service Worker Offline (Activo en Producción; Desactivado en Dev para evitar ChunkLoadError por HMR) */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-                if (${process.env.NODE_ENV === 'production'}) {
-                  window.addEventListener('load', function() {
-                    navigator.serviceWorker.register('/sw.js').catch(function() {});
-                  });
-                } else {
-                  navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for (var r of registrations) { r.unregister(); }
-                  });
-                }
-              }
-            `,
-          }}
-        />
+    <html lang="es" className="h-full bg-concrete" suppressHydrationWarning>
+      <body
+        className="min-h-full flex flex-col bg-concrete text-ink antialiased selection:bg-signal-orange selection:text-paper"
+        suppressHydrationWarning
+      >
+        {/* Cromo institucional: público con navbar/footer; /admin solo contenido */}
+        <PublicChrome>{children}</PublicChrome>
       </body>
     </html>
   );

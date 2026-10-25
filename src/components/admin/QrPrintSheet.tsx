@@ -86,7 +86,7 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
   };
 
   return (
-    <div className="w-full bg-paper border border-ink rounded-[12px] p-6 shadow-incident">
+    <div className="qr-print-sheet w-full bg-paper border border-ink rounded-[12px] p-6 shadow-incident">
       {/* Barra de Controles (Oculta en Impresión) */}
       <div className="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-ink mb-6">
         <div>
@@ -165,7 +165,7 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
                 {device.code}
               </span>
               <span className="font-sans text-[10px] text-carbon">
-                PIN:{" "}
+                {t.admin.pinLabel}:{" "}
                 <strong className="font-sans tracking-widest">
                   {device.activationPin}
                 </strong>

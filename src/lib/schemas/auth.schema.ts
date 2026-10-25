@@ -22,7 +22,7 @@
  */
 
 import { z } from "zod";
-import { EmailSchema } from "./common.schema";
+import { EmailSchema, PasswordSchema } from "./common.schema";
 
 /**
  * Esquema de validación para las credenciales de inicio de sesión.
@@ -44,3 +44,48 @@ export const LoginSchema = z
  * Tipo inferido de las credenciales de inicio de sesión.
  */
 export type LoginInput = z.infer<typeof LoginSchema>;
+
+/**
+ * Esquema de validación para solicitud de recuperación de contraseña.
+ */
+export const ForgotPasswordSchema = z
+  .object({
+    /** Correo electrónico registrado de la cuenta. */
+    email: EmailSchema,
+    /** Idioma preferido para el correo electrónico enviado. */
+    locale: z.enum(["es", "en"]).optional().default("es"),
+  })
+  .strict();
+
+/**
+ * Tipo inferido para solicitud de recuperación de contraseña.
+ */
+export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
+
+/**
+ * Esquema de validación para restablecer la contraseña con token criptográfico.
+ */
+export const ResetPasswordSchema = z
+  .object({
+    /** Token firmado temporal de recuperación de contraseña. */
+    token: z
+      .string({ required_error: "El token de recuperación es obligatorio." })
+      .min(20, "El token de recuperación es inválido o está incompleto."),
+
+    /** Nueva contraseña deseada (mínimo 8 caracteres, máximo 128). */
+    password: PasswordSchema,
+
+    /** Confirmación de la nueva contraseña: debe coincidir exactamente. */
+    confirmPassword: PasswordSchema,
+  })
+  .strict()
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden. Escríbelas exactamente iguales.",
+    path: ["confirmPassword"],
+  });
+
+/**
+ * Tipo inferido para ejecución del restablecimiento de contraseña.
+ */
+export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
+
