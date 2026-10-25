@@ -55,14 +55,16 @@ Tu territorio de trabajo abarca exclusivamente:
 13. `src/app/api/upload/cloudinary/route.ts` (Endpoint de subida de fotos de perfil)
 14. `src/app/api/admin/batches/route.ts` (Endpoint de generación de lotes secuenciales SAFE-XXXX con PINs)
 15. `src/app/api/admin/encode-nfc/route.ts` (Endpoint de confirmación de grabado NFC y switch read-only)
+16. `src/app/api/auth/session/route.ts` (Endpoint de verificación de sesión activa y usuario autenticado)
 
-PROHIBIDO TOCAR LOS ARCHIVOS DEL AGENTE 1 (`prisma/schema.prisma`, `src/lib/db.ts`, `src/lib/env.ts`, `src/lib/api-response.ts`, `src/services/gps-maps.service.ts`, `src/services/cooldown.service.ts`, `src/services/mail.service.ts`, `src/app/r/[code]/route.ts`, `src/app/api/emergency/alert/route.ts`, `src/app/api/devices/activate/route.ts`, etc.). Puedes importar `db` desde `src/lib/db.ts` para tus consultas sin modificar el archivo.
+PROHIBIDO TOCAR LOS ARCHIVOS DEL AGENTE 1 (`prisma/schema.prisma`, `src/lib/db.ts`, `src/lib/env.ts`, `src/lib/api-response.ts`, `src/services/gps-maps.service.ts`, `src/services/cooldown.service.ts`, `src/services/mail.service.ts`, `src/app/r/[code]/route.ts`, `src/app/api/emergency/alert/route.ts`, `src/app/api/devices/activate/route.ts`, `src/app/api/emergency/[code]/route.ts`, etc.). Puedes importar `db` desde `src/lib/db.ts` para tus consultas sin modificar el archivo.
 
 ---
 
 ### DOCUMENTOS BASE QUE DEBES CONSULTAR
 
 - `docs/SAFE_Plan_Agente_2_Backend_Parte2.md` (Tu plano específico de la Parte 2)
+- `docs/BACKEND_CONTRACTS.md` (Contratos congelados de tipos TypeScript, DTOs Zod y firmas)
 - `docs/SAFE_Arquitectura_Backend_2026.md` (Especificación de endpoints y servicios)
 - `docs/SAFE_Arquitectura_BaseDatos_2026.md` (Esquema relacional Prisma, modelos e índices)
 - `docs/LIVE_ARCHITECTURE_LEDGER.md` (El registro vivo de arquitectura)

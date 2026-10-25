@@ -116,7 +116,7 @@ function emptyToUndefined(value: unknown): unknown {
  * Crea un esquema para una cadena obligatoria, recortada y acotada.
  * `label` es el nombre legible usado en los diagnósticos, nunca el valor.
  */
-function requiredText(label: string, maxLength: number): z.ZodType<string> {
+function requiredText(label: string, maxLength: number): z.ZodString {
   return z
     .string({ required_error: `${label} es obligatoria.` })
     .trim()
@@ -128,7 +128,7 @@ function requiredText(label: string, maxLength: number): z.ZodType<string> {
  * Crea un esquema para un secreto obligatorio. No recorta el valor para no
  * alterar la entropía original, pero exige una longitud mínima verificable.
  */
-function requiredSecret(label: string, minLength: number): z.ZodType<string> {
+function requiredSecret(label: string, minLength: number): z.ZodType<string, z.ZodTypeDef, unknown> {
   return z
     .string({ required_error: `${label} es obligatoria.` })
     .min(minLength, `${label} debe tener al menos ${minLength} caracteres.`)
@@ -142,7 +142,7 @@ function requiredSecret(label: string, minLength: number): z.ZodType<string> {
  * Crea un esquema para un correo opcional. Un valor vacío se interpreta como
  * ausente; si existe, se valida su formato y longitud.
  */
-function optionalEmail(label: string): z.ZodType<string | undefined> {
+function optionalEmail(label: string): z.ZodType<string | undefined, z.ZodTypeDef, unknown> {
   return z.preprocess(
     emptyToUndefined,
     z
@@ -158,7 +158,7 @@ function optionalEmail(label: string): z.ZodType<string | undefined> {
  * Crea un esquema para una contraseña opcional con longitud mínima de
  * seguridad. Un valor vacío se interpreta como ausente.
  */
-function optionalPassword(label: string, minLength: number): z.ZodType<string | undefined> {
+function optionalPassword(label: string, minLength: number): z.ZodType<string | undefined, z.ZodTypeDef, unknown> {
   return z.preprocess(
     emptyToUndefined,
     z
@@ -177,7 +177,7 @@ function positiveIntegerWithDefault(
   label: string,
   defaultValue: number,
   maxValue: number,
-): z.ZodType<number> {
+): z.ZodType<number, z.ZodTypeDef, unknown> {
   return z.preprocess(
     emptyToUndefined,
     z.coerce
@@ -221,45 +221,18 @@ function databaseUrlSchema(): z.ZodType<string> {
 }
 
 /**
- * Valida la URL pública de la aplicación: protocolo http/https, host presente
- * y ausencia de barra final (el valor se usa como base para enlaces internos).
+ * Valida la URL pública de la aplicación con `z.string().url()` (protocolo
+ * http/https y host) y aplica un `transform` que elimina las barras finales
+ * sobrantes, porque este valor se usa como base para construir enlaces
+ * internos (activación, gateway `/r/[code]`, correos de emergencia).
  */
-function appUrlSchema(): z.ZodType<string> {
-  return requiredText("NEXT_PUBLIC_APP_URL", MAX_URL_LENGTH).superRefine((value, ctx) => {
-    if (value.endsWith("/")) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "NEXT_PUBLIC_APP_URL no debe terminar con barra (/).",
-      });
-      return;
-    }
-
-    let parsed: URL;
-    try {
-      parsed = new URL(value);
-    } catch {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "NEXT_PUBLIC_APP_URL no es una URL válida.",
-      });
-      return;
-    }
-
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "NEXT_PUBLIC_APP_URL debe usar el protocolo http o https.",
-      });
-      return;
-    }
-
-    if (!parsed.hostname) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "NEXT_PUBLIC_APP_URL debe incluir un dominio o host.",
-      });
-    }
-  });
+function appUrlSchema(): z.ZodType<string, z.ZodTypeDef, unknown> {
+  return z
+    .string({ required_error: "NEXT_PUBLIC_APP_URL es obligatoria." })
+    .trim()
+    .max(MAX_URL_LENGTH, "NEXT_PUBLIC_APP_URL supera el máximo de caracteres permitido.")
+    .url("NEXT_PUBLIC_APP_URL debe ser una URL válida con protocolo http o https.")
+    .transform((value) => value.replace(/\/+$/, ""));
 }
 
 /**
@@ -359,14 +332,14 @@ export function validateEnv(): ServerEnv {
       [
         "[SAFE] La configuración del entorno no es válida.",
         details,
-        "Revise el archivo .env tomando como referencia .env.example.",
+        "Revise sus variables de entorno (archivo .env local o panel de despliegue).",
       ].join("\n"),
     );
     error.name = "EnvValidationError";
     throw error;
   }
 
-  return parsed.data;
+  return parsed.data as ServerEnv;
 }
 
 /** Configuración validada y compartida durante la vida del proceso. */

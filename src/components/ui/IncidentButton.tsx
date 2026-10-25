@@ -59,20 +59,22 @@ export const IncidentButton = React.forwardRef<
       }
     };
 
-    // Estilos por variante canónica
+    // Estilos por variante canónica (paleta Incident estricta: cero colores Tailwind ajenos)
     let variantStyles = "bg-concrete text-ink border-ink hover:bg-mist";
     if (variant === "emergency") {
       variantStyles = "bg-ink text-paper border-ink hover:bg-carbon";
     } else if (variant === "paper") {
       variantStyles = "bg-paper text-ink border-ink hover:bg-concrete";
     } else if (variant === "danger") {
-      variantStyles = "bg-red-50 text-alert-red border-alert-red hover:bg-red-100";
+      // Lavado tintado oficial al 8% derivado de Alert Red (#ff492c), idéntico al banner crítico
+      variantStyles =
+        "bg-[rgba(255,73,44,0.08)] hover:bg-[rgba(255,73,44,0.14)] text-alert-red border-alert-red";
     }
 
-    // Altura y espaciado mínimo para ergonomía móvil
+    // Altura y espaciado mínimo para ergonomía móvil (objetivo táctil ≥ 44x44px en TODOS los tamaños)
     let sizeStyles = "min-h-[44px] px-3 py-2 text-micro";
     if (size === "sm") {
-      sizeStyles = "min-h-[40px] px-2.5 py-1.5 text-[12px]";
+      sizeStyles = "min-h-[44px] px-2.5 py-1.5 text-micro";
     } else if (size === "lg") {
       sizeStyles = "min-h-[50px] px-5 py-3 text-body font-bold";
     }
@@ -81,6 +83,8 @@ export const IncidentButton = React.forwardRef<
       <button
         ref={ref}
         disabled={disabled || isLoading}
+        // Estado de accesibilidad explícito: el botón queda inerte durante la carga o inhabilitación
+        aria-disabled={disabled || isLoading || undefined}
         onClick={handleClick}
         className={`
           inline-flex items-center justify-center gap-2
@@ -94,6 +98,7 @@ export const IncidentButton = React.forwardRef<
         `}
         {...props}
       >
+        {/* Indicador de carga: anillo CSS animado puro (borde + spin), sin texto hardcodeado */}
         {isLoading ? (
           <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
         ) : (

@@ -6,20 +6,26 @@
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
  * Renderiza la plancha de producción gráfica para imprimir códigos QR en serie.
- * Optimizado para papel vinílico adhesivo impermeable con resistencia a intemperie.
- * Muestra el folio secuencial, el código QR visual y la baliza Signal Orange.
- * 
+ * Los códigos se generan 100% EN LOCAL y en memoria con el motor `qrcode`
+ * (cero servicios de terceros, cero fuga de folios a APIs externas), codificando
+ * la URL canónica del gateway del casco (NEXT_PUBLIC_APP_URL u origen actual
+ * del navegador; jamás un dominio inventado). Optimizado para papel vinílico
+ * adhesivo impermeable con resistencia a la intemperie.
+ *
  * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas.
+ * - Límite estricto < 450 líneas físicas.
  * - Estilos @media print dedicados para impresión en imprenta sin elementos web.
+ * - Paleta Incident estricta y textos 100% del diccionario bilingüe.
  * ==============================================================================
  */
 
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import QRCode from "qrcode";
 import { useLocale } from "@/hooks/useLocale";
 import { IncidentButton } from "@/components/ui/IncidentButton";
+import { buildHelmetGatewayClientUrl } from "@/lib/nfc-write-utils";
 import type { AdminDeviceItem } from "@/lib/api-client";
 
 export interface QrPrintSheetProps {
@@ -30,6 +36,48 @@ export interface QrPrintSheetProps {
 
 export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps) {
   const { t } = useLocale();
+
+  // Mapa folio → Data URL (PNG base64) del QR generado localmente en memoria
+  const [qrDataUrls, setQrDataUrls] = useState<Record<string, string>>({});
+  const [generationError, setGenerationError] = useState(false);
+
+  // Generación local de toda la tira de stickers sin dependencias de terceros
+  useEffect(() => {
+    let cancelled = false;
+
+    async function generateLocalQrs() {
+      try {
+        const entries = await Promise.all(
+          devices.map(async (device) => {
+            const dataUrl = await QRCode.toDataURL(
+              buildHelmetGatewayClientUrl(device.code, "qr"),
+              {
+                width: 300,
+                margin: 1,
+                errorCorrectionLevel: "M",
+                color: { dark: "#000000", light: "#ffffff" },
+              },
+            );
+            return [device.code, dataUrl] as const;
+          }),
+        );
+        if (!cancelled) {
+          setQrDataUrls(Object.fromEntries(entries));
+          setGenerationError(false);
+        }
+      } catch (err: unknown) {
+        console.error("[QR] Falló la generación local de la plancha:", err);
+        if (!cancelled) setGenerationError(true);
+      }
+    }
+
+    if (devices.length > 0) {
+      void generateLocalQrs();
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [devices]);
 
   const handlePrint = () => {
     if (typeof window !== "undefined") {
@@ -46,7 +94,9 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
             {t.admin.printSheetTitle}
           </h3>
           <p className="font-sans text-micro text-carbon mt-1">
-            Lote: <strong className="text-ink">{batchName}</strong> ({devices.length} stickers)
+            {t.admin.batchNameLabel}:{" "}
+            <strong className="text-ink">{batchName}</strong> · {devices.length}{" "}
+            {t.admin.totalKitsLabel}
           </p>
           <p className="font-sans text-[12px] text-carbon mt-0.5">
             {t.admin.printSheetHelp}
@@ -65,52 +115,64 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
         </div>
       </div>
 
+      {/* Aviso de fallo en la generación local (oculto al imprimir) */}
+      {generationError && (
+        <div className="no-print p-3 mb-6 bg-[rgba(255,73,44,0.08)] border border-alert-red rounded-[6px] text-micro text-alert-red font-sans text-center">
+          ⚠️ {t.common.errorGeneric}
+        </div>
+      )}
+
       {/* Cuadrícula de Stickers Imprimibles (3 columnas en papel broadsheet) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 print:grid-cols-3 print:gap-6">
-        {devices.map((device) => {
-          const targetUrl = `https://safe.app/r/${device.code}?v=qr`;
-          const qrSvgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(targetUrl)}&margin=4`;
-
-          return (
-            <div
-              key={device.code}
-              className="p-3 border-2 border-ink rounded-[8px] bg-white flex flex-col items-center justify-between text-center select-none break-inside-avoid shadow-sm"
-              style={{ minHeight: "220px" }}
-            >
-              {/* Encabezado del Sticker */}
-              <div className="w-full flex items-center justify-between border-b border-ink pb-1 mb-2">
-                <span className="font-serif font-bold text-body text-ink leading-none">
-                  SAFE
-                </span>
-                <span className="w-2.5 h-2.5 rounded-full bg-signal-orange" />
-                <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-carbon">
-                  RESCATE
-                </span>
-              </div>
-
-              {/* Imagen del Código QR Vectorial */}
-              <div className="my-1 w-32 h-32 flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={qrSvgUrl}
-                  alt={`QR ${device.code}`}
-                  className="w-full h-full object-contain"
-                  loading="lazy"
-                />
-              </div>
-
-              {/* Folio y Clave de Activación Raspable */}
-              <div className="w-full pt-1 border-t border-mist flex flex-col items-center">
-                <span className="font-mono text-micro font-bold text-ink tracking-widest">
-                  {device.code}
-                </span>
-                <span className="font-sans text-[10px] text-carbon">
-                  PIN: <strong className="font-mono">{device.activationPin}</strong>
-                </span>
-              </div>
+        {devices.map((device) => (
+          <div
+            key={device.code}
+            className="p-3 border-2 border-ink rounded-[8px] bg-paper flex flex-col items-center justify-between text-center select-none break-inside-avoid shadow-sm"
+            style={{ minHeight: "220px" }}
+          >
+            {/* Encabezado del Sticker */}
+            <div className="w-full flex items-center justify-between gap-1 border-b border-ink pb-1 mb-2">
+              <span className="font-serif font-bold text-body text-ink leading-none">
+                {t.common.appName}
+              </span>
+              <span className="w-2.5 h-2.5 flex-shrink-0 rounded-full bg-signal-orange" />
+              <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-carbon leading-tight">
+                {t.common.emergencyBadge}
+              </span>
             </div>
-          );
-        })}
+
+            {/* Imagen del Código QR generado localmente (PNG en memoria) */}
+            <div className="my-1 w-32 h-32 flex items-center justify-center">
+              {qrDataUrls[device.code] ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={qrDataUrls[device.code]}
+                  alt={`${t.admin.printSheetTitle} — ${device.code}`}
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                // Marcador punteado mientras concluye la generación en memoria
+                <span
+                  aria-hidden="true"
+                  className="w-full h-full border border-dashed border-mist rounded-[4px]"
+                />
+              )}
+            </div>
+
+            {/* Folio y Clave de Activación Raspable */}
+            <div className="w-full pt-1 border-t border-mist flex flex-col items-center">
+              <span className="font-sans text-micro font-bold text-ink tracking-widest">
+                {device.code}
+              </span>
+              <span className="font-sans text-[10px] text-carbon">
+                PIN:{" "}
+                <strong className="font-sans tracking-widest">
+                  {device.activationPin}
+                </strong>
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -5,373 +5,339 @@
  * ARCHIVO: src/app/activate/[code]/page.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Flujo de onboarding del motociclista al adquirir su kit físico de casco.
- * Solicita el PIN secreto raspable de 6 dígitos, credenciales de cuenta,
- * datos clínicos prioritarios (sangre, alergias), fotografía de rostro,
- * contactos satelitales ilimitados y consentimiento vinculante de términos
- * y política de tratamiento de datos médicos.
- * 
+ * Onboarding del motociclista al recibir su kit físico: (1) PIN confidencial y
+ * cuenta, (2) fotografía de rostro real, (3) ficha médica con catálogo sanguíneo
+ * canónico (incluye DESCONOCIDO), (4) contactos con UUID y correo obligatorio,
+ * y (5) consentimiento legal vinculante. Valida con el esquema REAL del backend
+ * (ActivateDeviceSchema) y envía carga PLANA vía activate-api.ts.
+ *
+ * ENTRADAS: Param de ruta `code` (trim + mayúsculas, SIN fallback hardcodeado;
+ *           vacío → error humano + regreso al inicio).
+ * SALIDAS:  Pantalla de éxito con deviceCode real + redirect al panel (flujo
+ *           2.3: redirección automática a los 2,5 s, con botón manual intacto).
+ *
+ * DEPENDENCIAS CLAVE: useActivateForm, BLOOD_TYPES (solo lectura),
+ * CloudinaryPhotoPicker, ContactsRepeater, componentes Incident, useLocale,
+ * useHaptic.
+ *
  * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas.
- * - Casilla de verificación de consentimiento legal obligatoria (safe-legal-and-terms).
- * - Cero textos hardcodeados (100% t).
+ * - Límite estricto < 500 líneas (objetivo < 380 en esta vista).
+ * - Cero textos hardcodeados (100% `t`), cero mocks/fallbacks.
+ * - Paleta Incident oficial; errores en banner crítico, nunca fondos rojos
+ *   crudos. Táctiles ≥44px y háptica light/success/error.
  * ==============================================================================
  */
 
 "use client";
 
-import React, { useState, use } from "react";
+import React, { use, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
-import { apiClient, type EmergencyContact, type MedicalProfileData } from "@/lib/api-client";
+import { BLOOD_TYPES } from "@/lib/schemas/common.schema";
 import { IncidentCard } from "@/components/ui/IncidentCard";
 import { IncidentButton } from "@/components/ui/IncidentButton";
+import { IncidentAlertBanner } from "@/components/ui/IncidentAlertBanner";
 import { IncidentHairline } from "@/components/ui/IncidentHairline";
 import { CloudinaryPhotoPicker } from "@/components/medical/CloudinaryPhotoPicker";
 import { ContactsRepeater } from "@/components/medical/ContactsRepeater";
 
+import { useActivateForm } from "./activate-form";
+
+/** Propiedades de la página: param de ruta dinámica de Next.js 15 (Promise). */
 interface PageProps {
   params: Promise<{ code: string }>;
 }
 
+/** Campo de texto canónico Incident: hormigón, borde capilar y táctil ≥44px. */
+const INPUT_CLASS =
+  "h-11 min-h-[44px] px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink";
+
+/** Microetiqueta canónica Arial 13px en versalitas. */
+const LABEL_CLASS = "font-sans text-micro font-bold uppercase text-carbon";
+
+/** Área de texto clínica canónica (alergias, padecimientos, medicamentos). */
+const TEXTAREA_CLASS =
+  "p-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink resize-none";
+
 export default function ActivatePage({ params }: PageProps) {
   const resolvedParams = use(params);
-  const code = (resolvedParams?.code || "SAFE-0001").toUpperCase();
+  // Folio real de la ruta: trim + mayúsculas y CERO fallback inventado.
+  const code = (resolvedParams?.code ?? "").trim().toUpperCase();
 
   const router = useRouter();
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const { triggerHaptic } = useHaptic();
+  const form = useActivateForm(code, locale);
 
-  // Estados del formulario
-  const [pin, setPin] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [photoUrl, setPhotoUrl] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [nationalId, setNationalId] = useState("");
-  const [bloodType, setBloodType] = useState("O+");
-  const [allergies, setAllergies] = useState("");
-  const [conditions, setConditions] = useState("");
-  const [medications, setMedications] = useState("");
-  const [insurance, setInsurance] = useState("");
-  const [contacts, setContacts] = useState<EmergencyContact[]>([
-    { id: "cnt_init_1", name: "", phone: "", relationship: "" },
-  ]);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  // Resultado real de la activación. Flujo 2.3: entrada directa al panel ya
+  // logueado con redirección automática a los 2,5 s (timer limpiado al
+  // desmontar); el botón manual de la pantalla de éxito se conserva intacto.
+  const successResult = form.successResult;
+  useEffect(() => {
+    if (!successResult) return;
+    const timer = setTimeout(() => router.push(successResult.redirect), 2500);
+    return () => clearTimeout(timer);
+  }, [successResult, router]);
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isSuccess, setIsSuccess] = useState(false);
+  /** Envío con compuerta de consentimiento, háptica y activación real. */
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage("");
-
-    if (!termsAccepted) {
+    // El consentimiento legal es obligatorio: sin casilla marcada no hay envío.
+    if (!form.termsAccepted) {
       triggerHaptic("error");
-      setErrorMessage(t.common.requiredField + ": " + t.common.termsLink);
+      form.setErrorMessage(`${t.common.requiredField}: ${t.common.termsLink}`);
       return;
     }
 
-    if (pin.length !== 6) {
-      triggerHaptic("error");
-      setErrorMessage(t.activate.errorPinInvalid);
-      return;
-    }
-
-    setIsLoading(true);
     triggerHaptic("light");
-
-    try {
-      const medicalData: MedicalProfileData = {
-        fullName,
-        nationalId,
-        bloodType,
-        allergies,
-        conditions,
-        medications,
-        insurance,
-        photoUrl,
-        contacts: contacts.filter((c) => c.name.trim() && c.phone.trim()),
-      };
-
-      await apiClient.activateDevice({
-        code,
-        activationPin: pin,
-        email,
-        password,
-        medicalData,
-      });
-
-      triggerHaptic("success");
-      setIsSuccess(true);
-    } catch (err: any) {
-      triggerHaptic("error");
-      setErrorMessage(err?.message || t.common.errorGeneric);
-    } finally {
-      setIsLoading(false);
-    }
+    const activated = await form.submit();
+    triggerHaptic(activated ? "success" : "error");
   };
 
-  // Pantalla de Confirmación Exitosa
-  if (isSuccess) {
+  // Folio ausente o ilegible en la ruta: error humano y regreso al inicio.
+  if (code.length === 0) {
+    return (
+      <div className="safe-mobile-container py-12 flex flex-col gap-6">
+        <IncidentAlertBanner type="emergency" message={t.common.errorGeneric} />
+        <IncidentButton type="button" variant="neutral" className="w-full sm:w-auto" onClick={() => router.push("/")}>
+          {t.common.backToHome}
+        </IncidentButton>
+      </div>
+    );
+  }
+
+  // Pantalla de confirmación con el folio REAL devuelto por el servicio.
+  if (successResult) {
     return (
       <div className="safe-mobile-container py-12 flex flex-col items-center justify-center text-center">
-        <IncidentCard padding="lg" className="max-w-md w-full flex flex-col items-center gap-4 border-2">
-          <div className="w-16 h-16 rounded-full bg-concrete border-2 border-ink flex items-center justify-center text-3xl">
+        <IncidentCard padding="lg" className="max-w-md w-full flex flex-col items-center gap-4">
+          {/* Escudo Incident decorativo sobre hormigón con borde estructural */}
+          <div aria-hidden="true" className="w-16 h-16 rounded-[12px] bg-concrete border-2 border-ink flex items-center justify-center text-heading-sm">
             🛡️
           </div>
           <h2 className="font-serif text-heading-sm font-bold text-ink">
             {t.activate.successTitle}
           </h2>
-          <p className="font-serif text-body text-carbon">
-            {t.activate.successMessage}
-          </p>
-          <span className="font-mono text-micro font-bold bg-concrete px-3 py-1 border border-ink rounded-[4px]">
-            {code}
-          </span>
-          <IncidentButton
-            type="button"
-            variant="emergency"
-            size="lg"
-            onClick={() => router.push("/dashboard")}
-            className="w-full mt-2"
-          >
-            {t.activate.goToDashboard} →
+          <p className="font-serif text-body text-carbon">{t.activate.successMessage}</p>
+          <div className="flex flex-col items-center gap-1">
+            <span className="font-sans text-micro uppercase text-carbon">
+              {t.dashboard.folioLabel}
+            </span>
+            <span className="font-sans text-micro font-bold uppercase tracking-widest bg-concrete px-3 py-1 border border-ink rounded-[4px]">
+              {successResult.deviceCode}
+            </span>
+          </div>
+          <IncidentButton type="button" variant="emergency" size="lg" className="w-full mt-2" onClick={() => router.push(successResult.redirect)}>
+            {t.activate.goToDashboard}
           </IncidentButton>
         </IncidentCard>
       </div>
     );
   }
 
+  // Mensaje visible: humano del backend/esquema o genérico del diccionario.
+  const visibleError = form.errorMessage ?? (form.hasFailed ? t.common.errorGeneric : null);
+
   return (
     <div className="safe-mobile-container py-8 sm:py-12 flex flex-col gap-8">
-      {/* Encabezado Broadsheet */}
+      {/* Encabezado broadsheet con el folio real. El estado del kit NO se
+          afirma aquí (hallazgo #11): la verdad la dicta el backend al enviar. */}
       <section className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-micro font-bold bg-ink text-paper px-2 py-0.5 rounded-[3px]">
+          <span className="font-sans text-micro font-bold uppercase tracking-widest bg-ink text-paper px-2 py-0.5 rounded-[4px]">
             {code}
           </span>
-          <span className="font-sans text-micro font-bold uppercase text-signal-orange">
-            {t.common.statusUnclaimed}
-          </span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-ink leading-tight">
+        <h1 className="font-serif text-heading-sm sm:text-heading font-bold text-ink leading-tight">
           {t.activate.title}
         </h1>
-        <p className="font-serif text-body text-carbon">
-          {t.activate.subtitle}
-        </p>
+        <p className="font-serif text-body text-carbon">{t.activate.subtitle}</p>
       </section>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-        {/* Paso 1: PIN Secreto de Activación y Cuenta */}
+        {/* Paso 1: PIN confidencial del kit y credenciales de la cuenta */}
         <IncidentCard padding="md" className="flex flex-col gap-4">
           <div className="border-b border-mist pb-2">
             <h3 className="font-serif font-bold text-heading-sm text-ink">
               {t.activate.stepPinTitle}
             </h3>
-            <p className="font-sans text-micro text-carbon mt-0.5">
-              {t.activate.pinHelp}
-            </p>
+            <p className="font-sans text-micro text-carbon mt-0.5">{t.activate.pinHelp}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* PIN de 6 dígitos */}
             <div className="flex flex-col gap-1">
-              <label className="font-sans text-micro font-bold uppercase text-carbon">
-                {t.activate.pinLabel} *
-              </label>
+              <label className={LABEL_CLASS}>{t.activate.pinLabel} *</label>
               <input
-                type="text"
-                inputMode="numeric"
-                maxLength={6}
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6}
+                required
+                value={form.pin}
+                onChange={(event) => form.setPin(event.target.value.replace(/\D/g, ""))}
                 placeholder={t.activate.pinPlaceholder}
-                required
-                className="h-12 px-3 bg-concrete border-2 border-ink rounded-[4px] font-mono text-heading-sm font-bold tracking-widest text-center text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+                className="h-12 px-3 bg-concrete border-2 border-ink rounded-[4px] font-sans text-heading-sm font-bold tracking-widest text-center text-ink focus:outline-none focus:ring-1 focus:ring-ink"
               />
             </div>
 
-            {/* Correo Electrónico */}
             <div className="flex flex-col gap-1">
-              <label className="font-sans text-micro font-bold uppercase text-carbon">
-                {t.activate.emailLabel} *
-              </label>
+              <label className={LABEL_CLASS}>{t.activate.emailLabel} *</label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="email" autoComplete="email" required className={INPUT_CLASS}
+                value={form.email}
+                onChange={(event) => form.setEmail(event.target.value)}
                 placeholder={t.activate.emailPlaceholder}
-                required
-                className="h-12 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
               />
             </div>
 
-            {/* Contraseña */}
             <div className="flex flex-col gap-1">
-              <label className="font-sans text-micro font-bold uppercase text-carbon">
-                {t.activate.passwordLabel} *
-              </label>
+              <label className={LABEL_CLASS}>{t.activate.passwordLabel} *</label>
               <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                type="password" autoComplete="new-password" required minLength={8}
+                className={INPUT_CLASS}
+                value={form.password}
+                onChange={(event) => form.setPassword(event.target.value)}
                 placeholder={t.activate.passwordPlaceholder}
-                required
-                minLength={8}
-                className="h-12 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
               />
             </div>
           </div>
         </IncidentCard>
 
-        {/* Paso 2: Foto de Reconocimiento Facial */}
+        {/* Paso 2: fotografía de rostro con subida real al servicio de medios */}
         <CloudinaryPhotoPicker
-          currentPhotoUrl={photoUrl}
-          onPhotoSelected={(dataUri) => setPhotoUrl(dataUri)}
-          disabled={isLoading}
+          currentPhotoUrl={form.photo.photoUrl}
+          deviceCode={code}
+          disabled={form.isSubmitting}
+          onPhotoSelected={(photoUrl, meta) => {
+            form.setPhoto({ photoUrl, photoPublicId: meta?.photoPublicId });
+            form.setErrorMessage(null);
+          }}
+          onUploadError={(message) => {
+            if (message) {
+              form.setErrorMessage(message);
+              triggerHaptic("warning");
+            }
+          }}
         />
 
-        {/* Paso 3: Ficha Médica Personal */}
+        {/* Paso 3: ficha médica personal del conductor */}
         <IncidentCard padding="md" className="flex flex-col gap-4">
           <div className="border-b border-mist pb-2">
+            {/* Semántica de onboarding (hallazgo #12): claves del panel médico,
+                NO del contexto de siniestro (t.emergency.*) */}
             <h3 className="font-serif font-bold text-heading-sm text-ink">
-              {t.emergency.title}
+              {t.dashboard.editMedicalTitle}
             </h3>
-            <p className="font-sans text-micro text-carbon mt-0.5">
-              {t.emergency.subtitle}
-            </p>
+            <p className="font-sans text-micro text-carbon mt-0.5">{t.dashboard.editMedicalSubtitle}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Nombre Completo */}
             <div className="flex flex-col gap-1 sm:col-span-2">
-              <label className="font-sans text-micro font-bold uppercase text-carbon">
-                {t.activate.fullNameLabel} *
-              </label>
+              <label className={LABEL_CLASS}>{t.activate.fullNameLabel} *</label>
               <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                type="text" autoComplete="name" required className={INPUT_CLASS}
+                value={form.fullName}
+                onChange={(event) => form.setFullName(event.target.value)}
                 placeholder={t.activate.fullNamePlaceholder}
-                required
-                className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
               />
             </div>
 
-            {/* Grupo Sanguíneo */}
+            {/* Grupo sanguíneo: catálogo canónico del backend (única fuente) */}
             <div className="flex flex-col gap-1">
-              <label className="font-sans text-micro font-bold uppercase text-carbon">
-                {t.activate.bloodTypeLabel} *
-              </label>
+              <label className={LABEL_CLASS}>{t.activate.bloodTypeLabel} *</label>
               <select
-                value={bloodType}
-                onChange={(e) => setBloodType(e.target.value)}
-                className="h-11 px-3 bg-concrete border-2 border-ink rounded-[4px] font-serif text-body font-bold text-ink focus:outline-none cursor-pointer"
+                value={form.bloodType} required
+                onChange={(event) => form.setBloodType(event.target.value)}
+                className="h-11 min-h-[44px] px-3 bg-concrete border-2 border-ink rounded-[4px] font-serif text-body font-bold text-ink focus:outline-none cursor-pointer"
               >
-                {["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"].map((type) => (
-                  <option key={type} value={type}>
-                    {type}
+                <option value="" disabled>
+                  {t.activate.bloodTypeLabel}
+                </option>
+                {BLOOD_TYPES.map((bloodTypeOption) => (
+                  <option key={bloodTypeOption} value={bloodTypeOption}>
+                    {bloodTypeOption}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Cédula / Documento de Identidad */}
             <div className="flex flex-col gap-1">
-              <label className="font-sans text-micro font-bold uppercase text-carbon">
-                {t.activate.nationalIdLabel} *
-              </label>
+              <label className={LABEL_CLASS}>{t.activate.nationalIdLabel} *</label>
               <input
-                type="text"
-                value={nationalId}
-                onChange={(e) => setNationalId(e.target.value)}
+                type="text" required className={INPUT_CLASS}
+                value={form.nationalId}
+                onChange={(event) => form.setNationalId(event.target.value)}
                 placeholder={t.activate.nationalIdPlaceholder}
-                required
-                className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
               />
             </div>
 
-            {/* Seguro de Salud */}
             <div className="flex flex-col gap-1 sm:col-span-2">
-              <label className="font-sans text-micro font-bold uppercase text-carbon">
-                {t.activate.insuranceLabel}
-              </label>
+              <label className={LABEL_CLASS}>{t.activate.insuranceLabel}</label>
               <input
-                type="text"
-                value={insurance}
-                onChange={(e) => setInsurance(e.target.value)}
+                type="text" className={INPUT_CLASS}
+                value={form.insuranceInfo}
+                onChange={(event) => form.setInsuranceInfo(event.target.value)}
                 placeholder={t.activate.insurancePlaceholder}
-                className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
               />
             </div>
           </div>
 
           <IncidentHairline variant="subtle" margin="sm" />
 
-          {/* Alergias, Patologías y Medicamentos */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="flex flex-col gap-1">
               <label className="font-sans text-micro font-bold uppercase text-alert-red">
                 {t.activate.allergiesLabel}
               </label>
               <textarea
-                rows={3}
-                value={allergies}
-                onChange={(e) => setAllergies(e.target.value)}
+                rows={3} className={TEXTAREA_CLASS}
+                value={form.allergies}
+                onChange={(event) => form.setAllergies(event.target.value)}
                 placeholder={t.activate.allergiesPlaceholder}
-                className="p-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink resize-none"
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="font-sans text-micro font-bold uppercase text-carbon">
-                {t.activate.conditionsLabel}
-              </label>
+              <label className={LABEL_CLASS}>{t.activate.conditionsLabel}</label>
               <textarea
-                rows={3}
-                value={conditions}
-                onChange={(e) => setConditions(e.target.value)}
+                rows={3} className={TEXTAREA_CLASS}
+                value={form.chronicConditions}
+                onChange={(event) => form.setChronicConditions(event.target.value)}
                 placeholder={t.activate.conditionsPlaceholder}
-                className="p-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink resize-none"
               />
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="font-sans text-micro font-bold uppercase text-carbon">
-                {t.activate.medicationsLabel}
-              </label>
+              <label className={LABEL_CLASS}>{t.activate.medicationsLabel}</label>
               <textarea
-                rows={3}
-                value={medications}
-                onChange={(e) => setMedications(e.target.value)}
+                rows={3} className={TEXTAREA_CLASS}
+                value={form.medications}
+                onChange={(event) => form.setMedications(event.target.value)}
                 placeholder={t.activate.medicationsPlaceholder}
-                className="p-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink resize-none"
               />
             </div>
           </div>
         </IncidentCard>
 
-        {/* Paso 4: Repetidor Dinámico de Contactos */}
+        {/* Paso 4: repetidor de contactos con UUID y correo obligatorio */}
         <ContactsRepeater
-          contacts={contacts}
-          onChange={(newContacts) => setContacts(newContacts)}
-          disabled={isLoading}
+          contacts={form.contacts}
+          onChange={form.setContacts}
+          disabled={form.isSubmitting}
+          requireEmail
         />
 
-        {/* Paso 5: Consentimiento Legal Vinculante (safe-legal-and-terms) */}
+        {/* Paso 5: consentimiento legal vinculante (safe-legal-and-terms) */}
         <div className="p-4 bg-paper border border-ink rounded-[8px]">
-          <label className="flex items-start gap-3 cursor-pointer select-none">
+          <label className="flex items-start gap-3 cursor-pointer select-none min-h-[44px]">
             <input
               type="checkbox"
               required
-              checked={termsAccepted}
-              onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="mt-1 h-5 w-5 rounded border-ink text-signal-orange focus:ring-0 cursor-pointer"
+              checked={form.termsAccepted}
+              onChange={(event) => form.setTermsAccepted(event.target.checked)}
+              disabled={form.isSubmitting}
+              className="mt-0.5 h-6 w-6 shrink-0 accent-ink cursor-pointer"
             />
             <span className="font-sans text-micro text-ink leading-relaxed">
               {t.activate.acceptTermsPre}{" "}
@@ -395,24 +361,16 @@ export default function ActivatePage({ params }: PageProps) {
           </label>
         </div>
 
-        {/* Aviso de Error */}
-        {errorMessage && (
-          <div className="p-4 bg-red-50 border border-alert-red rounded-[8px] text-micro text-alert-red font-sans font-bold text-center">
-            ⚠️ {errorMessage}
-          </div>
-        )}
+        {/* Aviso de error en banner crítico Incident (nunca fondos crudos) */}
+        {visibleError && <IncidentAlertBanner type="emergency" message={visibleError} />}
 
-        {/* Botón de Envío */}
+        {/* Botón de envío con estado de progreso */}
         <div className="pt-2">
           <IncidentButton
-            type="submit"
-            variant="emergency"
-            size="lg"
-            isLoading={isLoading}
-            disabled={isLoading}
-            className="w-full"
+            type="submit" variant="emergency" size="lg" className="w-full"
+            isLoading={form.isSubmitting} disabled={form.isSubmitting}
           >
-            {isLoading ? t.activate.submittingButton : t.activate.submitButton}
+            {form.isSubmitting ? t.activate.submittingButton : t.activate.submitButton}
           </IncidentButton>
         </div>
       </form>

@@ -32,19 +32,14 @@ export default function TermsPage() {
     <div className="safe-mobile-container py-8 sm:py-12 flex flex-col gap-8">
       {/* Encabezado Broadsheet Legal */}
       <section className="flex flex-col gap-2 border-b border-ink pb-4">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-signal-orange" />
-          <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-carbon">
-            DOCUMENTO PÚBLICO OFICIAL
-          </span>
-        </div>
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-ink leading-tight">
+        <h1 className="font-serif text-heading font-bold text-ink leading-tight">
           {t.legal.termsTitle}
         </h1>
         <p className="font-serif text-body text-carbon">
           {t.legal.termsSubtitle}
         </p>
-        <span className="font-sans text-[12px] text-carbon font-semibold mt-1">
+        {/* Metadato de última actualización en micro Arial 13px */}
+        <span className="font-sans text-micro text-carbon mt-1">
           {t.legal.lastUpdated}
         </span>
       </section>
@@ -61,11 +56,12 @@ export default function TermsPage() {
           </p>
         </IncidentCard>
 
-        {/* Sección 2: El Buen Samaritano */}
-        <IncidentCard padding="md" variant="emergency" className="bg-white">
-          <h2 className="font-serif text-heading-sm font-bold text-ink mb-2 flex items-center gap-2">
-            <span>⚖️</span>
-            <span>{t.legal.termsSection2Title}</span>
+        {/* Sección 2: El Buen Samaritano. El énfasis es puramente tipográfico
+            (cuerpo en tinta y peso medio): el borde Alert Red se reserva en
+            exclusiva para banners críticos de emergencia médica. */}
+        <IncidentCard padding="md">
+          <h2 className="font-serif text-heading-sm font-bold text-ink mb-2">
+            {t.legal.termsSection2Title}
           </h2>
           <p className="font-serif text-body text-ink leading-relaxed font-medium">
             {t.legal.termsSection2Body}
@@ -95,20 +91,16 @@ export default function TermsPage() {
 
       <IncidentHairline variant="subtle" />
 
-      {/* Navegación Cruzada hacia Privacidad y Portada */}
-      <div className="flex flex-wrap items-center justify-between gap-4 font-sans text-micro">
-        <Link
-          href="/privacy"
-          className="text-ink hover:text-signal-orange underline font-semibold"
-        >
-          → {t.common.privacyLink}
+      {/* Navegación Cruzada hacia Privacidad y Portada: botones neutros
+          canónicos (concreto + borde negro 1px) con área táctil mínima de
+          44px garantizada por la utilidad global .btn-neutral. */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Link href="/privacy" className="btn-neutral">
+          {t.common.privacyLink}
         </Link>
 
-        <Link
-          href="/"
-          className="text-carbon hover:text-ink transition-colors"
-        >
-          ← {t.common.backToHome}
+        <Link href="/" className="btn-neutral">
+          {t.common.backToHome}
         </Link>
       </div>
     </div>

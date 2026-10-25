@@ -1,165 +1,273 @@
 /**
  * ==============================================================================
  * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
- * MÓDULO: Cliente de API Desacoplado (Transporte HTTP y Fallback de Resiliencia)
+ * MÓDULO: Cliente de API Desacoplado (Transporte HTTP Real sin Mocks)
  * ARCHIVO: src/lib/api-client.ts
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Cliente centralizado para comunicación con los Route Handlers de Agente 1.
- * Consume los contratos congelados (/api/devices/activate, /api/emergency/alert,
- * /api/gps/heartbeat, /api/auth/login, /api/profile, /api/admin/batches).
- * 
+ * Cliente centralizado para comunicación con los Route Handlers del backend:
+ * /api/auth/*, /api/profile, /api/gps/heartbeat, /api/admin/*,
+ * /api/devices/activate, /api/emergency/*, /api/upload/cloudinary.
+ *
+ * CORRECCIÓN DE AUDITORÍA (FIX-D2A): cero defaults fabricados (contraseñas,
+ * fotos, grupos sanguíneos, parentescos, éxitos y perfiles simulados); las
+ * funciones duplicadas por clientes canónicos (activate-api.ts,
+ * emergency-api.ts, CloudinaryPhotoPicker) quedan @deprecated pero conservan
+ * su exportación; el texto de error proviene del backend y, si no existe,
+ * se usa un único mensaje neutro (helpers en api-client-helpers.ts).
+ *
  * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas.
- * - Desacoplamiento total: no depende de PostgreSQL local en desarrollo visual.
- * - Cero jerga técnica en las excepciones retornadas al usuario.
+ * - Límite estricto < 450 líneas físicas; helpers en api-client-helpers.ts.
+ * - Cero mocks o datos simulados (llamadas 100% reales a Neon PostgreSQL).
+ * - Cero jerga técnica en las excepciones al usuario.
  * ==============================================================================
  */
 
-export interface EmergencyContact {
-  id: string;
-  name: string;
-  phone: string;
-  relationship: string;
-}
+import type {
+  EmergencyContact,
+  MedicalProfileData,
+  SessionUser,
+  SessionResponse,
+  DashboardResponse,
+  EmergencyAlertResult,
+  AdminDeviceItem,
+  AdminBatchSummary,
+  AdminBatchDetail,
+  CreatedBatchResult,
+} from "./api-types";
+import { lanzarErrorHttp, normalizarContactos } from "./api-client-helpers";
 
-export interface MedicalProfileData {
-  fullName: string;
-  nationalId: string;
-  bloodType: string;
-  allergies?: string;
-  conditions?: string;
-  medications?: string;
-  insurance?: string;
-  photoUrl?: string;
-  contacts: EmergencyContact[];
-}
+export type {
+  EmergencyContact,
+  MedicalProfileData,
+  SessionUser,
+  SessionResponse,
+  DashboardResponse,
+  EmergencyAlertResult,
+  AdminDeviceItem,
+  AdminBatchSummary,
+  AdminBatchDetail,
+  CreatedBatchResult,
+};
 
-export interface EmergencyAlertResult {
-  alertId: string;
-  googleMapsUrl: string;
-  dmsFormatted?: string;
-  wasThrottled: boolean;
-}
-
-export interface AdminDeviceItem {
-  code: string;
-  activationPin: string;
-  status: "UNCLAIMED" | "ACTIVE" | "DISABLED";
-  encodedAt?: string;
-}
-
-export interface AdminBatchResult {
-  batchId: string;
-  batchName: string;
-  devices: AdminDeviceItem[];
-}
-
-/**
- * Cliente HTTP desacoplado de la plataforma SAFE
- */
 export const apiClient = {
-  /**
-   * Dispara una alerta de siniestro vial al escanear el casco por NFC o QR
-   */
-  async triggerEmergencyAlert(params: {
-    code: string;
-    lat: number;
-    lng: number;
-    scanSource: "nfc" | "qr";
-  }): Promise<EmergencyAlertResult> {
+  /** Consulta el estado de autenticación de la sesión HttpOnly */
+  async getSession(): Promise<SessionResponse> {
     try {
-      const res = await fetch("/api/emergency/alert", {
-        method: "POST",
+      const res = await fetch("/api/auth/session", {
+        method: "GET",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params),
+        cache: "no-store",
       });
-
-      if (res.ok) {
-        const json = await res.json();
-        return json.data || json;
-      }
+      if (!res.ok) return { authenticated: false };
+      const json = await res.json();
+      return json.data || { authenticated: false };
     } catch {
-      // Fallback de resiliencia si la red está en zona de sombra celular
+      return { authenticated: false };
     }
-
-    // Retorno de auxilio satelital de emergencia basado en la coordenada recibida
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${params.lat},${params.lng}`;
-    return {
-      alertId: `ALT-OFFLINE-${Date.now()}`,
-      googleMapsUrl,
-      wasThrottled: false,
-    };
   },
 
   /**
-   * Emite el latido de ubicación (heartbeat) periódico durante el Modo Ruta
+   * Dispara una alerta de siniestro vial al escanear el casco.
+   *
+   * @deprecated Duplicada por `src/app/emergency/[code]/emergency-api.ts`
+   * (POST /api/emergency/alert). Se conserva exportada por compatibilidad.
    */
-  async sendGpsHeartbeat(lat: number, lng: number): Promise<{ success: boolean }> {
+  async triggerEmergencyAlert(params: {
+    code: string;
+    latitude?: number;
+    longitude?: number;
+    lat?: number;
+    lng?: number;
+    scanSource: "nfc" | "qr" | "direct";
+    accuracy?: number;
+  }): Promise<EmergencyAlertResult> {
+    const lat = params.latitude !== undefined ? params.latitude : params.lat;
+    const lng = params.longitude !== undefined ? params.longitude : params.lng;
+    const payload: Record<string, unknown> = {
+      code: params.code.trim().toUpperCase(),
+      scanSource: params.scanSource,
+    };
+    if (lat !== undefined && lng !== undefined) {
+      payload.latitude = lat;
+      payload.longitude = lng;
+    }
+    if (params.accuracy !== undefined) payload.accuracy = params.accuracy;
+
+    const res = await fetch("/api/emergency/alert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return json.data;
+  },
+
+  /**
+   * Consulta el expediente público de auxilio vial para rescatistas.
+   *
+   * @deprecated Duplicada por `src/app/emergency/[code]/emergency-api.ts`
+   * (GET /api/emergency/[code]). Se conserva exportada por compatibilidad.
+   */
+  async getEmergencyProfile(code: string): Promise<unknown> {
+    const res = await fetch(
+      `/api/emergency/${encodeURIComponent(code.trim().toUpperCase())}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+      },
+    );
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return json.data;
+  },
+
+  /**
+   * Sube fotografía de rostro a Cloudinary optimizada para socorristas.
+   *
+   * @deprecated Duplicada por `src/components/medical/CloudinaryPhotoPicker.tsx`
+   * (POST /api/upload/cloudinary). Se conserva exportada por compatibilidad.
+   */
+  async uploadPhoto(
+    image: string,
+    deviceCode?: string,
+  ): Promise<{ photoUrl: string; photoPublicId: string }> {
+    const res = await fetch("/api/upload/cloudinary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image, deviceCode }),
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return json.data;
+  },
+
+  /** Emite el latido satelital periódico durante el Modo Ruta */
+  async sendGpsHeartbeat(
+    lat: number,
+    lng: number,
+    active = true,
+  ): Promise<{ success: boolean; recordedAt?: string }> {
     try {
       const res = await fetch("/api/gps/heartbeat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lat, lng }),
+        body: JSON.stringify({ lat, lng, active }),
       });
       if (res.ok) {
-        return { success: true };
+        const json = await res.json();
+        return { success: true, recordedAt: json.data?.recordedAt };
       }
     } catch {
-      // Ignorar fallos de red esporádicos en ruta
+      // Tolerar pérdidas temporales de señal celular en carretera
     }
-    return { success: true };
+    return { success: false };
   },
 
   /**
-   * Activa un kit virgen con su PIN secreto de 6 dígitos
+   * Activa un kit virgen con su PIN secreto de 6 dígitos.
+   *
+   * @deprecated La ruta canónica es `src/app/activate/[code]/activate-api.ts`
+   * (POST /api/devices/activate). Se conserva exportada y corregida: ya no
+   * fabrica contraseña, fotografía, grupo sanguíneo ni consentimiento.
    */
   async activateDevice(payload: {
     code: string;
     activationPin: string;
     email: string;
     password?: string;
-    medicalData: MedicalProfileData;
+    fullName?: string;
+    nationalId?: string;
+    photoUrl?: string;
+    photoPublicId?: string;
+    birthDate?: string;
+    bloodType?: string;
+    allergies?: string;
+    chronicConditions?: string;
+    medications?: string;
+    insuranceInfo?: string;
+    emergencyNumber?: string;
+    emergencyContacts?: EmergencyContact[];
+    medicalData?: MedicalProfileData;
+    termsAccepted?: boolean;
+    locale?: "es" | "en";
   }): Promise<{ success: boolean; redirect: string }> {
+    const md = payload.medicalData;
+
+    // [C5-C8] Cero datos sensibles fabricados: el esquema del backend exige
+    // contraseña real, fotografía existente, grupo sanguíneo declarado por el
+    // piloto y consentimiento legal explícito (literal true) del llamador.
+    if (!payload.password) throw new Error("La contraseña es obligatoria para activar el kit.");
+    if (!(md?.photoUrl || payload.photoUrl)) throw new Error("La fotografía del piloto es obligatoria.");
+    if (!(md?.bloodType || payload.bloodType)) throw new Error("El grupo sanguíneo es obligatorio.");
+    if (payload.termsAccepted !== true) throw new Error("Debe aceptar los Términos y Condiciones.");
+
+    let body: Record<string, unknown>;
+    if (md) {
+      body = {
+        code: payload.code.trim().toUpperCase(),
+        activationPin: payload.activationPin.trim(),
+        email: payload.email.trim().toLowerCase(),
+        password: payload.password,
+        fullName: md.fullName.trim(),
+        nationalId: md.nationalId.trim(),
+        photoUrl: md.photoUrl || payload.photoUrl,
+        photoPublicId: md.photoPublicId || undefined,
+        birthDate: md.birthDate || undefined,
+        bloodType: md.bloodType || payload.bloodType,
+        allergies: md.allergies?.trim() || undefined,
+        chronicConditions: (md.chronicConditions || md.conditions || "")?.trim() || undefined,
+        medications: md.medications?.trim() || undefined,
+        insuranceInfo: (md.insuranceInfo || md.insurance || "")?.trim() || undefined,
+        emergencyNumber: md.emergencyNumber?.trim() || undefined,
+        // Contactos reales: sin ids inventados ni parentescos supuestos.
+        emergencyContacts: normalizarContactos(md.emergencyContacts || md.contacts || []),
+        termsAccepted: payload.termsAccepted,
+        locale: payload.locale || "es",
+      };
+    } else {
+      body = {
+        ...payload,
+        code: payload.code.trim().toUpperCase(),
+        activationPin: payload.activationPin.trim(),
+        termsAccepted: payload.termsAccepted,
+      };
+    }
+
     const res = await fetch("/api/devices/activate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || "PIN no válido o kit ya activado previamente.");
-    }
-
+    if (!res.ok) await lanzarErrorHttp(res);
     const data = await res.json();
-    return data.data || { success: true, redirect: "/dashboard" };
+    // [M9] Sin éxitos fabricados: si el backend no entrega resultado, error.
+    if (!data?.data) throw new Error("No se pudo completar la activación.");
+    return data.data;
   },
 
-  /**
-   * Inicia sesión del motociclista titular
-   */
+  /** Inicia sesión con verificación Bcrypt y recepción de cookie HttpOnly */
   async login(credentials: {
     email: string;
     password?: string;
-  }): Promise<{ success: boolean; user?: any }> {
+  }): Promise<{ success: boolean; user?: SessionUser; redirect?: string }> {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
     });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || "Credenciales incorrectas.");
-    }
-
-    return await res.json();
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return {
+      success: true,
+      user: json.data?.user,
+      redirect: json.data?.redirect,
+    };
   },
 
-  /**
-   * Cierra la sesión segura del motociclista
-   */
+  /** Cierra la sesión segura revocando la cookie HttpOnly */
   async logout(): Promise<void> {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -171,71 +279,161 @@ export const apiClient = {
     }
   },
 
-  /**
-   * Consulta el perfil médico y contactos del usuario autenticado
-   */
-  async getProfile(): Promise<MedicalProfileData> {
-    const res = await fetch("/api/profile");
-    if (!res.ok) {
-      throw new Error("No se pudo cargar la información médica.");
-    }
+  /** Consulta el expediente completo del piloto autenticado */
+  async getDashboard(): Promise<DashboardResponse> {
+    const res = await fetch("/api/profile", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
     const json = await res.json();
-    return json.data || json;
+    return json.data;
   },
 
   /**
-   * Actualiza los datos de salud y contactos de auxilio
+   * Consulta el perfil médico formateado del usuario autenticado.
+   *
+   * @deprecated Código muerto sin consumidores vigentes (el dashboard usa
+   * getDashboard). Se conserva exportada; ya no retorna perfiles simulados.
    */
-  async updateProfile(profile: MedicalProfileData): Promise<{ success: boolean }> {
+  async getProfile(): Promise<MedicalProfileData> {
+    const data = await this.getDashboard();
+    const p = data.profile;
+    // Cero perfiles simulados: si la ficha no existe se lanza un error
+    // humano en vez de inventar un expediente vacío con grupo "O+".
+    if (!p) {
+      throw new Error("No se pudo cargar la información médica.");
+    }
+
+    const rawContacts = Array.isArray(p.emergencyContacts) ? p.emergencyContacts : [];
+    const formattedContacts: EmergencyContact[] = rawContacts.map((c) => ({
+      id: c.id,
+      name: c.name,
+      relation: c.relation || c.relationship,
+      relationship: c.relationship || c.relation || "",
+      phone: c.phone,
+      email: c.email || "",
+      isPrimary: c.isPrimary ?? false,
+    }));
+
+    return {
+      fullName: p.fullName,
+      nationalId: p.nationalId,
+      birthDate: p.birthDate,
+      bloodType: p.bloodType,
+      allergies: p.allergies || "",
+      chronicConditions: p.chronicConditions || "",
+      conditions: p.chronicConditions || "",
+      medications: p.medications || "",
+      insuranceInfo: p.insuranceInfo || "",
+      insurance: p.insuranceInfo || "",
+      emergencyNumber: p.emergencyNumber || "",
+      photoUrl: p.photoUrl || "",
+      photoPublicId: p.photoPublicId || "",
+      contacts: formattedContacts,
+    };
+  },
+
+  /** Actualiza la ficha médica y contactos de auxilio en PostgreSQL */
+  async updateProfile(profile: Partial<MedicalProfileData>): Promise<{ success: boolean }> {
+    const sourceContacts = profile.emergencyContacts || profile.contacts || [];
+    // [M8] Contactos reales: sin ids fabricados ni parentesco "Familiar"
+    // supuesto; si la relación falta, la clave se omite y el backend valida.
+    const normalizedContacts = normalizarContactos(sourceContacts);
+
+    // [B3] ProfileUpdateSchema solo acepta string|undefined (.optional()):
+    // enviar null provocaba un rechazo 400. JSON.stringify omite
+    // automáticamente las claves con undefined, así que el campo ausente
+    // simplemente no se modifica en PostgreSQL.
+    const payload = {
+      fullName: profile.fullName?.trim(),
+      nationalId: profile.nationalId?.trim(),
+      photoUrl: profile.photoUrl || undefined,
+      photoPublicId: profile.photoPublicId || undefined,
+      birthDate: profile.birthDate || undefined,
+      bloodType: profile.bloodType,
+      allergies: profile.allergies?.trim() || undefined,
+      chronicConditions: (profile.chronicConditions || profile.conditions || "")?.trim() || undefined,
+      medications: profile.medications?.trim() || undefined,
+      insuranceInfo: (profile.insuranceInfo || profile.insurance || "")?.trim() || undefined,
+      emergencyNumber: profile.emergencyNumber?.trim() || undefined,
+      emergencyContacts: normalizedContacts,
+    };
+
     const res = await fetch("/api/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(profile),
+      body: JSON.stringify(payload),
     });
-
-    if (!res.ok) {
-      throw new Error("No se pudieron guardar las modificaciones.");
-    }
-
+    if (!res.ok) await lanzarErrorHttp(res);
     return { success: true };
   },
 
-  /**
-   * Genera un nuevo lote de folios en la fábrica de administración
-   */
-  async createAdminBatch(batchName: string, quantity: number): Promise<AdminBatchResult> {
+  /** Lista el resumen de todos los lotes de producción */
+  async getAdminBatches(): Promise<{ batches: AdminBatchSummary[] }> {
+    const res = await fetch("/api/admin/batches", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return json.data || { batches: [] };
+  },
+
+  /** Obtiene el detalle individual de kits de un lote con sus PINs para impresión */
+  async getAdminBatchDetail(batchName: string, includePins = true): Promise<AdminBatchDetail> {
+    const query = new URLSearchParams({
+      batchName,
+      includePins: includePins ? "true" : "false",
+    });
+    const res = await fetch(`/api/admin/batches?${query.toString()}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return json.data;
+  },
+
+  /** Genera un nuevo lote de folios secuenciales en Neon PostgreSQL */
+  async createAdminBatch(batchName: string, quantity: number): Promise<CreatedBatchResult> {
     const res = await fetch("/api/admin/batches", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ batchName, quantity }),
     });
-
-    if (!res.ok) {
-      throw new Error("No se pudo crear el lote de kits.");
-    }
-
+    if (!res.ok) await lanzarErrorHttp(res);
     const json = await res.json();
-    return json.data || json;
+    const data = json.data || {};
+    // [M10] El backend solo entrega folio y PIN por kit: ya no se fabrican
+    // status, isNfcEncoded ni createdAt. El consumidor obtiene el detalle
+    // veraz del lote vía getAdminBatchDetail(batchName).
+    const devices = (data.devices || []).map((d: { code: string; activationPin: string }) => {
+      const minimo: Partial<AdminDeviceItem> = { code: d.code, activationPin: d.activationPin };
+      return minimo as AdminDeviceItem;
+    });
+    return { batchName: data.batchName, createdAt: data.createdAt, devices };
   },
 
-  /**
-   * Registra la confirmación de grabación física de la antena NFC
-   */
+  /** Registra la confirmación de grabación física de la antena NFC y devuelve el dispositivo real persistido por el backend */
   async recordNfcWrite(params: {
     code: string;
     nfcSerialNumber: string;
     isLockedReadOnly: boolean;
-  }): Promise<{ success: boolean }> {
+  }): Promise<{ success: boolean; device?: AdminDeviceItem }> {
     const res = await fetch("/api/admin/encode-nfc", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(params),
     });
-
-    if (!res.ok) {
-      throw new Error("No se pudo confirmar la codificación de la antena.");
-    }
-
-    return { success: true };
+    if (!res.ok) await lanzarErrorHttp(res);
+    // La ruta responde { success: true, data: { device } } con el registro veraz de PostgreSQL
+    // (code, nfcSerialNumber, isNfcEncoded, isLockedReadOnly, encodedAt). Nunca se fabrica estado.
+    const json = await res.json().catch(() => null);
+    const device = (json?.data?.device ?? undefined) as AdminDeviceItem | undefined;
+    return { success: true, device };
   },
 };

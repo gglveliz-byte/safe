@@ -58,6 +58,7 @@ flowchart TD
 11. `src/app/r/[code]/route.ts`: Gateway de redirección del casco físico (HTTP 307).
 12. `src/app/api/emergency/alert/route.ts`: Endpoint crítico de rescate y despacho.
 13. `src/app/api/devices/activate/route.ts`: Endpoint de activación de kit virgen.
+14. `src/app/api/emergency/[code]/route.ts`: Endpoint público de consulta de ficha médica protegida para auxilio vial.
 
 ---
 

@@ -5,13 +5,20 @@
  * ARCHIVO: src/components/ui/IncidentFooter.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Pie de página sobrio y editorial. Provee enlaces directos y permanentes a las
- * páginas legales obligatorias (/terms, /privacy), acceso al centro de emisión
- * (/admin) y declaración de derechos reservados y versión de protocolo.
- * 
+ * Pie de página sobrio y editorial sobre concreto (#efefef) con borde superior
+ * capilar negro. Provee enlaces permanentes a las páginas legales obligatorias
+ * (/terms y /privacy) con área táctil mínima de 44px, la declaración de derechos
+ * reservados con el año en curso calculado dinámicamente y la versión del
+ * protocolo, todo en microtipografía Arial. Export SIN props: el layout raíz
+ * lo consume como <IncidentFooter />.
+ *
+ * ENTRADAS: diccionario bilingüe vía useLocale; año del reloj del sistema.
+ * SALIDAS: navegación a las vistas legales oficiales.
+ * DEPENDENCIAS: useLocale, useHaptic, next/link.
+ *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 500 líneas.
- * - Cero textos hardcodeados.
+ * - Cero textos hardcodeados (100% t vía useLocale; año dinámico).
  * ==============================================================================
  */
 
@@ -20,52 +27,56 @@
 import React from "react";
 import Link from "next/link";
 import { useLocale } from "@/hooks/useLocale";
+import { useHaptic } from "@/hooks/useHaptic";
 
 export function IncidentFooter() {
   const { t } = useLocale();
+  const { triggerHaptic } = useHaptic();
+
+  // Año en curso calculado dinámicamente (nunca hardcodeado)
+  const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full bg-concrete border-t border-ink mt-auto py-8 text-ink select-none">
-      <div className="max-w-4xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
-        {/* Identidad y Protocolo */}
-        <div className="flex flex-col items-center md:items-start text-center md:text-left">
-          <div className="flex items-center gap-2">
-            <span className="font-serif font-bold text-body text-ink">SAFE</span>
-            <span className="text-mist">/</span>
-            <span className="font-sans text-micro text-carbon">{t.common.systemVersion}</span>
+    <footer className="mt-auto w-full border-t border-ink bg-concrete pb-[max(32px,env(safe-area-inset-bottom))] pt-8 text-ink">
+      <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-4 px-4 md:flex-row md:gap-6">
+        {/* Identidad, año en curso y protocolo del sistema (micro Arial) */}
+        <div className="flex flex-col items-center gap-1 text-center md:items-start md:text-left">
+          <div className="flex items-center gap-2 font-sans text-micro">
+            <span className="font-serif text-body font-bold text-ink">
+              {t.common.appName}
+            </span>
+            <span className="text-mist" aria-hidden="true">
+              /
+            </span>
+            <span className="text-carbon">{t.common.systemVersion}</span>
           </div>
-          <p className="font-sans text-[12px] text-carbon mt-1">
-            {t.common.allRightsReserved}
+          <p className="font-sans text-micro text-carbon">
+            {"©"} {currentYear} {t.common.appName}. {t.common.allRightsReserved}
           </p>
         </div>
 
-        {/* Enlaces Legales y de Administración */}
-        <div className="flex flex-wrap items-center justify-center gap-4 text-micro font-sans">
+        {/* Enlaces legales permanentes con área táctil mínima de 44px */}
+        <nav className="flex flex-wrap items-center justify-center font-sans text-micro">
           <Link
             href="/terms"
-            className="text-ink hover:text-signal-orange underline transition-colors"
+            onClick={() => triggerHaptic("light")}
+            className="inline-flex min-h-[44px] items-center px-2 text-ink underline decoration-ink underline-offset-4 transition-colors hover:text-signal-orange"
           >
             {t.common.termsLink}
           </Link>
 
-          <span className="text-mist">•</span>
+          <span className="text-mist" aria-hidden="true">
+            •
+          </span>
 
           <Link
             href="/privacy"
-            className="text-ink hover:text-signal-orange underline transition-colors"
+            onClick={() => triggerHaptic("light")}
+            className="inline-flex min-h-[44px] items-center px-2 text-ink underline decoration-ink underline-offset-4 transition-colors hover:text-signal-orange"
           >
             {t.common.privacyLink}
           </Link>
-
-          <span className="text-mist">•</span>
-
-          <Link
-            href="/admin"
-            className="text-carbon hover:text-ink transition-colors"
-          >
-            {t.common.adminPanel}
-          </Link>
-        </div>
+        </nav>
       </div>
     </footer>
   );

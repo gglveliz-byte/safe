@@ -29,22 +29,22 @@ export function IncidentCard({
   className = "",
   ...props
 }: IncidentCardProps) {
-  // Bordes según el estado semántico de atención médica
+  // Bordes según el estado semántico de atención médica (siempre 1px capilar, solo cambia el color)
   let borderStyles = "border-ink";
   if (variant === "emergency") {
-    borderStyles = "border-alert-red border-2";
+    borderStyles = "border-alert-red";
   } else if (variant === "warning") {
     borderStyles = "border-ember";
   } else if (variant === "subtle") {
     borderStyles = "border-mist";
   }
 
-  // Padding ergonómico
+  // Padding ergonómico canónico: sm=16px, md=20-24px, lg=28-32px
   let paddingStyles = "p-5 sm:p-6";
   if (padding === "sm") {
-    paddingStyles = "p-3 sm:p-4";
+    paddingStyles = "p-4";
   } else if (padding === "lg") {
-    paddingStyles = "p-6 sm:p-8";
+    paddingStyles = "p-7 sm:p-8";
   }
 
   return (

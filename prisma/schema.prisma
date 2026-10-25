@@ -18,6 +18,9 @@
 // - Cero datos mock, demos o textos clínicos localizados por defecto.
 // - Relación 1:1 estricta (un chip = una cuenta) y 1:N para alertas.
 // - Borrado seguro: Cascade en datos clínicos/alertas, SetNull en hardware.
+// - Cubre literalmente docs/BACKEND_CONTRACTS.md §10 (campos de seguridad y
+//   operación: PIN hash + cifrado, consentimiento, cooldown, RateLimitBucket)
+//   y la Solicitud A1→A2 #3 del Ledger (ningún PIN en texto plano).
 // ==============================================================================
 
 // Conexión a PostgreSQL; la URL se inyecta desde el entorno del servidor.
@@ -31,16 +34,21 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Roles de acceso: motociclista (RIDER) y administrador (ADMIN).
+// Roles de acceso a la plataforma (doc de BD §3 y BACKEND_CONTRACTS.md §10).
 enum Role {
+  // MOTOCICLISTA: propietario del kit, dueño de su ficha médica y del Modo Ruta.
   RIDER
+  // ADMINISTRADOR: operador del panel /admin; gestiona lotes, NFC y auditoría.
   ADMIN
 }
 
-// Ciclo de vida físico del kit: virgen, activo o dado de baja.
+// Ciclo de vida físico del kit según el flujo de activación (doc de BD §3).
 enum DeviceStatus {
+  // Kit virgen de fábrica: el gateway /r/[code] redirige a /activate/[code].
   UNCLAIMED
+  // Kit activado y ligado a un rider: el gateway redirige SIEMPRE a /emergency/[code].
   ACTIVE
+  // Kit dado de baja por pérdida, robo o reemplazo: el gateway muestra aviso inerte.
   DISABLED
 }
 
@@ -48,10 +56,15 @@ enum DeviceStatus {
 // Custodia credenciales, el estado del Modo Ruta y sus marcas de tiempo UTC.
 model User {
   id             String    @id @default(uuid()) @db.Uuid
+  // Correo único de inicio de sesión, normalizado en minúsculas por Zod.
   email          String    @unique
+  // Hash bcrypt de coste 12 (BACKEND_CONTRACTS.md §5); jamás la contraseña plana.
   passwordHash   String
   role           Role      @default(RIDER)
+  // Estado del Modo Ruta: true mientras el piloto sale a rodar y late su GPS.
   liveRideActive Boolean   @default(false)
+  // Última posición conocida del rider (/api/gps/heartbeat): fallback de la
+  // alerta cuando el escáner no aporta coordenadas (RIDER_FALLBACK_GPS).
   lastKnownLat   Float?
   lastKnownLng   Float?
   lastGpsAt      DateTime? @db.Timestamptz(3)
@@ -61,6 +74,9 @@ model User {
   // Relación 1:1 con el hardware del casco y 1:1 con la ficha clínica.
   device         Device?
   medicalProfile MedicalProfile?
+
+  // Índice B-Tree del login: búsqueda por correo en el inicio de sesión.
+  @@index([email])
 }
 
 // Kit físico SAFE (chip NTAG216 + código QR) identificado por su folio público.
@@ -68,16 +84,30 @@ model User {
 // de la última posición de alerta real para la ventana de cooldown.
 model Device {
   id                     String       @id @default(uuid()) @db.Uuid
+  // Folio público impreso y grabado en el chip, ej. "SAFE-0001" (único B-Tree).
   code                   String       @unique
+  // Hash bcrypt de coste 10 del PIN de 6 dígitos: NUNCA el PIN en texto plano
+  // (Solicitud A1→A2 #3 del Ledger + BACKEND_CONTRACTS.md §10).
   activationPinHash      String
+  // PIN cifrado con AES-256-GCM (src/lib/crypto.ts), reversible solo para el
+  // panel Admin al listar el lote con includePins=true.
   activationPinEncrypted String
+  // Nombre del lote de fabricación en tira (agrupación logística del Admin).
   batchName              String
+  // UID hexadecimal físico del chip NXP NTAG216, ej. "04:D4:F1:34:C2:2A:81".
   nfcSerialNumber        String?
+  // Flag de grabación física NFC completada por el operador de fábrica.
   isNfcEncoded           Boolean      @default(false)
+  // Switch de protección: bloquea la reescritura del tag NFC una vez grabado.
   isLockedReadOnly       Boolean      @default(false)
+  // Estado del ciclo de vida del kit (ver enum DeviceStatus arriba).
   status                 DeviceStatus @default(UNCLAIMED)
+  // Vínculo único 1:1 con la cuenta del motociclista (chip virgen = NULL).
   userId                 String?      @unique @db.Uuid
+  // UTC de la última alerta REAL despachada: base del cooldown de 3 minutos.
   lastAlertAt            DateTime?    @db.Timestamptz(3)
+  // Coordenadas de la última alerta despachada: referencia de la distancia
+  // Haversine para la excepción de desplazamiento >150 m (traslado en ambulancia).
   lastAlertLat           Float?
   lastAlertLng           Float?
   encodedAt              DateTime?    @db.Timestamptz(3)
@@ -101,18 +131,32 @@ model Device {
 model MedicalProfile {
   id                String    @id @default(uuid()) @db.Uuid
   userId            String    @unique @db.Uuid
+  // Identificación del piloto: nombre y cédula/DNI. La cédula se muestra
+  // ofuscada en la vista pública (safe-security-and-compliance §5, PII).
   fullName          String
   nationalId        String
+  // Fotografía servida por el CDN seguro de Cloudinary (600x600, crop rostro);
+  // photoPublicId permite reemplazo y borrado limpio del activo.
   photoUrl          String
   photoPublicId     String?
   birthDate         DateTime? @db.Timestamptz(3)
+  // Grupo sanguíneo del contrato Zod BloodTypeSchema (O+, O-, A+, A-, B+, B-,
+  // AB+, AB-, DESCONOCIDO). Opcionales clínicos = NULL "no declarado", cero
+  // textos en duro ni valores demo (BACKEND_CONTRACTS.md §10).
   bloodType         String
   allergies         String?
   chronicConditions String?
   medications       String?
   insuranceInfo     String?
   emergencyNumber   String?
+  // JSONB nativo: array dinámico tipado por EmergencyContact en
+  // src/lib/schemas/common.schema.ts (id, name, relation, phone, email, isPrimary?).
   emergencyContacts Json      @default("[]")
+  // Idioma preferido del piloto ("es" | "en") para los correos de alerta; null = español.
+  locale            String?
+  // Consentimiento legal vinculante: momento UTC de la aceptación, versión del
+  // documento (TERMS_VERSION, ej. "2026-01") y hash HMAC de la IP del acatante
+  // (nunca la IP cruda), exigidos por safe-legal-and-terms y BACKEND_CONTRACTS §10.
   consentAcceptedAt DateTime  @db.Timestamptz(3)
   consentVersion    String
   consentIpHash     String?
@@ -121,24 +165,38 @@ model MedicalProfile {
 
   // Al eliminar la cuenta se purgan de inmediato los datos clínicos (Habeas Data).
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Índice de la consulta del panel de emergencia por titular del expediente.
+  @@index([userId])
 }
 
 // Registro inmutable de cada escaneo y despacho de auxilio.
 // Almacena coordenadas decimales y DMS, el enlace oficial de Google Maps,
 // la precisión del sensor y el resultado auditable del envío de correos.
 model EmergencyAlert {
-  id              String   @id @default(uuid()) @db.Uuid
-  deviceId        String   @db.Uuid
-  scanSource      String
-  latitude        Float
-  longitude       Float
-  accuracyMeters  Float?
-  dmsFormatted    String
-  googleMapsUrl   String
-  locationOrigin  String
-  emailsSentCount Int      @default(0)
+  id             String   @id @default(uuid()) @db.Uuid
+  deviceId       String   @db.Uuid
+  // Canal físico por el que el rescatista llegó al expediente: "nfc" | "qr" | "direct".
+  scanSource     String
+  // Posición decimal del siniestro capturada por el sensor del escáner o fallback.
+  latitude       Float
+  longitude      Float
+  // Precisión horizontal reportada por el GPS del dispositivo escáner (metros).
+  accuracyMeters Float?
+  // Coordenada sexagesimal legible, ej. 2°10'06.9"N 79°27'10.6"W (gps-maps.service).
+  dmsFormatted   String
+  googleMapsUrl  String
+  // Origen de la coordenada: "SCANNER_DEVICE_GPS" (teléfono del rescatista) o
+  // "RIDER_FALLBACK_GPS" (última posición del Modo Ruta del motociclista).
+  locationOrigin String
+  // Correos Gmail efectivamente entregados; 0 cuando la alerta fue suprimida.
+  emailsSentCount Int     @default(0)
+  // Auditoría por destinatario: correo, entregado, messageId o error de SMTP.
   emailDelivery   Json?
-  wasThrottled    Boolean  @default(false)
+  // True si cayó dentro del cooldown de 3 min sin desplazamiento >150 m
+  // (registro auditor sin envío, safe-security-and-compliance §1).
+  wasThrottled    Boolean @default(false)
+  // IP del escáner guardada como hash HMAC-SHA256: nunca la IP cruda (PII).
   scannerIp       String?
   createdAt       DateTime @default(now()) @db.Timestamptz(3)
 
@@ -154,11 +212,19 @@ model EmergencyAlert {
 // Sustituye cualquier caché en memoria volátil para sobrevivir a reinicios.
 model RateLimitBucket {
   id              String    @id @default(uuid()) @db.Uuid
+  // Clave canónica compartida "scope:identificador" (ej. pin:SAFE-0001:ip-hash).
+  // La escriben el throttle.service.ts de la Parte 1 y el futuro
+  // ratelimit.service.ts del Agente 2 bajo el mismo formato (Ledger A1→A2 #1).
   key             String    @unique
+  // Dominio de protección: pin | login | login-ip | emergency-alert-ip |
+  // public-emergency-ip | upload-ip | gateway-ip.
   scope           String
+  // Intentos fallidos acumulados dentro de la ventana corriente.
   attempts        Int       @default(0)
   windowStartedAt DateTime  @db.Timestamptz(3)
+  // Bloqueo temporal por fuerza bruta (PIN: 5 fallos → 15 min, HTTP 429).
   blockedUntil    DateTime? @db.Timestamptz(3)
+  // Vencimiento del bucket: índice para la purga periódica de ventanas muertas.
   expiresAt       DateTime  @db.Timestamptz(3)
   createdAt       DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime  @updatedAt @db.Timestamptz(3)

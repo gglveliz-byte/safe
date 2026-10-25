@@ -53,6 +53,7 @@ Tu territorio de trabajo abarca exclusivamente:
 11. `src/app/r/[code]/route.ts` (Gateway del casco físico: redirige con HTTP 307 a /activate o /emergency)
 12. `src/app/api/emergency/alert/route.ts` (Endpoint crítico de rescate, GPS, cooldown y correos a familiares)
 13. `src/app/api/devices/activate/route.ts` (Endpoint atómico de activación con PIN y creación de perfil médico)
+14. `src/app/api/emergency/[code]/route.ts` (Endpoint público que entrega la ficha médica protegida y contactos para rescate vial)
 
 PROHIBIDO TOCAR LOS ARCHIVOS DEL AGENTE 2 (`src/lib/auth.ts`, `src/middleware.ts`, `src/app/api/auth/*`, `src/app/api/gps/heartbeat/*`, `src/app/api/profile/*`, `src/app/api/admin/*`, `src/services/cloudinary.service.ts`, `src/services/qr-generator.service.ts`, etc.).
 
@@ -61,6 +62,7 @@ PROHIBIDO TOCAR LOS ARCHIVOS DEL AGENTE 2 (`src/lib/auth.ts`, `src/middleware.ts
 ### DOCUMENTOS BASE QUE DEBES CONSULTAR
 
 - `docs/SAFE_Plan_Agente_1_Backend_Parte1.md` (Tu plano específico de la Parte 1)
+- `docs/BACKEND_CONTRACTS.md` (Contratos congelados de tipos TypeScript, DTOs Zod y firmas)
 - `docs/SAFE_Arquitectura_Backend_2026.md` (Especificación de endpoints y servicios)
 - `docs/SAFE_Arquitectura_BaseDatos_2026.md` (Esquema relacional Prisma, modelos e índices)
 - `docs/LIVE_ARCHITECTURE_LEDGER.md` (El registro vivo de arquitectura)

@@ -62,6 +62,7 @@ flowchart TD
 13. `src/app/api/upload/cloudinary/route.ts`: Endpoint de subida de fotos de rostro a Cloudinary.
 14. `src/app/api/admin/batches/route.ts`: Endpoint de generación de lotes secuenciales (`SAFE-XXXX`) y PINs.
 15. `src/app/api/admin/encode-nfc/route.ts`: Endpoint de confirmación de grabado NFC y switch de bloqueo.
+16. `src/app/api/auth/session/route.ts`: Endpoint de verificación de sesión activa y usuario autenticado.
 
 ---
 
