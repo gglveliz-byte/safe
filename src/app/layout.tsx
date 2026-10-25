@@ -70,14 +70,20 @@ export default function RootLayout({
         {/* Pie de Página Institucional */}
         <IncidentFooter />
 
-        {/* Script de Registro del Service Worker Offline */}
+        {/* Script de Registro del Service Worker Offline (Activo en Producción; Desactivado en Dev para evitar ChunkLoadError por HMR) */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function() {});
-                });
+                if (${process.env.NODE_ENV === 'production'}) {
+                  window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('/sw.js').catch(function() {});
+                  });
+                } else {
+                  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for (var r of registrations) { r.unregister(); }
+                  });
+                }
               }
             `,
           }}

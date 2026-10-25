@@ -112,6 +112,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // No interceptar chunks internos de compilación ni HMR de Next.js (_next/)
+  // para prevenir colisiones de hash y ChunkLoadError por timeout
+  if (url.pathname.startsWith('/_next/')) {
+    return;
+  }
+
   // Rutas de rescate: Estrategia Network-First con respaldo en Caché.
   // Cubre las vistas públicas (/emergency, /r/) y la ficha pública de rescate
   // (/api/emergency/, dato clínico de auxilio con cédula ya ofuscada por el

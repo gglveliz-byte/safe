@@ -72,6 +72,12 @@ function LoginScreen() {
       try {
         const session = await apiClient.getSession();
         if (isMounted && session.authenticated && session.user) {
+          // Si el destino solicitado es /admin pero la sesión activa NO es ADMIN,
+          // no redirigir a /admin para evitar el bucle infinito de rebote con el middleware.
+          if (safeRedirect === "/admin" && session.user.role !== "ADMIN") {
+            return;
+          }
+
           const destination =
             safeRedirect ||
             (session.user.role === "ADMIN" ? "/admin" : "/dashboard");

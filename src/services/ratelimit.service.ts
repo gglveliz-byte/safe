@@ -361,11 +361,11 @@ export async function clearRateLimit(
 ): Promise<void> {
   const bucketKey = buildBucketKey(resolveCanonicalScope(scope, policy), key);
   try {
-    await db.rateLimitBucket.delete({
+    await db.rateLimitBucket.deleteMany({
       where: { key: bucketKey },
     });
   } catch {
-    // Si ya no existe, ignorar
+    // Si falla la conexión, ignorar para no interrumpir el flujo principal
   }
 }
 

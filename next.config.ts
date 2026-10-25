@@ -48,7 +48,7 @@ const CONTENT_SECURITY_POLICY = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https://res.cloudinary.com https://*.googleapis.com",
-  "connect-src 'self' https://*.neon.tech https://api.cloudinary.com",
+  "connect-src 'self' ws: wss: https://*.neon.tech https://api.cloudinary.com",
   "font-src 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
