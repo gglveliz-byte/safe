@@ -158,9 +158,18 @@ function LoginScreen() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="font-sans text-micro font-bold uppercase text-carbon">
-              {t.login.passwordLabel}
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="font-sans text-micro font-bold uppercase text-carbon">
+                {t.login.passwordLabel}
+              </label>
+              <Link
+                href="/forgot-password"
+                onClick={() => triggerHaptic("light")}
+                className="font-sans text-micro text-carbon hover:text-signal-orange underline transition-colors"
+              >
+                {t.login.forgotPasswordLink}
+              </Link>
+            </div>
             <input
               type="password"
               value={password}

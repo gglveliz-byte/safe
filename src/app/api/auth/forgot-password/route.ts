@@ -33,7 +33,7 @@ import { getClientIp } from "@/lib/request";
 import { logEvent } from "@/lib/logger";
 import { successResponse, handleApiError, parseJsonBody } from "@/lib/api-response";
 import { ForgotPasswordSchema } from "@/lib/schemas/auth.schema";
-import { checkRateLimit, RATE_LIMITS } from "@/services/ratelimit.service";
+import { consumeRateLimit, enforceNotBlocked, RATE_LIMITS } from "@/services/ratelimit.service";
 import { sendPasswordResetEmail } from "@/services/mail.service";
 
 export const runtime = "nodejs";
@@ -45,13 +45,15 @@ export async function POST(req: NextRequest) {
     const clientIp = getClientIp(req);
     const normalizedEmail = input.email.trim().toLowerCase();
 
-    // 1. Control de tasa: máximo 5 solicitudes por IP cada 15 min
-    await checkRateLimit(RATE_LIMITS.forgotPasswordIp, clientIp);
+    // 1. Control de tasa: verificar que la IP y el correo no estén bloqueados
+    await enforceNotBlocked("forgot-password-ip", clientIp, RATE_LIMITS.forgotPasswordIp);
+    await enforceNotBlocked("forgot-password-email", normalizedEmail, RATE_LIMITS.forgotPasswordEmail);
 
-    // 2. Control de tasa: máximo 3 solicitudes por correo cada 15 min
-    await checkRateLimit(RATE_LIMITS.forgotPasswordEmail, normalizedEmail);
+    // Consumir cuota por IP y por correo
+    await consumeRateLimit("forgot-password-ip", clientIp, RATE_LIMITS.forgotPasswordIp);
+    await consumeRateLimit("forgot-password-email", normalizedEmail, RATE_LIMITS.forgotPasswordEmail);
 
-    // 3. Buscar usuario en base de datos
+    // 2. Buscar usuario en base de datos
     const user = await db.user.findUnique({
       where: { email: normalizedEmail },
       include: {
@@ -62,7 +64,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (user) {
-      // 4. Derivar clave simétrica para firmar token de recuperación
+      // 3. Derivar clave simétrica para firmar token de recuperación
       const secretBytes = new TextEncoder().encode(getEnv().JWT_SECRET);
 
       // Huella de versión: primeros 10 caracteres del passwordHash actual.
@@ -83,12 +85,12 @@ export async function POST(req: NextRequest) {
         .setExpirationTime("15m") // Vigencia máxima de 15 minutos
         .sign(secretBytes);
 
-      // 5. Construir URL canónica de restablecimiento
+      // 4. Construir URL canónica de restablecimiento
       const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "localhost:3000";
       const proto = req.headers.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
       const resetUrl = `${proto}://${host}/reset-password?token=${token}`;
 
-      // 6. Despachar correo bilingüe con transporte SMTP de Gmail
+      // 5. Despachar correo bilingüe con transporte SMTP de Gmail
       const chosenLocale = (user.medicalProfile?.locale === "en" || input.locale === "en") ? "en" : "es";
       const recipientName = user.medicalProfile?.fullName || undefined;
 
@@ -106,10 +108,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 7. Respuesta neutral para anti-enumeración
+    // 6. Respuesta neutral para anti-enumeración
     return successResponse(
-      { sent: true },
-      "Si el correo está registrado en SAFE, hemos enviado las instrucciones de restablecimiento.",
+      {
+        sent: true,
+        message: "Si el correo está registrado en SAFE, hemos enviado las instrucciones de restablecimiento.",
+      },
+      200,
     );
   } catch (error) {
     return handleApiError(error, "auth.forgotPassword");

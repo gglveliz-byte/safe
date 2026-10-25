@@ -30,7 +30,7 @@ import { logEvent } from "@/lib/logger";
 import { hashPassword } from "@/lib/auth";
 import { successResponse, handleApiError, parseJsonBody, AppError } from "@/lib/api-response";
 import { ResetPasswordSchema } from "@/lib/schemas/auth.schema";
-import { checkRateLimit, RATE_LIMITS } from "@/services/ratelimit.service";
+import { consumeRateLimit, enforceNotBlocked, RATE_LIMITS } from "@/services/ratelimit.service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,8 +40,9 @@ export async function POST(req: NextRequest) {
     const input = await parseJsonBody(req, ResetPasswordSchema);
     const clientIp = getClientIp(req);
 
-    // 1. Control de tasa: máximo 5 intentos por IP cada 15 min
-    await checkRateLimit(RATE_LIMITS.resetPasswordIp, clientIp);
+    // 1. Control de tasa: verificar que la IP no esté bloqueada y consumir cuota
+    await enforceNotBlocked("reset-password-ip", clientIp, RATE_LIMITS.resetPasswordIp);
+    await consumeRateLimit("reset-password-ip", clientIp, RATE_LIMITS.resetPasswordIp);
 
     // 2. Verificar criptográficamente el token JWT
     const secretBytes = new TextEncoder().encode(getEnv().JWT_SECRET);
@@ -56,8 +57,8 @@ export async function POST(req: NextRequest) {
     } catch {
       throw new AppError(
         "VALIDATION_ERROR",
-        400,
         "El enlace de recuperación es inválido o ha expirado. Por favor, solicita uno nuevo.",
+        400,
       );
     }
 
@@ -65,8 +66,8 @@ export async function POST(req: NextRequest) {
     if (payload.purpose !== "pwd_reset" || !payload.sub || typeof payload.pv !== "string") {
       throw new AppError(
         "VALIDATION_ERROR",
-        400,
         "El token proporcionado no corresponde a una solicitud de recuperación válida.",
+        400,
       );
     }
 
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
-      throw new AppError("NOT_FOUND", 404, "El usuario asociado a este enlace ya no existe.");
+      throw new AppError("NOT_FOUND", "El usuario asociado a este enlace ya no existe.", 404);
     }
 
     // 5. Comparar huella de versión: si ya se cambió la clave antes, el token queda inservible
@@ -87,8 +88,8 @@ export async function POST(req: NextRequest) {
     if (currentPasswordVersion !== tokenPasswordVersion) {
       throw new AppError(
         "VALIDATION_ERROR",
-        400,
         "Este enlace de recuperación ya ha sido utilizado anteriormente. Solicita un nuevo enlace si lo necesitas.",
+        400,
       );
     }
 
@@ -107,8 +108,11 @@ export async function POST(req: NextRequest) {
     });
 
     return successResponse(
-      { reset: true },
-      "Tu contraseña ha sido restablecida exitosamente. Ahora puedes iniciar sesión con tus nuevas credenciales.",
+      {
+        reset: true,
+        message: "Tu contraseña ha sido restablecida exitosamente. Ahora puedes iniciar sesión con tus nuevas credenciales.",
+      },
+      200,
     );
   } catch (error) {
     return handleApiError(error, "auth.resetPassword");
