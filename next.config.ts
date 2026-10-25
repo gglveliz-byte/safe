@@ -47,7 +47,7 @@ const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https://res.cloudinary.com https://*.googleapis.com",
+  "img-src 'self' data: https://res.cloudinary.com https://*.googleapis.com https://*.googleusercontent.com",
   "connect-src 'self' ws: wss: https://*.neon.tech https://api.cloudinary.com",
   "font-src 'self'",
   "frame-ancestors 'none'",
@@ -66,13 +66,16 @@ const nextConfig: NextConfig = {
     "nodemailer",
     "qrcode",
   ],
-  // C-18: optimización de imágenes remotas de Cloudinary (fusionado desde la
-  // next.config.mjs eliminada para dejar una única configuración activa).
+  // Optimización de imágenes remotas (Cloudinary y Google User Content para fotografía del casco)
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
       },
     ],
   },

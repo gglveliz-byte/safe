@@ -1,104 +1,104 @@
 ---
 name: safe-incident-design-system
 description: >-
-  Sistema de diseño visual obligatorio 'Incident — Technical broadsheet on concrete' para la plataforma SAFE. Define la paleta cromática exacta (Concrete #efefef, Ink #000000, Signal Orange #f25533, Paper #ffffff, Alert Red #ff492c, Ember #f1641e), tipografía serif editorial Times para titulares y Arial 13px para microetiquetas, botones neutros enmarcados con borde de 1px negro, cero gradientes y sombras ultraligeras.
+  Sistema de diseño visual obligatorio 'Incident — Technical Broadsheet 2026' para la plataforma SAFE. Define la paleta cromática oficial (Navy Dark #0B1F3A, Navy Secondary #15365B, Text Desc #23466D, Text Muted #5C718A, Brand Accent #FF5138, Nav Blue #2F648F, Nav Active #EDF5FC, Border Subtle #D7E3F0, Border Field #C9D9E9, Border Strong #B8CADD, Separator #DCE5EE, White #FFFFFF, Alt Bg #F8FAFC), tipografía Newsreader (Editorial Serif) para titulares/lectura e Inter (Clean Sans) para microetiquetas/interacciones, micro-animaciones sónar/radares en casco, y tarjetas informativas.
 ---
 
-# Skill: Sistema de Diseño Visual 'Incident' (Technical Broadsheet)
+# Skill: Sistema de Diseño Visual 'Incident' (Technical Broadsheet 2026)
 
-Esta skill rige la identidad estética obligatoria para todas las interfaces de **SAFE** (Landing, Router del Casco, Activación, Ficha Médica de Emergencia, Panel del Motociclista, Admin y Páginas Legales).
+Esta skill rige la identidad estética obligatoria para todas las interfaces de **SAFE** (Landing, Router del Casco, Activación, Ficha Médica de Emergencia, Panel del Conductor, Admin y Páginas Legales).
 
 ---
 
-## 1. Filosofía Estética: Technical Broadsheet on Concrete
+## 1. Filosofía Estética: Technical Broadsheet 2026
 
-> *"Un boletín técnico sobre concreto. Titulares serif estilo Times flotan sobre una página gris cálido con líneas capilares de color negro puro y un destello de naranja señal que rompe la calma como una baliza de emergencia."*
+> *"Un boletín médico-editorial en tu casco que habla por ti cuando más lo necesitas. Titulares serif Newsreader de alta autoridad conviven con una tipografía funcional Inter, fondos puros (#FFFFFF y #F8FAFC), líneas estructurales sutiles (#D7E3F0), balizas sónar pulsantes (#FF5138) y acentos azul editorial (#2F648F)."*
 
-El diseño proyecta la autoridad y sobriedad de un manual técnico o una publicación editorial de alta confianza. **La disciplina cromática es extrema:** el color no es decorativo ni abultado; se raciona rigurosamente y sólo interviene como aviso de marca o indicador semántico de advertencia/emergencia.
+El diseño proyecta máxima seriedad clínica, rescate vial inmediato y modernidad táctil. Es sobrio, legible bajo luz solar directa y amigable tanto para rescatistas como para motociclistas.
 
 ---
 
 ## 2. Tokens Oficiales de Color
 
-| Nombre de Token | Valor Hex | Variable CSS | Rol de Uso Obligatorio |
+| Nombre de Token | Valor Hex | Variable CSS / Tailwind | Rol de Uso Obligatorio |
 | :--- | :--- | :--- | :--- |
-| **Concrete** | `#efefef` | `--color-concrete` | **Lienzo principal de página** y fondo de botones neutros. Aporta calidez de papel periódico/concreto. Nunca usar blanco puro como fondo de página. |
-| **Paper** | `#ffffff` | `--color-paper` | Superficie de tarjetas (`cards`), contenedores de formularios y barra de navegación superior. |
-| **Ink** | `#000000` | `--color-ink` | Texto principal, líneas divisorias capilares (hairline rules de 1px), bordes estructurales de tarjetas y botones. |
-| **Carbon** | `#161618` | `--color-carbon` | Casi-negro para trazos de navegación, texto de énfasis y base de sombras sutiles. |
-| **Signal Orange** | `#f25533` | `--color-signal-orange` | Baliza de marca, acento de logo, insignias destacadas de SAFE y detalles de foco. **Nunca como fondo de botones de acción.** |
-| **Alert Red** | `#ff492c` | `--color-alert-red` | Acento decorativo para iconos de peligro/accidente y bordes de banner crítico de emergencia médica. |
-| **Ember** | `#f1641e` | `--color-ember` | Borde de advertencia para estados degradados o avisos secundarios (batería baja, GPS impreciso). |
-| **Mist** | `#dadada` | `--color-mist` | Tono de sombra sutil y bordes atenuados para elementos deshabilitados. |
-| **Fog** | `#cccccc` | `--color-fog` | Tono secundario de sombras tenues en tarjetas elevadas. |
-| **Parchment** | `#e4d9c8` | `--color-parchment` | Superficie crema cálida para badges de archivo o etiquetas de datos técnicos. |
+| **White** | `#FFFFFF` | `brand-white` / `--color-white` | **Lienzo principal de página** y fondo de tarjetas puras. |
+| **Bg Alt** | `#F8FAFC` | `brand-bg-alt` | Superficie alterna para contenedores de descripción y tarjetas con fondo suave. |
+| **Bg Subtle** | `#F1F5F9` | `brand-bg-subtle` | Fondos de hover sutiles y áreas neutrales. |
+| **Navy Dark** | `#0B1F3A` | `brand-navy-dark` | Color principal de titulares serif, cajas de isotipo, botones primarios e insignias numéricas. |
+| **Navy Secondary** | `#15365B` | `brand-navy-secondary` | Estado hover de botones primarios y acentos oscuros. |
+| **Text Desc** | `#23466D` | `brand-text-desc` | Color de párrafos explicativos, descripciones y enlaces secundarios. |
+| **Text Muted** | `#5C718A` | `brand-text-muted` | Metadatos, micro-etiquetas, tooltips, etiquetas de campo y pie de foto. |
+| **Accent (Signal)** | `#FF5138` | `brand-accent` | Baliza de marca, anillos sónar, punto de advertencia y borde de la Hora Dorada. |
+| **Accent Hover** | `#F45136` | `brand-accent-hover` | Hover sobre acentos de marca activos. |
+| **Nav Blue** | `#2F648F` | `brand-nav-blue` | Iconos de tecnología, enlaces interactivos y contornos de foco (focus rings). |
+| **Nav Active** | `#EDF5FC` | `brand-nav-active` | Fondo activo suave para píldoras de navegación y fondos de iconos informativos. |
+| **Border Subtle** | `#D7E3F0` | `brand-border-subtle` | Bordes divisorios estándar de tarjetas, cabecera y pie. |
+| **Border Field** | `#C9D9E9` | `brand-border-field` | Bordes de campos de formulario en estado inactivo. |
+| **Border Strong** | `#B8CADD` | `brand-border-strong` | Bordes en hover de tarjetas e inputs. |
+| **Separator** | `#DCE5EE` | `brand-separator` | Líneas divisorias horizontales y separadores sutiles. |
 
 ---
 
-## 3. Tipografía Bimodal Obligatoria (Serif Editorial + Micro Sans)
+## 3. Tipografía Bimodal Obligatoria (Newsreader Serif + Inter Sans)
 
-La tipografía utiliza una división estricta:
-1. **Times (Serif):** Voz principal, titulares, cuerpo de lectura médica, etiquetas de navegación, valores clínicos.
-2. **Arial (Sans 13px):** Micro-etiquetas funcionales, textos auxiliares de botones, metadatos y tooltips.
+1. **Newsreader (Editorial Serif):** Voz clínica y editorial, titulares `h1`, `h2`, `h3`, grupo sanguíneo, citas médicas y marca SAFE.
+2. **Inter (Clean Sans):** Micro-etiquetas, navegación, inputs, botones de acción, metadatos y tooltips.
 
 ```css
 /* Configuración CSS */
---font-times-system-serif: 'Times (system serif)', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
---font-arial-system-sans: 'Arial (system sans)', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-
-/* Escala */
---text-micro: 13px;       /* Arial (system sans), Line Height 1.2 */
---text-body: 16px;        /* Times, Line Height 1.2 */
---text-body-lg: 19px;     /* Times, Line Height 1.2 */
---text-heading-sm: 24px;  /* Times, Line Height 1.2 */
---text-heading: 32px;     /* Times Bold, Line Height 1.2 */
+--font-serif: 'Newsreader', Georgia, Cambria, 'Times New Roman', serif;
+--font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 ```
 
 ---
 
-## 4. Componentes Canónicos
+## 4. Componentes y Patrones Canónicos
 
-### 4.1. Botón Neutro (Neutral Button)
-Es el botón interactivo principal. **No lleva colores vivos de fondo**:
-- **Fondo:** `#efefef` (Concrete, idéntico al lienzo).
-- **Borde:** `1px solid #000000` (Ink).
-- **Radio:** `4px` estricto (nunca píldora redondeada).
-- **Padding:** `6px 12px` (compacto y preciso).
-- **Texto:** `Arial 13px`, peso 400, color `#000000`.
-- **Sombra:** Ninguna. Al pulsar (`:active`), leve hundimiento `transform: scale(0.98)`.
+### 4.1. Barra de Navegación Sticky con Isotipo
+- Contenedor sticky con `backdrop-blur-md` y fondo `#FFFFFF/95`.
+- Isotipo: Cuadrado `#0B1F3A` con punto central `#FF5138`.
+- Enlaces con píldoras activas en `#EDF5FC` y texto `#0B1F3A`.
+- Menú hamburguesa móvil morphing (3 líneas que se transforman en X).
 
-### 4.2. Tarjeta de Contenedor (Status / Paper Card)
-- **Fondo:** `#ffffff` (Paper).
-- **Radio de Borde:** `12px`.
-- **Borde:** `1px solid #000000` o borde cromático semántico según el estado (`#ff492c` para alerta médica activa, `#f1641e` para advertencias).
-- **Padding:** `20px` a `24px`.
-- **Sombra:** `rgba(22, 22, 24, 0.02) 0px 8px 15px -3px, rgba(22, 22, 24, 0.04) 0px 4px 6px -2px`.
+### 4.2. Tarjeta Visual del Casco con Radares Sónar
+- Fotografía oficial con ratio `aspect-[4/3]` y bordes redondeados `rounded-xl`.
+- Dos balizas de radar sónar pulsantes (`pulseSonar` + `pulseGlow`) posicionadas estratégicamente sobre el código QR y la antena NFC.
+- Pie de foto en degradado oscuro con distintivo "ACTIVO 24/7" y "Kit SAFE NFC / QR Grado Vial".
 
-### 4.3. Banner Crítico de Emergencia Médica
-- **Fondo:** Lavado suave rojizo tintado a partir de `#ff492c` al 8% de opacidad (`rgba(255, 73, 44, 0.08)`).
-- **Borde:** `1px solid #ff492c`.
-- **Icono:** Triángulo de advertencia en `#ff492c`.
-- **Titular:** Times `16px` Bold, `#000000`.
-- **Cuerpo:** Times `16px` Regular, `#000000`.
-- **Radio:** `8px`.
+### 4.3. Formulario de Activación de Casco
+- Input con anillo de foco `safe-input-focus` (azul `#2F648F`).
+- Botón primario `#0B1F3A` con spinner interactivo de verificación.
+- Retroalimentación accesible para códigos válidos o incompletos con conexión a rutas reales `/activate/[code]`.
 
-### 4.4. Hairlines (Líneas Divisorias Capilares)
-- Separación entre secciones mediante bordes de `1px solid #000000` o `#dadada`.
-- Espaciado vertical entre secciones: `40px` a `64px`.
+### 4.4. Tarjetas de Pasos ("¿Cómo Funciona SAFE?")
+- Insignia circular con número 1, 2, 3 en `#0B1F3A`.
+- Icono lineal azul `#2F648F` en contenedor `#EDF5FC`.
+- Pie de tarjeta con viñeta de color distintivo (Adhesivo 3M, Encriptación, Alerta SMS).
+
+### 4.5. Bloque "El Principio de la Hora Dorada"
+- Fondo `#F8FAFC` con borde izquierdo `#FF5138` animado con pulso respiratorio (`golden-hour-border`).
+- Cita itálica en Newsreader sobre los primeros 60 minutos del siniestro vial.
+
+### 4.6. Ficha Médica de Demostración (Modal)
+- Modal accesible con `role="dialog"`, desenfoque de fondo y tecla Escape.
+- Muestra grupo sanguíneo O Negativo (O-), Donante Sí, Alergias y Contactos con notificación inmediata.
 
 ---
 
 ## 5. Reglas Inquebrantables (Do's & Don'ts)
 
 ### SÍ HACER (Do):
-- Usar siempre `#efefef` de fondo general en `body` y contenedores base.
-- Dejar que las tarjetas blancas `#ffffff` floten sobre el concreto `#efefef`.
-- Usar `Times` para todo texto de lectura, titulares médicos y avisos.
-- Usar `Arial 13px` únicamente para microetiquetas y botones neutros.
-- Usar `Signal Orange (#f25533)` exclusivamente para isotipo, detalles de marca o balizas de foco.
+- Usar `#FFFFFF` y `#F8FAFC` como fondos canónicos del nuevo diseño.
+- Usar `Newsreader` para titulares, grupo sanguíneo y citas editoriales.
+- Usar `Inter` para toda microtipografía, botones y navegación.
+- Mantener objetivos táctiles mínimos de 44x44px en móviles.
+- Respetar `prefers-reduced-motion` cancelando animaciones para usuarios con sensibilidad de movimiento.
 
 ### PROHIBIDO (Don't):
-- **CERO GRADIENTES:** La estética 'Incident' es estrictamente plana y editorial.
-- **CERO BOTONES CON FONDOS AZULES, VERDES O NARANJAS BRILLANTES:** Los botones deben ser neutros en concreto con borde negro capilar.
-- **CERO SOMBRAS NEGRAS PESADAS:** Solo sombras ultraligeras de 2% a 4% de opacidad.
-- **CERO BORDES REDONDEADOS TIPO PÍLDORA (pill):** Radios de 4px para botones, 8px para banners y 12px para tarjetas.
+- Cero folios ficticios o rutas inventadas en el formulario de activación.
+- Cero textos hardcodeados; todo copy debe consumirse del diccionario bilingüe (`useLocale`).
+- Nunca superar las 500 líneas físicas por archivo.
+- Cero colores fuera de la paleta canónica `#0B1F3A`, `#15365B`, `#23466D`, `#5C718A`, `#FF5138`, `#2F648F`, `#EDF5FC`, `#D7E3F0`, `#C9D9E9`, `#B8CADD`, `#FFFFFF`, `#F8FAFC`.
+- Cero fallas de accesibilidad: todo botón y elemento interactivo debe tener etiqueta accesible y contraste WCAG AA.
+

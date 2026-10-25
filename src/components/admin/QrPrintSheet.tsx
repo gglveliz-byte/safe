@@ -5,17 +5,15 @@
  * ARCHIVO: src/components/admin/QrPrintSheet.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Renderiza la plancha de producción gráfica para imprimir códigos QR en serie.
- * Los códigos se generan 100% EN LOCAL y en memoria con el motor `qrcode`
- * (cero servicios de terceros, cero fuga de folios a APIs externas), codificando
- * la URL canónica del gateway del casco (NEXT_PUBLIC_APP_URL u origen actual
- * del navegador; jamás un dominio inventado). Optimizado para papel vinílico
- * adhesivo impermeable con resistencia a la intemperie.
+ * Renderiza la plancha de producción gráfica para imprimir códigos QR en serie
+ * bajo la estética SAFE 2026. Los códigos se generan 100% en local con el motor
+ * qrcode. Optimizado para papel vinílico adhesivo impermeable con resistencia a
+ * la intemperie y corte en imprenta.
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 450 líneas físicas.
- * - Estilos @media print dedicados para impresión en imprenta sin elementos web.
- * - Paleta Incident estricta y textos 100% del diccionario bilingüe.
+ * - Estilos @media print dedicados para impresión en papel sin elementos web.
+ * - Paleta SAFE 2026 y textos 100% del diccionario bilingüe.
  * ==============================================================================
  */
 
@@ -24,7 +22,6 @@
 import React, { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useLocale } from "@/hooks/useLocale";
-import { IncidentButton } from "@/components/ui/IncidentButton";
 import { buildHelmetGatewayClientUrl } from "@/lib/nfc-write-utils";
 import type { AdminDeviceItem } from "@/lib/api-client";
 
@@ -41,7 +38,6 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
   const [qrDataUrls, setQrDataUrls] = useState<Record<string, string>>({});
   const [generationError, setGenerationError] = useState(false);
 
-  // Generación local de toda la tira de stickers sin dependencias de terceros
   useEffect(() => {
     let cancelled = false;
 
@@ -55,7 +51,7 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
                 width: 300,
                 margin: 1,
                 errorCorrectionLevel: "M",
-                color: { dark: "#000000", light: "#ffffff" },
+                color: { dark: "#0B1F3A", light: "#FFFFFF" },
               },
             );
             return [device.code, dataUrl] as const;
@@ -86,38 +82,47 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
   };
 
   return (
-    <div className="qr-print-sheet w-full bg-paper border border-ink rounded-[12px] p-6 shadow-incident">
+    <div className="qr-print-sheet w-full bg-brand-white border border-brand-border-subtle rounded-2xl p-6 sm:p-8 shadow-2xl">
       {/* Barra de Controles (Oculta en Impresión) */}
-      <div className="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-ink mb-6">
+      <div className="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-brand-separator mb-6">
         <div>
-          <h3 className="font-serif font-bold text-heading text-ink leading-tight">
+          <h3 className="font-serif font-bold text-2xl text-brand-navy-dark leading-tight">
             {t.admin.printSheetTitle}
           </h3>
-          <p className="font-sans text-micro text-carbon mt-1">
+          <p className="font-sans text-xs sm:text-sm text-brand-text-desc mt-1">
             {t.admin.batchNameLabel}:{" "}
-            <strong className="text-ink">{batchName}</strong> · {devices.length}{" "}
-            {t.admin.totalKitsLabel}
+            <strong className="text-brand-navy-dark font-mono font-bold">{batchName}</strong> ·{" "}
+            {devices.length} {t.admin.totalKitsLabel}
           </p>
-          <p className="font-sans text-[12px] text-carbon mt-0.5">
+          <p className="font-sans text-xs text-brand-text-muted mt-0.5">
             {t.admin.printSheetHelp}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {onClose && (
-            <IncidentButton variant="neutral" onClick={onClose}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-[44px] px-5 py-2.5 bg-brand-white border border-brand-border-field hover:bg-brand-bg-alt text-brand-navy-dark font-sans text-xs font-semibold rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer"
+            >
               {t.common.cancel}
-            </IncidentButton>
+            </button>
           )}
-          <IncidentButton variant="emergency" onClick={handlePrint}>
-            🖨️ {t.admin.printQrsButton}
-          </IncidentButton>
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-brand-navy-dark hover:bg-brand-navy-secondary text-white font-sans text-xs font-semibold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer"
+          >
+            <span>🖨️</span>
+            {t.admin.printQrsButton}
+          </button>
         </div>
       </div>
 
       {/* Aviso de fallo en la generación local (oculto al imprimir) */}
       {generationError && (
-        <div className="no-print p-3 mb-6 bg-[rgba(255,73,44,0.08)] border border-alert-red rounded-[6px] text-micro text-alert-red font-sans text-center">
+        <div className="no-print p-3 mb-6 bg-rose-50 border border-brand-accent/30 rounded-lg text-xs text-brand-accent font-sans text-center font-medium">
           ⚠️ {t.common.errorGeneric}
         </div>
       )}
@@ -127,22 +132,22 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
         {devices.map((device) => (
           <div
             key={device.code}
-            className="p-3 border-2 border-ink rounded-[8px] bg-paper flex flex-col items-center justify-between text-center select-none break-inside-avoid shadow-sm"
+            className="p-3.5 border-2 border-brand-navy-dark rounded-xl bg-brand-white flex flex-col items-center justify-between text-center select-none break-inside-avoid shadow-sm"
             style={{ minHeight: "220px" }}
           >
             {/* Encabezado del Sticker */}
-            <div className="w-full flex items-center justify-between gap-1 border-b border-ink pb-1 mb-2">
-              <span className="font-serif font-bold text-body text-ink leading-none">
+            <div className="w-full flex items-center justify-between gap-1 border-b border-brand-separator pb-1.5 mb-2">
+              <span className="font-serif font-bold text-sm text-brand-navy-dark leading-none">
                 {t.common.appName}
               </span>
-              <span className="w-2.5 h-2.5 flex-shrink-0 rounded-full bg-signal-orange" />
-              <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-carbon leading-tight">
+              <span className="w-2 h-2 flex-shrink-0 rounded-full bg-brand-accent" />
+              <span className="font-sans text-[9px] font-bold uppercase tracking-wider text-brand-text-muted leading-tight">
                 {t.common.emergencyBadge}
               </span>
             </div>
 
-            {/* Imagen del Código QR generado localmente (PNG en memoria) */}
-            <div className="my-1 w-32 h-32 flex items-center justify-center">
+            {/* Imagen del Código QR generado localmente */}
+            <div className="my-1.5 w-32 h-32 flex items-center justify-center">
               {qrDataUrls[device.code] ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
@@ -151,22 +156,21 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
                   className="w-full h-full object-contain"
                 />
               ) : (
-                // Marcador punteado mientras concluye la generación en memoria
                 <span
                   aria-hidden="true"
-                  className="w-full h-full border border-dashed border-mist rounded-[4px]"
+                  className="w-full h-full border border-dashed border-brand-border-subtle rounded-md"
                 />
               )}
             </div>
 
             {/* Folio y Clave de Activación Raspable */}
-            <div className="w-full pt-1 border-t border-mist flex flex-col items-center">
-              <span className="font-sans text-micro font-bold text-ink tracking-widest">
+            <div className="w-full pt-1.5 border-t border-brand-separator flex flex-col items-center">
+              <span className="font-mono text-xs font-bold text-brand-navy-dark tracking-widest">
                 {device.code}
               </span>
-              <span className="font-sans text-[10px] text-carbon">
+              <span className="font-sans text-[10px] text-brand-text-desc mt-0.5">
                 {t.admin.pinLabel}:{" "}
-                <strong className="font-sans tracking-widest">
+                <strong className="font-mono tracking-widest font-semibold text-brand-navy-dark">
                   {device.activationPin}
                 </strong>
               </span>

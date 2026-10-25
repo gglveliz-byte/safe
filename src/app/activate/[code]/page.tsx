@@ -37,10 +37,6 @@ import { useRouter } from "next/navigation";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
 import { BLOOD_TYPES } from "@/lib/schemas/common.schema";
-import { IncidentCard } from "@/components/ui/IncidentCard";
-import { IncidentButton } from "@/components/ui/IncidentButton";
-import { IncidentAlertBanner } from "@/components/ui/IncidentAlertBanner";
-import { IncidentHairline } from "@/components/ui/IncidentHairline";
 import { CloudinaryPhotoPicker } from "@/components/medical/CloudinaryPhotoPicker";
 import { ContactsRepeater } from "@/components/medical/ContactsRepeater";
 
@@ -51,16 +47,16 @@ interface PageProps {
   params: Promise<{ code: string }>;
 }
 
-/** Campo de texto canónico Incident: hormigón, borde capilar y táctil ≥44px. */
+/** Campo de texto oficial SAFE 2026: lienzo blanco, foco suave y táctil ≥44px. */
 const INPUT_CLASS =
-  "h-11 min-h-[44px] px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink";
+  "safe-input-focus h-11 min-h-[44px] px-4 bg-brand-white border border-brand-border-field rounded-md font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted";
 
-/** Microetiqueta canónica Arial 13px en versalitas. */
-const LABEL_CLASS = "font-sans text-micro font-bold uppercase text-carbon";
+/** Microetiqueta oficial SAFE 2026. */
+const LABEL_CLASS = "font-sans text-xs font-semibold text-brand-navy-dark";
 
-/** Área de texto clínica canónica (alergias, padecimientos, medicamentos). */
+/** Área de texto clínica SAFE 2026. */
 const TEXTAREA_CLASS =
-  "p-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink resize-none";
+  "safe-input-focus p-3 bg-brand-white border border-brand-border-field rounded-md font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted resize-none";
 
 export default function ActivatePage({ params }: PageProps) {
   const resolvedParams = use(params);
@@ -101,11 +97,17 @@ export default function ActivatePage({ params }: PageProps) {
   // Folio ausente o ilegible en la ruta: error humano y regreso al inicio.
   if (code.length === 0) {
     return (
-      <div className="safe-mobile-container py-12 flex flex-col gap-6">
-        <IncidentAlertBanner type="emergency" message={t.common.errorGeneric} />
-        <IncidentButton type="button" variant="neutral" className="w-full sm:w-auto" onClick={() => router.push("/")}>
+      <div className="w-full max-w-lg mx-auto px-4 py-12 flex flex-col gap-5 text-center animate-fadeInUp">
+        <div className="p-4 bg-rose-50 border border-brand-accent/30 rounded-xl text-xs text-brand-accent font-sans">
+          ⚠️ {t.common.errorGeneric}
+        </div>
+        <button
+          type="button"
+          className="w-full min-h-[44px] inline-flex items-center justify-center px-4 py-2.5 bg-brand-navy-dark text-white rounded-lg text-sm font-semibold hover:bg-brand-navy-secondary transition-all cursor-pointer"
+          onClick={() => router.push("/")}
+        >
           {t.common.backToHome}
-        </IncidentButton>
+        </button>
       </div>
     );
   }
@@ -113,28 +115,36 @@ export default function ActivatePage({ params }: PageProps) {
   // Pantalla de confirmación con el folio REAL devuelto por el servicio.
   if (successResult) {
     return (
-      <div className="safe-mobile-container py-12 flex flex-col items-center justify-center text-center">
-        <IncidentCard padding="lg" className="max-w-md w-full flex flex-col items-center gap-4">
-          {/* Escudo Incident decorativo sobre hormigón con borde estructural */}
-          <div aria-hidden="true" className="w-16 h-16 rounded-[12px] bg-concrete border-2 border-ink flex items-center justify-center text-heading-sm">
+      <div className="w-full max-w-lg mx-auto px-4 py-12 flex flex-col items-center justify-center text-center animate-fadeInUp">
+        <div className="w-full bg-brand-white border border-brand-border-subtle rounded-2xl p-7 sm:p-9 shadow-lg flex flex-col items-center gap-5">
+          <div
+            aria-hidden="true"
+            className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-3xl shadow-sm"
+          >
             🛡️
           </div>
-          <h2 className="font-serif text-heading-sm font-bold text-ink">
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-navy-dark leading-tight">
             {t.activate.successTitle}
           </h2>
-          <p className="font-serif text-body text-carbon">{t.activate.successMessage}</p>
-          <div className="flex flex-col items-center gap-1">
-            <span className="font-sans text-micro uppercase text-carbon">
+          <p className="font-sans text-xs sm:text-sm text-brand-text-desc leading-relaxed">
+            {t.activate.successMessage}
+          </p>
+          <div className="flex flex-col items-center gap-1.5 p-3 bg-brand-bg-alt border border-brand-border-subtle rounded-xl w-full">
+            <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted">
               {t.dashboard.folioLabel}
             </span>
-            <span className="font-sans text-micro font-bold uppercase tracking-widest bg-concrete px-3 py-1 border border-ink rounded-[4px]">
+            <span className="font-mono text-base font-bold uppercase tracking-widest text-brand-navy-dark">
               {successResult.deviceCode}
             </span>
           </div>
-          <IncidentButton type="button" variant="emergency" size="lg" className="w-full mt-2" onClick={() => router.push(successResult.redirect)}>
+          <button
+            type="button"
+            className="w-full min-h-[48px] inline-flex items-center justify-center px-6 py-3.5 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary text-sm font-semibold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer mt-2"
+            onClick={() => router.push(successResult.redirect)}
+          >
             {t.activate.goToDashboard}
-          </IncidentButton>
-        </IncidentCard>
+          </button>
+        </div>
       </div>
     );
   }
@@ -143,29 +153,31 @@ export default function ActivatePage({ params }: PageProps) {
   const visibleError = form.errorMessage ?? (form.hasFailed ? t.common.errorGeneric : null);
 
   return (
-    <div className="safe-mobile-container py-8 sm:py-12 flex flex-col gap-8">
-      {/* Encabezado broadsheet con el folio real. El estado del kit NO se
-          afirma aquí (hallazgo #11): la verdad la dicta el backend al enviar. */}
-      <section className="flex flex-col gap-2">
+    <div className="w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 flex flex-col gap-8 animate-fadeInUp">
+      {/* Encabezado broadsheet con el folio real */}
+      <section className="flex flex-col gap-2 border-b border-brand-separator pb-5">
         <div className="flex items-center gap-2">
-          <span className="font-sans text-micro font-bold uppercase tracking-widest bg-ink text-paper px-2 py-0.5 rounded-[4px]">
+          <span className="font-mono text-xs font-bold uppercase tracking-widest bg-brand-navy-dark text-white px-3 py-1 rounded-md">
             {code}
           </span>
+          <span className="font-sans text-xs font-semibold text-brand-text-muted uppercase tracking-wider">
+            {t.common.appName} · {t.nav.activateHelmet}
+          </span>
         </div>
-        <h1 className="font-serif text-heading-sm sm:text-heading font-bold text-ink leading-tight">
+        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-brand-navy-dark leading-tight">
           {t.activate.title}
         </h1>
-        <p className="font-serif text-body text-carbon">{t.activate.subtitle}</p>
+        <p className="font-sans text-sm text-brand-text-desc">{t.activate.subtitle}</p>
       </section>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-8">
         {/* Paso 1: PIN confidencial del kit y credenciales de la cuenta */}
-        <IncidentCard padding="md" className="flex flex-col gap-4">
-          <div className="border-b border-mist pb-2">
-            <h3 className="font-serif font-bold text-heading-sm text-ink">
+        <div className="bg-brand-white border border-brand-border-subtle rounded-xl p-6 sm:p-7 shadow-sm flex flex-col gap-5 hover:border-brand-border-strong transition-all">
+          <div className="border-b border-brand-separator pb-3">
+            <h3 className="font-serif font-bold text-xl text-brand-navy-dark leading-tight">
               {t.activate.stepPinTitle}
             </h3>
-            <p className="font-sans text-micro text-carbon mt-0.5">{t.activate.pinHelp}</p>
+            <p className="font-sans text-xs text-brand-text-desc mt-0.5">{t.activate.pinHelp}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -177,7 +189,7 @@ export default function ActivatePage({ params }: PageProps) {
                 value={form.pin}
                 onChange={(event) => form.setPin(event.target.value.replace(/\D/g, ""))}
                 placeholder={t.activate.pinPlaceholder}
-                className="h-12 px-3 bg-concrete border-2 border-ink rounded-[4px] font-sans text-heading-sm font-bold tracking-widest text-center text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+                className="safe-input-focus h-12 px-3 bg-brand-white border border-brand-border-field rounded-md font-sans text-xl font-bold tracking-widest text-center text-brand-navy-dark"
               />
             </div>
 
@@ -202,7 +214,7 @@ export default function ActivatePage({ params }: PageProps) {
               />
             </div>
           </div>
-        </IncidentCard>
+        </div>
 
         {/* Paso 2: fotografía de rostro con subida real al servicio de medios */}
         <CloudinaryPhotoPicker
@@ -222,14 +234,12 @@ export default function ActivatePage({ params }: PageProps) {
         />
 
         {/* Paso 3: ficha médica personal del conductor */}
-        <IncidentCard padding="md" className="flex flex-col gap-4">
-          <div className="border-b border-mist pb-2">
-            {/* Semántica de onboarding (hallazgo #12): claves del panel médico,
-                NO del contexto de siniestro (t.emergency.*) */}
-            <h3 className="font-serif font-bold text-heading-sm text-ink">
+        <div className="bg-brand-white border border-brand-border-subtle rounded-xl p-6 sm:p-7 shadow-sm flex flex-col gap-5 hover:border-brand-border-strong transition-all">
+          <div className="border-b border-brand-separator pb-3">
+            <h3 className="font-serif font-bold text-xl text-brand-navy-dark leading-tight">
               {t.dashboard.editMedicalTitle}
             </h3>
-            <p className="font-sans text-micro text-carbon mt-0.5">{t.dashboard.editMedicalSubtitle}</p>
+            <p className="font-sans text-xs text-brand-text-desc mt-0.5">{t.dashboard.editMedicalSubtitle}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -249,7 +259,7 @@ export default function ActivatePage({ params }: PageProps) {
               <select
                 value={form.bloodType} required
                 onChange={(event) => form.setBloodType(event.target.value)}
-                className="h-11 min-h-[44px] px-3 bg-concrete border-2 border-ink rounded-[4px] font-serif text-body font-bold text-ink focus:outline-none cursor-pointer"
+                className="safe-input-focus h-11 min-h-[44px] px-3 bg-brand-white border border-brand-border-field rounded-md font-serif text-base font-bold text-brand-navy-dark cursor-pointer"
               >
                 <option value="" disabled>
                   {t.activate.bloodTypeLabel}
@@ -283,11 +293,11 @@ export default function ActivatePage({ params }: PageProps) {
             </div>
           </div>
 
-          <IncidentHairline variant="subtle" margin="sm" />
+          <div className="border-t border-brand-separator my-1" />
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="flex flex-col gap-1">
-              <label className="font-sans text-micro font-bold uppercase text-alert-red">
+              <label className="font-sans text-xs font-semibold text-brand-accent">
                 {t.activate.allergiesLabel}
               </label>
               <textarea
@@ -318,7 +328,7 @@ export default function ActivatePage({ params }: PageProps) {
               />
             </div>
           </div>
-        </IncidentCard>
+        </div>
 
         {/* Paso 4: repetidor de contactos con UUID y correo obligatorio */}
         <ContactsRepeater
@@ -329,7 +339,7 @@ export default function ActivatePage({ params }: PageProps) {
         />
 
         {/* Paso 5: consentimiento legal vinculante (safe-legal-and-terms) */}
-        <div className="p-4 bg-paper border border-ink rounded-[8px]">
+        <div className="p-4 bg-brand-white border border-brand-border-subtle rounded-xl shadow-xs">
           <label className="flex items-start gap-3 cursor-pointer select-none min-h-[44px]">
             <input
               type="checkbox"
@@ -337,14 +347,14 @@ export default function ActivatePage({ params }: PageProps) {
               checked={form.termsAccepted}
               onChange={(event) => form.setTermsAccepted(event.target.checked)}
               disabled={form.isSubmitting}
-              className="mt-0.5 h-6 w-6 shrink-0 accent-ink cursor-pointer"
+              className="mt-0.5 h-5 w-5 shrink-0 rounded border-brand-border-field text-brand-navy-dark focus:ring-brand-nav-blue cursor-pointer"
             />
-            <span className="font-sans text-micro text-ink leading-relaxed">
+            <span className="font-sans text-xs text-brand-text-desc leading-relaxed">
               {t.activate.acceptTermsPre}{" "}
               <Link
                 href="/terms"
                 target="_blank"
-                className="underline font-bold text-ink hover:text-signal-orange"
+                className="underline font-semibold text-brand-navy-dark hover:text-brand-accent transition-colors"
               >
                 {t.common.termsLink}
               </Link>{" "}
@@ -352,7 +362,7 @@ export default function ActivatePage({ params }: PageProps) {
               <Link
                 href="/privacy"
                 target="_blank"
-                className="underline font-bold text-ink hover:text-signal-orange"
+                className="underline font-semibold text-brand-navy-dark hover:text-brand-accent transition-colors"
               >
                 {t.common.privacyLink}
               </Link>
@@ -361,17 +371,37 @@ export default function ActivatePage({ params }: PageProps) {
           </label>
         </div>
 
-        {/* Aviso de error en banner crítico Incident (nunca fondos crudos) */}
-        {visibleError && <IncidentAlertBanner type="emergency" message={visibleError} />}
+        {/* Aviso de error accesible */}
+        {visibleError && (
+          <div className="text-xs rounded-md p-3.5 bg-red-50 text-red-700 border border-red-200 block animate-fadeInDown">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>{visibleError}</span>
+            </div>
+          </div>
+        )}
 
         {/* Botón de envío con estado de progreso */}
         <div className="pt-2">
-          <IncidentButton
-            type="submit" variant="emergency" size="lg" className="w-full"
-            isLoading={form.isSubmitting} disabled={form.isSubmitting}
+          <button
+            type="submit"
+            disabled={form.isSubmitting}
+            className="w-full min-h-[48px] inline-flex items-center justify-center px-6 py-3.5 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary text-sm font-semibold rounded-md shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
           >
-            {form.isSubmitting ? t.activate.submittingButton : t.activate.submitButton}
-          </IncidentButton>
+            {form.isSubmitting ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                {t.activate.submittingButton}
+              </span>
+            ) : (
+              t.activate.submitButton
+            )}
+          </button>
         </div>
       </form>
     </div>

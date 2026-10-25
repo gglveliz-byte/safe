@@ -1,235 +1,143 @@
 /**
  * ==============================================================================
  * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
- * MÓDULO: Vistas Oficiales — VISTA 1: Landing Page Informativa Editorial
+ * MÓDULO: Vistas Oficiales — VISTA 1: Landing Page Editorial (SAFE 2026)
  * ARCHIVO: src/app/page.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Portada institucional broadsheet de la plataforma. Presenta la baliza editorial,
- * el titular principal, un mini-formulario REAL de acceso a la activación del kit
- * (el motociclista escribe el folio físico impreso en su paquete y navega a
- * `/activate/[folio]`; jamás se navega a folios inventados), la explicación del
- * escaneo del casco en carretera (antena de contacto / código visual → ficha
- * médica + aviso a familiares) y la cita de la Hora Dorada. Todo el copy
- * proviene del diccionario bilingüe tipado. Cero estadísticas fabricadas
- * (Ley 2): la sección how-it-works concentra el peso editorial de la portada.
+ * Portada institucional y técnica de la plataforma SAFE bajo la estética
+ * 'Technical Broadsheet 2026'. Presenta el boletín médico vital en el casco,
+ * la visualización con radares sónar activos sobre NFC/QR, el modal interactivo
+ * de ficha médica de emergencia (demo), el formulario real de activación de tag,
+ * el flujo funcional en carretera en 3 pasos y la cita de la Hora Dorada.
  *
- * ENTRADAS: diccionario bilingüe vía useLocale; folio físico capturado al usuario.
- * SALIDAS: navegación real a la ruta de activación `/activate/[folio]`.
- * DEPENDENCIAS: useLocale, useHaptic, IncidentCard, IncidentHairline, next/navigation.
+ * ENTRADAS: diccionario bilingüe vía useLocale.
+ * SALIDAS: navegación real y apertura de modales accesibles.
+ * DEPENDENCIAS: HelmetHeroCard, HelmetActivationSection, HowItWorksSection,
+ *               GoldenHourSection, DemoMedicalModal.
  *
  * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas (objetivo landing < 350).
+ * - Límite estricto < 500 líneas (módulo < 220 líneas).
  * - Cero textos hardcodeados (100% t vía useLocale).
- * - Cero folios o enlaces de demostración (Ley 2).
- * - Cero gradientes; fondo concreto #efefef heredado del body.
- * - Objetivos táctiles mínimos de 44x44px y háptica en cada interacción.
+ * - Cero datos mock o folios inventados en la activación.
+ * - 100% responsive: diseño adaptativo continuo para móviles, tablets y desktop.
  * ==============================================================================
  */
 
 "use client";
 
-import React, { useState, type ChangeEvent, type FormEvent } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
-import { IncidentCard } from "@/components/ui/IncidentCard";
-import { IncidentHairline } from "@/components/ui/IncidentHairline";
-
-/**
- * Regla local de validación del folio del kit: la MISMA regla que aplica el
- * servicio al recibir el código (recorte, longitud de 4 a 32 caracteres y
- * únicamente letras, números y guiones). El valor se normaliza a mayúsculas
- * al vuelo en el propio campo, igual que la normalización del registro oficial.
- */
-const FOLIO_PATTERN = /^[A-Za-z0-9-]{4,32}$/;
+import { HelmetHeroCard } from "@/components/landing/HelmetHeroCard";
+import { HelmetActivationSection } from "@/components/landing/HelmetActivationSection";
+import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
+import { GoldenHourSection } from "@/components/landing/GoldenHourSection";
+import { DemoMedicalModal } from "@/components/landing/DemoMedicalModal";
 
 export default function HomePage() {
   const { t } = useLocale();
-  const router = useRouter();
   const { triggerHaptic } = useHaptic();
+  const [demoModalOpen, setDemoModalOpen] = useState(false);
 
-  // Folio físico escrito por el usuario (normalizado a mayúsculas al vuelo)
-  const [folio, setFolio] = useState<string>("");
-  // Marca de error local del mini-formulario de activación
-  const [folioError, setFolioError] = useState<boolean>(false);
-
-  /**
-   * Captura el folio escrito, lo normaliza a mayúsculas (anti-variaciones del
-   * teclado) y recorta la longitud máxima a 32 caracteres, igual que el servicio.
-   */
-  const handleFolioChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const normalized = event.target.value.toUpperCase().slice(0, 32);
-    setFolio(normalized);
-    if (folioError && FOLIO_PATTERN.test(normalized.trim())) {
-      setFolioError(false);
-    }
+  const openDemoModal = () => {
+    triggerHaptic("light");
+    setDemoModalOpen(true);
   };
 
-  /**
-   * Envío del mini-formulario de activación: valida el folio localmente y,
-   * si es válido, navega a la ruta real `/activate/[folio]`. Folio vacío o
-   * inválido → mensaje de campo obligatorio y vibración de error.
-   * NUNCA se navega a un folio de ejemplo.
-   */
-  const handleActivateSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const candidate = folio.trim();
-    if (!candidate || !FOLIO_PATTERN.test(candidate)) {
-      triggerHaptic("error");
-      setFolioError(true);
-      return;
-    }
-    setFolioError(false);
-    triggerHaptic("success");
-    router.push(`/activate/${candidate}`);
+  const closeDemoModal = () => {
+    triggerHaptic("light");
+    setDemoModalOpen(false);
   };
 
   return (
-    <div className="safe-mobile-container flex flex-col pb-10">
-      {/* ══════════════════ HERO EDITORIAL BROADSHEET ══════════════════ */}
-      <section className="flex flex-col gap-5 pt-6 sm:pt-10">
-        {/* Insignia micro con punto baliza Signal Orange */}
-        <div className="flex items-center gap-2.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-signal-orange" aria-hidden="true" />
-          <span className="font-sans text-micro font-bold uppercase tracking-widest text-carbon">
-            {t.landing.badgeText}
-          </span>
-        </div>
+    <div className="w-full bg-brand-white">
+      {/* ══════════════════ HERO SECTION (BROADSHEET 2026) ══════════════════ */}
+      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-10 md:pt-16 pb-12 md:pb-16 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+          {/* Columna Izquierda: Información Editorial (aprox. 58%) */}
+          <div className="lg:col-span-7 flex flex-col justify-center">
+            {/* Tag Superior con Baliza Sónar Pulsante */}
+            <div className="flex items-center gap-2.5 mb-5 animate-fadeInDown">
+              <span className="relative flex h-2.5 w-2.5 flex-shrink-0" aria-hidden="true">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-accent opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-accent" />
+              </span>
+              <span className="font-sans text-[11px] md:text-[12px] font-semibold text-brand-text-muted tracking-[0.14em] uppercase">
+                {t.landing.badgeText}
+              </span>
+            </div>
 
-        {/* Titular y bajada principal (serif editorial) */}
-        <h1 className="max-w-3xl font-serif text-heading font-bold tracking-tight text-ink">
-          {t.landing.heroHeadline}
-        </h1>
-        <p className="max-w-2xl font-serif text-body-lg leading-relaxed text-carbon">
-          {t.landing.heroSubheadline}
-        </p>
+            {/* Titular Principal en Serif Newsreader */}
+            <h1 className="font-serif font-bold text-[30px] sm:text-[38px] lg:text-[44px] leading-[1.14] text-brand-navy-dark mb-6 tracking-[-0.015em]">
+              {t.landing.heroHeadline}
+            </h1>
 
-        {/* Acceso explicativo: ancla interna a la sección de funcionamiento
-            (sin enlaces a códigos falsos de demostración) */}
-        <div className="flex flex-wrap items-center gap-3 pt-1">
-          <Link
-            href="#como-funciona"
-            onClick={() => triggerHaptic("light")}
-            className="btn-neutral text-micro no-underline"
-          >
-            {t.landing.exploreEmergencyCta}
-          </Link>
-        </div>
-      </section>
+            {/* Párrafo Descriptivo */}
+            <p className="font-sans text-[16px] sm:text-[17px] md:text-[18px] leading-[1.6] text-brand-text-desc max-w-[620px] mb-8 font-normal">
+              {t.landing.heroSubheadline}
+            </p>
 
-      <IncidentHairline variant="solid" />
+            {/* Botones de Acción Interactivos */}
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                onClick={openDemoModal}
+                aria-haspopup="dialog"
+                className="group inline-flex items-center justify-center px-6 py-3.5 bg-brand-white text-brand-navy-dark border border-brand-border-subtle hover:border-brand-nav-blue hover:bg-brand-nav-active hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] text-[13px] md:text-[14px] font-semibold rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer"
+              >
+                <span>{t.landing.exploreEmergencyCta}</span>
+                <svg
+                  className="ml-2.5 w-4 h-4 text-brand-nav-blue transform group-hover:translate-x-1.5 transition-transform duration-200"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </button>
 
-      {/* ══════════ ACCESO DE ACTIVACIÓN REAL (SIN FOLIOS DE MUESTRA) ══════════ */}
-      <section id="activar" className="scroll-mt-28">
-        <IncidentCard padding="lg">
-          <form onSubmit={handleActivateSubmit} className="flex flex-col gap-4" noValidate>
-            <div className="flex flex-col gap-2">
-              <label
-                htmlFor="activate-folio"
-                className="font-sans text-micro font-bold uppercase tracking-widest text-ink"
+              <Link
+                href="/#activar-casco"
+                onClick={() => triggerHaptic("light")}
+                className="inline-flex items-center justify-center px-6 py-3.5 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] text-[13px] md:text-[14px] font-semibold rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-nav-blue no-underline"
               >
                 {t.nav.activateHelmet}
-              </label>
-              <input
-                id="activate-folio"
-                name="folio"
-                type="text"
-                value={folio}
-                onChange={handleFolioChange}
-                aria-invalid={folioError}
-                aria-describedby={folioError ? "activate-folio-error" : undefined}
-                autoComplete="off"
-                autoCapitalize="characters"
-                spellCheck={false}
-                maxLength={32}
-                className="w-full min-h-[44px] rounded-[4px] border border-ink bg-paper px-3 py-2 font-sans text-body uppercase text-ink focus:outline-none focus:ring-2 focus:ring-signal-orange"
-              />
-              {/* Mensaje de validación local: campo vacío o folio inválido */}
-              {folioError && (
-                <span
-                  id="activate-folio-error"
-                  role="alert"
-                  className="font-sans text-micro text-alert-red"
-                >
-                  {t.common.requiredField}
-                </span>
-              )}
+              </Link>
             </div>
-            <button type="submit" className="btn-neutral self-start text-micro">
-              {t.landing.activateCta}
-            </button>
-          </form>
-        </IncidentCard>
-      </section>
 
-      <IncidentHairline variant="solid" />
+            {/* Micro-indicador de Confianza */}
+            <div className="mt-8 pt-6 border-t border-brand-separator flex items-center gap-4 text-xs text-brand-text-muted">
+              <span className="inline-flex items-center gap-1.5 font-medium group cursor-default">
+                <svg className="w-4 h-4 text-brand-nav-blue group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                {t.landing.trustNfcQr}
+              </span>
+              <span className="w-1 h-1 rounded-full bg-brand-border-strong" aria-hidden="true" />
+              <span>{t.landing.trustNoDownloads}</span>
+            </div>
+          </div>
 
-      {/* ══════════ CÓMO FUNCIONA EL ESCANEO DEL CASCO EN CARRETERA ══════════ */}
-      <section id="como-funciona" className="flex scroll-mt-28 flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h2 className="font-serif text-heading-sm font-bold text-ink sm:text-heading">
-            {t.landing.howItWorksTitle}
-          </h2>
-          <p className="font-serif text-body leading-relaxed text-carbon">
-            {t.landing.howItWorksSubtitle}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {/* Paso 1: chip físico adherido al casco (barra baliza Signal Orange) */}
-          <IncidentCard padding="md" className="flex flex-col gap-3">
-            <span className="h-1 w-12 bg-signal-orange" aria-hidden="true" />
-            <h3 className="font-serif text-body-lg font-bold text-ink">
-              {t.landing.step1Title}
-            </h3>
-            <IncidentHairline variant="subtle" margin="sm" />
-            <p className="font-serif text-body leading-relaxed text-carbon">
-              {t.landing.step1Desc}
-            </p>
-          </IncidentCard>
-
-          {/* Paso 2: registro de datos vitales (barra baliza Signal Orange) */}
-          <IncidentCard padding="md" className="flex flex-col gap-3">
-            <span className="h-1 w-12 bg-signal-orange" aria-hidden="true" />
-            <h3 className="font-serif text-body-lg font-bold text-ink">
-              {t.landing.step2Title}
-            </h3>
-            <IncidentHairline variant="subtle" margin="sm" />
-            <p className="font-serif text-body leading-relaxed text-carbon">
-              {t.landing.step2Desc}
-            </p>
-          </IncidentCard>
-
-          {/* Paso 3: auxilio inmediato con aviso a familiares (barra baliza) */}
-          <IncidentCard padding="md" className="flex flex-col gap-3">
-            <span className="h-1 w-12 bg-signal-orange" aria-hidden="true" />
-            <h3 className="font-serif text-body-lg font-bold text-ink">
-              {t.landing.step3Title}
-            </h3>
-            <IncidentHairline variant="subtle" margin="sm" />
-            <p className="font-serif text-body leading-relaxed text-carbon">
-              {t.landing.step3Desc}
-            </p>
-          </IncidentCard>
+          {/* Columna Derecha: Tarjeta Fotográfica con Radares Sónar */}
+          <div className="lg:col-span-5 flex justify-center items-center">
+            <HelmetHeroCard />
+          </div>
         </div>
       </section>
 
-      <IncidentHairline variant="solid" />
+      {/* ══════════ SECCIÓN: FORMULARIO PARA ACTIVAR EL CASCO ══════════ */}
+      <HelmetActivationSection />
 
-      {/* ══════════ CITA EDITORIAL: EL PRINCIPIO DE LA HORA DORADA ══════════ */}
-      <section className="border-l-2 border-signal-orange pl-5 sm:pl-6">
-        <span className="block font-sans text-micro font-bold uppercase tracking-widest text-ink">
-          {t.landing.quoteTitle}
-        </span>
-        <blockquote className="mt-3 font-serif text-body italic leading-relaxed text-ink sm:text-body-lg">
-          {t.landing.quoteBody}
-        </blockquote>
-        <span className="mt-3 block font-sans text-micro font-semibold text-carbon">
-          {t.landing.quoteAuthor}
-        </span>
-      </section>
+      {/* ══════════ SECCIÓN: ¿CÓMO FUNCIONA SAFE EN CARRETERA? ══════════ */}
+      <HowItWorksSection />
+
+      {/* ══════════ SECCIÓN: EL PRINCIPIO DE LA HORA DORADA ══════════ */}
+      <GoldenHourSection />
+
+      {/* ══════════ MODAL: FICHA MÉDICA DE DEMOSTRACIÓN ══════════ */}
+      <DemoMedicalModal isOpen={demoModalOpen} onClose={closeDemoModal} />
     </div>
   );
 }

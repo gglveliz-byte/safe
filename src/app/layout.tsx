@@ -17,13 +17,29 @@
  */
 
 import type { Metadata, Viewport } from "next";
+import { Newsreader, Inter } from "next/font/google";
 import "./globals.css";
 import { PublicChrome } from "@/components/layout/PublicChrome";
 
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-newsreader",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "SAFE — Emergency Medical & Real-Time GPS Ledger for Riders",
+  title: "SAFE | Respaldo Médico en Carretera",
   description:
-    "Ficha médica de emergencia y auxilio satelital en tiempo real para motociclistas. Información clínica vital en 1 segundo.",
+    "Un boletín médico vital en tu casco que habla por ti cuando más lo necesitas. Ficha clínica de rescate y auxilio satelital en 1 segundo.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -42,7 +58,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#efefef",
+  themeColor: "#FFFFFF",
 };
 
 export default function RootLayout({
@@ -51,14 +67,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="h-full bg-concrete" suppressHydrationWarning>
+    <html
+      lang="es"
+      className={`h-full scroll-smooth ${newsreader.variable} ${inter.variable}`}
+      suppressHydrationWarning
+    >
       <body
-        className="min-h-full flex flex-col bg-concrete text-ink antialiased selection:bg-signal-orange selection:text-paper"
+        className="min-h-full flex flex-col bg-brand-white text-brand-navy-dark font-sans antialiased selection:bg-brand-nav-active selection:text-brand-navy-dark"
         suppressHydrationWarning
       >
-        {/* Cromo institucional: público con navbar/footer; /admin solo contenido */}
+        {/* Cromo institucional: público con navbar/footer; /admin y /dashboard solo contenido */}
         <PublicChrome>{children}</PublicChrome>
       </body>
     </html>
   );
 }
+

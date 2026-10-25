@@ -22,46 +22,60 @@
 @tailwind utilities;
 
 :root {
-  /* Paleta cromática canónica Incident */
-  --color-concrete: #efefef;
-  --color-paper: #ffffff;
-  --color-ink: #000000;
-  --color-carbon: #161618;
-  --color-signal-orange: #f25533;
-  --color-alert-red: #ff492c;
-  --color-ember: #f1641e;
-  --color-mist: #dadada;
-  --color-fog: #cccccc;
-  --color-parchment: #e4d9c8;
+  /* Paleta cromática oficial SAFE 2026 */
+  --color-white: #FFFFFF;
+  --color-bg-alt: #F8FAFC;
+  --color-bg-subtle: #F1F5F9;
+  --color-navy-dark: #0B1F3A;
+  --color-navy-secondary: #15365B;
+  --color-text-desc: #23466D;
+  --color-text-muted: #5C718A;
+  --color-accent: #FF5138;
+  --color-accent-hover: #F45136;
+  --color-nav-blue: #2F648F;
+  --color-nav-active: #EDF5FC;
+  --color-border-subtle: #D7E3F0;
+  --color-border-field: #C9D9E9;
+  --color-border-strong: #B8CADD;
+  --color-separator: #DCE5EE;
 
-  /* Tipografía bimodal */
-  --font-times-system-serif: 'Times (system serif)', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-  --font-arial-system-sans: 'Arial (system sans)', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Alias de compatibilidad previa */
+  --color-concrete: #FFFFFF;
+  --color-paper: #FFFFFF;
+  --color-ink: #0B1F3A;
+  --color-carbon: #23466D;
+  --color-signal-orange: #FF5138;
+  --color-alert-red: #FF5138;
+  --color-ember: #F45136;
+  --color-mist: #D7E3F0;
+  --color-fog: #B8CADD;
+  --color-parchment: #F8FAFC;
 
   /* Escala tipográfica */
   --text-micro: 13px;
   --text-body: 16px;
-  --text-body-lg: 19px;
-  --text-heading-sm: 24px;
-  --text-heading: 32px;
+  --text-body-lg: 18px;
+  --text-heading-sm: 22px;
+  --text-heading: 34px;
 }
 
-/* Reset y base global sobre lienzo concreto */
+/* Reset y base global sobre lienzo limpio */
 html,
 body {
   margin: 0;
   padding: 0;
-  background-color: var(--color-concrete);
-  color: var(--color-ink);
-  font-family: var(--font-times-system-serif);
+  background-color: var(--color-white);
+  color: var(--color-navy-dark);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: var(--text-body);
-  line-height: 1.35;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   min-height: 100dvh;
 }
+
 
 /* Contenedor móvil con adaptación a muesca (notch) e indicador de inicio */
 .safe-mobile-container {
@@ -178,14 +192,100 @@ body {
   margin-bottom: 16px;
 }
 
-/* Clases de utilidad tipográfica */
-.font-serif-reading {
-  font-family: var(--font-times-system-serif);
+/* ══════════════ MICRO-INTERACCIONES & RADARES SÓNAR (SAFE 2026) ══════════════ */
+
+/* Anillos sónar sobre antena NFC y código QR */
+.sonar-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  animation: pulseSonar 2.6s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
 }
 
-.font-sans-micro {
-  font-family: var(--font-arial-system-sans);
-  font-size: 13px;
+.sonar-ring-2 {
+  animation-delay: 1.1s;
+}
+
+.dot-beacon {
+  animation: pulseGlow 2.2s ease-in-out infinite;
+}
+
+/* Pulso respiratorio en borde de la Hora Dorada */
+.golden-hour-border {
+  animation: borderPulse 3.5s ease-in-out infinite;
+}
+
+/* Enfoque accesible con resplandor suave en inputs */
+.safe-input-focus,
+.input-field-glow {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.safe-input-focus:focus,
+.input-field-glow:focus {
+  border-color: #2F648F;
+  box-shadow: 0 0 0 3px rgba(47, 100, 143, 0.18);
+  outline: none;
+}
+
+/* Tarjeta 3D del casco */
+.helmet-hero-card {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease;
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.helmet-hero-card:hover {
+  transform: translateY(-4px) scale(1.012);
+  box-shadow: 0 20px 35px -10px rgba(11, 31, 58, 0.12), 0 1px 3px rgba(11, 31, 58, 0.05);
+}
+
+/* Tarjetas de pasos funcionales */
+.feature-card:hover .card-icon-wrap {
+  transform: scale(1.08) rotate(-2deg);
+  background-color: #0B1F3A;
+  color: #FFFFFF;
+}
+
+.feature-card:hover .card-badge {
+  background-color: #FF5138;
+  transform: scale(1.05);
+}
+
+/* Morphing del menú hamburguesa en móvil */
+.bar-top, .bar-mid, .bar-bot {
+  transition: transform 0.28s ease, opacity 0.2s ease;
+  transform-origin: center;
+}
+
+.menu-active .bar-top {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.menu-active .bar-mid {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.menu-active .bar-bot {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* Reducción de movimiento para accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-delay: 0s !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .sonar-ring, .dot-beacon, .golden-hour-border {
+    animation: none !important;
+  }
+  .helmet-hero-card:hover {
+    transform: none !important;
+  }
 }
 
 /* Estilo para impresión de stickers QR (admin) */

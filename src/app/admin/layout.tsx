@@ -28,7 +28,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex min-h-dvh w-full flex-col bg-concrete">
+    <div className="flex min-h-dvh w-full flex-col bg-brand-bg-alt text-brand-navy-dark">
       <ConsoleTopBar area="admin" />
       <main className="flex-1 w-full">{children}</main>
     </div>

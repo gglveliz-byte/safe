@@ -1,20 +1,16 @@
 /**
  * ==============================================================================
  * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
- * MÓDULO: Administración — Selector de Lotes Emitidos
+ * MÓDULO: Administración — Selector de Lotes Emitidos (SAFE 2026)
  * ARCHIVO: src/components/admin/BatchSelector.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
  * Lista los lotes reales devueltos por GET /api/admin/batches y permite elegir
- * uno para imprimir su plancha QR o grabar las antenas de sus chips. Cada
- * botón muestra cifras veraces de PostgreSQL: total, disponibles y activos.
- *
- * ENTRADAS: lotes, lote seleccionado y callback de selección.
- * SALIDAS: cuadrícula de botones accesibles con estado activo en Ink.
- * DEPENDENCIAS: useLocale, AdminBatchSummary.
+ * uno para imprimir su plancha QR o grabar las antenas de sus chips bajo el
+ * diseño SAFE 2026.
  *
  * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas físicas.
+ * - Límite estricto < 500 líneas físicas (módulo < 110 líneas).
  * - Cero lotes de demostración ni cifras fabricadas.
  * ==============================================================================
  */
@@ -26,18 +22,11 @@ import { useLocale } from "@/hooks/useLocale";
 import type { AdminBatchSummary } from "@/lib/api-client";
 
 export interface BatchSelectorProps {
-  /** Lotes reales agregados desde PostgreSQL. */
   batches: AdminBatchSummary[];
-  /** Nombre del lote actualmente abierto en el inventario. */
   selectedBatchName: string;
-  /** Selecciona un lote para cargar su detalle. */
   onSelect: (batchName: string) => void;
 }
 
-/**
- * Selector editorial de lotes: botones rectangulares con borde capilar negro.
- * El lote activo invierte a fondo Ink y texto Paper para máxima legibilidad.
- */
 export function BatchSelector({
   batches,
   selectedBatchName,
@@ -48,25 +37,25 @@ export function BatchSelector({
   return (
     <section className="flex flex-col gap-2">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-serif font-bold text-heading-sm text-ink">
+        <h2 className="font-serif font-bold text-xl sm:text-2xl text-brand-navy-dark">
           {t.admin.generatedBatchesTitle}{" "}
-          <span className="font-sans text-micro text-carbon">
+          <span className="font-sans text-xs font-semibold text-brand-text-muted">
             ({batches.length})
           </span>
         </h2>
-        <p className="font-sans text-micro text-carbon">
+        <p className="font-sans text-xs text-brand-text-muted">
           {t.admin.batchListHint}
         </p>
       </div>
 
       {batches.length === 0 ? (
-        <div className="p-5 border border-dashed border-mist rounded-[8px] bg-paper text-center">
-          <p className="font-sans text-micro text-carbon">
+        <div className="p-6 border border-dashed border-brand-border-subtle rounded-xl bg-brand-white text-center">
+          <p className="font-sans text-xs text-brand-text-muted">
             {t.admin.batchListEmpty}
           </p>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5">
           {batches.map((batch) => {
             const isSelected = selectedBatchName === batch.batchName;
             return (
@@ -75,10 +64,10 @@ export function BatchSelector({
                 type="button"
                 onClick={() => onSelect(batch.batchName)}
                 aria-pressed={isSelected}
-                className={`min-h-[44px] px-3 py-2 inline-flex flex-col items-start justify-center border rounded-[4px] font-sans text-micro transition-all ${
+                className={`min-h-[48px] px-3.5 py-2 inline-flex flex-col items-start justify-center border rounded-lg font-sans text-xs transition-all cursor-pointer ${
                   isSelected
-                    ? "bg-ink text-paper border-ink"
-                    : "bg-paper text-ink border-mist hover:border-ink"
+                    ? "bg-brand-navy-dark text-white border-brand-navy-dark shadow-sm"
+                    : "bg-brand-white text-brand-navy-dark border-brand-border-subtle hover:border-brand-border-strong hover:bg-brand-bg-alt"
                 }`}
               >
                 <span className="font-bold tracking-wide">
@@ -86,7 +75,7 @@ export function BatchSelector({
                 </span>
                 <span
                   className={`text-[11px] ${
-                    isSelected ? "text-paper/80" : "text-carbon"
+                    isSelected ? "text-white/80" : "text-brand-text-muted"
                   }`}
                 >
                   {batch.totalDevices} {t.admin.totalKitsLabel} ·{" "}

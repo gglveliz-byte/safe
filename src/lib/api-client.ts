@@ -422,6 +422,41 @@ export const apiClient = {
     return json.data || { riders: [] };
   },
 
+  /** Elimina un usuario registrado y su chip vinculado (transacción atómica) */
+  async deleteAdminRider(userId: string): Promise<{
+    success: boolean;
+    notFound: boolean;
+    message: string;
+  }> {
+    const res = await fetch(`/api/admin/riders/${encodeURIComponent(userId)}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return json.data || { success: false, notFound: false, message: "" };
+  },
+
+  /** Elimina un chip físico (libera al usuario asociado) */
+  async deleteAdminDevice(code: string): Promise<{
+    success: boolean;
+    notFound: boolean;
+    message: string;
+  }> {
+    const res = await fetch(
+      `/api/admin/devices/${encodeURIComponent(code.trim().toUpperCase())}`,
+      {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+      },
+    );
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return json.data || { success: false, notFound: false, message: "" };
+  },
+
   /** Lista el resumen de todos los lotes de producción */
   async getAdminBatches(): Promise<{ batches: AdminBatchSummary[] }> {
     const res = await fetch("/api/admin/batches", {

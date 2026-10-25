@@ -1,23 +1,22 @@
 /**
  * ==============================================================================
  * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
- * MÓDULO: Administración — Usuarios Registrados y Chips Vinculados
+ * MÓDULO: Administración — Usuarios Registrados y Chips Vinculados (SAFE 2026)
  * ARCHIVO: src/components/admin/RidersTable.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
  * Tabla operativa de cuentas RIDER reales con el chip SAFE que tienen
- * vinculado. Permite buscar por nombre, correo o folio y actualizar la lista
- * contra GET /api/admin/riders. En móvil cada registro se apila como tarjeta
- * con microetiquetas; en escritorio se alinea en columnas editoriales.
- *
- * ENTRADAS: riders, estado de carga/error y callback de actualización.
- * SALIDAS: búsqueda filtrada, tabla responsiva y estado vacío veraz.
- * DEPENDENCIAS: useLocale, IncidentButton, AdminRiderItem.
+ * vinculado. Permite:
+ * 1. Buscar instantáneamente por nombre, correo o folio.
+ * 2. Actualizar la lista contra GET /api/admin/riders.
+ * 3. Eliminar un usuario registrado (con chip) vía DELETE /api/admin/riders/:userId.
+ * 4. Eliminar un chip físico (libera al usuario) vía DELETE /api/admin/devices/:code.
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 500 líneas físicas.
  * - Cero usuarios de demostración: los datos provienen de PostgreSQL.
  * - Objetivos táctiles mínimos de 44x44px.
+ * - 100% bilingüe vía useLocale().
  * ==============================================================================
  */
 
@@ -25,8 +24,10 @@
 
 import React, { useMemo, useState } from "react";
 import { useLocale } from "@/hooks/useLocale";
-import { IncidentButton } from "@/components/ui/IncidentButton";
+import { useHaptic } from "@/hooks/useHaptic";
+import { apiClient } from "@/lib/api-client";
 import type { AdminRiderItem } from "@/lib/api-client";
+import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 
 export interface RidersTableProps {
   /** Usuarios RIDER reales con su chip vinculado. */
@@ -37,6 +38,10 @@ export interface RidersTableProps {
   errorMessage: string;
   /** Vuelve a consultar la lista de usuarios. */
   onRefresh: () => void;
+  /** Callback cuando se elimina un usuario (opcional: para UI sync). */
+  onUserDeleted?: (userId: string) => void;
+  /** Callback cuando se elimina un chip (opcional: para UI sync). */
+  onDeviceDeleted?: (code: string) => void;
 }
 
 /** Convierte una fecha ISO a texto local legible; vacío si no existe. */
@@ -52,19 +57,30 @@ function formatDate(value: string | null, locale: "es" | "en"): string {
 }
 
 /**
- * Tabla de usuarios con búsqueda local instantánea.
- * El estado del chip se rotula con el diccionario; nunca se inventa ACTIVE.
+ * Tabla de usuarios con búsqueda local instantánea y operaciones de eliminación.
  */
 export function RidersTable({
   riders,
   isLoading,
   errorMessage,
   onRefresh,
+  onUserDeleted,
+  onDeviceDeleted,
 }: RidersTableProps) {
   const { t, locale } = useLocale();
+  const { triggerHaptic } = useHaptic();
   const [query, setQuery] = useState("");
 
-  // Filtrado instantáneo por nombre, correo o folio, sin consultas adicionales.
+  // Estado del modal de confirmación
+  const [deleteTarget, setDeleteTarget] = useState<
+    | { type: "user"; rider: AdminRiderItem }
+    | { type: "device"; code: string }
+    | null
+  >(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  // Filtrado instantáneo por nombre, correo o folio
   const filteredRiders = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     if (!normalizedQuery) return riders;
@@ -87,42 +103,92 @@ export function RidersTable({
     return t.common.statusUnclaimed;
   };
 
+  /** Abre el modal de confirmación para eliminar un usuario + chip. */
+  const handleDeleteUser = (rider: AdminRiderItem) => {
+    triggerHaptic("light");
+    setDeleteTarget({ type: "user", rider });
+    setDeleteError("");
+  };
+
+  /** Abre el modal de confirmación para eliminar un chip (libera al usuario). */
+  const handleDeleteDevice = (code: string) => {
+    triggerHaptic("light");
+    setDeleteTarget({ type: "device", code });
+    setDeleteError("");
+  };
+
+  /** Ejecuta la eliminación confirmada. */
+  const handleConfirmDelete = async (): Promise<boolean> => {
+    if (!deleteTarget) return false;
+    setIsDeleting(true);
+    setDeleteError("");
+
+    try {
+      if (deleteTarget.type === "user") {
+        const result = await apiClient.deleteAdminRider(deleteTarget.rider.id);
+        if (!result.success) throw new Error(result.message || t.admin.deleteError);
+        triggerHaptic("success");
+        onUserDeleted?.(deleteTarget.rider.id);
+        return true;
+      } else {
+        const result = await apiClient.deleteAdminDevice(deleteTarget.code);
+        if (!result.success) throw new Error(result.message || t.admin.deleteError);
+        triggerHaptic("success");
+        onDeviceDeleted?.(deleteTarget.code);
+        return true;
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : t.admin.deleteError;
+      setDeleteError(msg);
+      triggerHaptic("error");
+      return false;
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <section className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <h2 className="font-serif font-bold text-heading-sm text-ink leading-tight">
-          {t.admin.ridersTitle}{" "}
-          <span className="font-sans text-micro text-carbon">
-            ({riders.length})
-          </span>
-        </h2>
-        <p className="font-sans text-micro text-carbon">
-          {t.admin.ridersSubtitle}
-        </p>
+    <section className="bg-brand-white border border-brand-border-subtle rounded-xl p-6 sm:p-7 shadow-sm hover:border-brand-border-strong flex flex-col gap-5 transition-all">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="font-serif font-bold text-xl sm:text-2xl text-brand-navy-dark leading-tight">
+            {t.admin.ridersTitle}{" "}
+            <span className="font-sans text-xs font-normal text-brand-text-muted">
+              ({riders.length})
+            </span>
+          </h2>
+          <p className="font-sans text-xs sm:text-sm text-brand-text-desc mt-0.5">
+            {t.admin.ridersSubtitle}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={isLoading}
+          className="min-h-[44px] self-start sm:self-auto inline-flex items-center justify-center px-4 py-2 bg-brand-white border border-brand-border-field hover:bg-brand-bg-alt text-brand-navy-dark text-xs font-semibold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer disabled:opacity-60"
+        >
+          <span className={isLoading ? "animate-spin mr-1.5" : "mr-1.5"}>↻</span>
+          {t.admin.ridersRefresh}
+        </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+      <div className="w-full">
         <input
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t.admin.ridersSearchPlaceholder}
           aria-label={t.admin.ridersSearchPlaceholder}
-          className="h-11 flex-1 px-3 bg-paper border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+          className="safe-input-focus h-11 w-full px-4 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
         />
-        <IncidentButton
-          type="button"
-          variant="neutral"
-          onClick={onRefresh}
-          isLoading={isLoading}
-          disabled={isLoading}
-        >
-          ↻ {t.admin.ridersRefresh}
-        </IncidentButton>
       </div>
 
       {errorMessage && (
-        <div role="alert" className="banner-emergency text-micro text-alert-red font-sans text-center">
+        <div
+          role="alert"
+          className="p-3 bg-rose-50 border border-brand-accent/30 rounded-lg text-xs text-brand-accent font-sans text-center font-medium"
+        >
           ⚠️ {errorMessage}
         </div>
       )}
@@ -131,62 +197,52 @@ export function RidersTable({
         <div
           role="status"
           aria-live="polite"
-          className="p-8 border border-dashed border-mist rounded-[8px] bg-paper text-center"
+          className="p-8 border border-dashed border-brand-border-subtle rounded-xl bg-brand-bg-alt text-center"
         >
-          <p className="font-sans text-micro text-carbon">
+          <p className="font-sans text-xs text-brand-text-muted">
             {t.admin.ridersLoading}
           </p>
         </div>
       ) : riders.length === 0 ? (
-        <div className="p-8 border border-dashed border-mist rounded-[8px] bg-paper text-center">
-          <p className="font-sans text-micro text-carbon">
+        <div className="p-8 border border-dashed border-brand-border-subtle rounded-xl bg-brand-bg-alt text-center">
+          <p className="font-sans text-xs text-brand-text-muted">
             {t.admin.ridersEmpty}
           </p>
         </div>
       ) : filteredRiders.length === 0 ? (
-        <div className="p-8 border border-dashed border-mist rounded-[8px] bg-paper text-center">
-          <p className="font-sans text-micro text-carbon">
+        <div className="p-8 border border-dashed border-brand-border-subtle rounded-xl bg-brand-bg-alt text-center">
+          <p className="font-sans text-xs text-brand-text-muted">
             {t.admin.ridersNoResults}
           </p>
         </div>
       ) : (
-        <div className="border border-ink rounded-[8px] bg-paper overflow-hidden">
-          {/* Cabecera editorial visible solo en pantallas medianas o mayores */}
-          <div className="hidden md:grid md:grid-cols-[1.5fr_1.1fr_1fr_1fr] gap-3 px-4 py-2 bg-concrete border-b border-ink">
-            <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-carbon">
-              {t.admin.columnRider}
-            </span>
-            <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-carbon">
-              {t.admin.columnChip}
-            </span>
-            <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-carbon">
-              {t.admin.columnStatus}
-            </span>
-            <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-carbon">
-              {t.admin.columnDates}
-            </span>
+        <div className="border border-brand-border-subtle rounded-xl bg-brand-white overflow-hidden shadow-sm">
+          {/* Cabecera de columnas en pantallas medianas */}
+          <div className="hidden md:grid md:grid-cols-[1.5fr_1.1fr_1fr_1fr_1.1fr] gap-3 px-5 py-3 bg-brand-bg-alt border-b border-brand-border-subtle text-[11px] font-bold uppercase tracking-wider text-brand-text-muted">
+            <span>{t.admin.columnRider}</span>
+            <span>{t.admin.columnChip}</span>
+            <span>{t.admin.columnStatus}</span>
+            <span>{t.admin.columnDates}</span>
+            <span className="text-right">{t.admin.actionsLabel}</span>
           </div>
 
-          <ul className="divide-y divide-mist">
+          <ul className="divide-y divide-brand-separator">
             {filteredRiders.map((rider) => (
               <li
                 key={rider.id}
-                className="grid grid-cols-1 md:grid-cols-[1.5fr_1.1fr_1fr_1fr] gap-2 md:gap-3 px-4 py-3 items-start"
+                className="grid grid-cols-1 md:grid-cols-[1.5fr_1.1fr_1fr_1fr_1.1fr] gap-2 md:gap-3 px-5 py-3.5 items-center hover:bg-brand-bg-alt/40 transition-colors"
               >
                 {/* Identidad del motociclista */}
                 <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="font-serif text-body font-bold text-ink truncate">
+                  <span className="font-serif text-sm font-bold text-brand-navy-dark truncate">
                     {rider.fullName || t.admin.riderUnnamed}
                   </span>
-                  <span className="font-sans text-[11px] text-carbon truncate">
+                  <span className="font-sans text-xs text-brand-text-desc truncate">
                     {rider.email}
                   </span>
                   {rider.liveRideActive && (
-                    <span className="inline-flex items-center gap-1.5 font-sans text-[11px] font-bold text-ink mt-0.5">
-                      <span
-                        className="w-1.5 h-1.5 rounded-full bg-signal-orange"
-                        aria-hidden="true"
-                      />
+                    <span className="inline-flex items-center gap-1.5 font-sans text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full w-fit mt-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                       {t.admin.riderLiveRide}
                     </span>
                   )}
@@ -194,79 +250,142 @@ export function RidersTable({
 
                 {/* Chip físico vinculado */}
                 <div className="flex flex-col gap-1 min-w-0">
-                  <span className="md:hidden font-sans text-[10px] font-bold uppercase tracking-wider text-carbon">
+                  <span className="md:hidden font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted">
                     {t.admin.columnChip}
                   </span>
                   {rider.device ? (
-                    <>
-                      <span className="font-sans tracking-widest text-micro font-bold text-ink">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-mono text-xs font-bold text-brand-navy-dark tracking-wide">
                         {rider.device.code}
                       </span>
                       <span
-                        className={`self-start font-sans text-[10px] font-bold px-1.5 py-0.5 rounded-[3px] border ${
+                        className={`self-start font-sans text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
                           rider.device.isNfcEncoded
-                            ? "bg-parchment border-ember text-ink"
-                            : "bg-paper border-mist text-carbon"
+                            ? "bg-brand-nav-active border-brand-nav-blue/30 text-brand-navy-dark"
+                            : "bg-brand-bg-alt border-brand-border-subtle text-brand-text-muted"
                         }`}
                       >
                         {rider.device.isNfcEncoded
                           ? t.admin.riderNfcEncoded
                           : t.admin.riderNfcPending}
                       </span>
-                    </>
+                    </div>
                   ) : (
-                    <span className="font-sans text-micro text-carbon">
+                    <span className="font-sans text-xs text-brand-text-muted">
                       {t.admin.riderNoChip}
                     </span>
                   )}
                 </div>
 
-                {/* Estado real del chip */}
+                {/* Estado del kit */}
                 <div className="flex flex-col gap-1">
-                  <span className="md:hidden font-sans text-[10px] font-bold uppercase tracking-wider text-carbon">
+                  <span className="md:hidden font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted">
                     {t.admin.columnStatus}
                   </span>
                   {rider.device ? (
                     <span
-                      className={`self-start font-sans text-[11px] font-bold px-2 py-0.5 rounded-[3px] border ${
+                      className={`self-start font-sans text-[11px] font-semibold px-2 py-0.5 rounded-md border ${
                         rider.device.status === "ACTIVE"
-                          ? "bg-concrete border-ink text-ink"
+                          ? "bg-emerald-50 border-emerald-200 text-emerald-800"
                           : rider.device.status === "DISABLED"
-                            ? "bg-paper border-mist text-carbon"
-                            : "bg-paper border-signal-orange text-signal-orange"
+                            ? "bg-slate-100 border-slate-200 text-slate-600"
+                            : "bg-amber-50 border-amber-200 text-amber-800"
                       }`}
                     >
                       {chipStatusLabel(rider.device.status)}
                     </span>
                   ) : (
-                    <span className="font-sans text-micro text-carbon">—</span>
+                    <span className="font-sans text-xs text-brand-text-muted">—</span>
                   )}
                 </div>
 
                 {/* Fechas de alta y activación */}
-                <div className="flex flex-col gap-0.5">
-                  <span className="md:hidden font-sans text-[10px] font-bold uppercase tracking-wider text-carbon">
+                <div className="flex flex-col gap-0.5 text-xs text-brand-text-desc">
+                  <span className="md:hidden font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted">
                     {t.admin.columnDates}
                   </span>
-                  <span className="font-sans text-[11px] text-carbon">
+                  <span>
                     {t.admin.riderRegisteredAt}:{" "}
-                    <strong className="text-ink font-normal">
+                    <strong className="text-brand-navy-dark font-medium">
                       {formatDate(rider.registeredAt, locale)}
                     </strong>
                   </span>
-                  <span className="font-sans text-[11px] text-carbon">
+                  <span>
                     {t.admin.riderActivatedAt}:{" "}
-                    <strong className="text-ink font-normal">
+                    <strong className="text-brand-navy-dark font-medium">
                       {rider.device?.activatedAt
                         ? formatDate(rider.device.activatedAt, locale)
                         : t.admin.riderNotActivated}
                     </strong>
                   </span>
                 </div>
+
+                {/* Acciones de eliminación */}
+                <div className="flex flex-wrap md:flex-col gap-1.5 md:items-end justify-start pt-1 md:pt-0">
+                  {rider.device && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteDevice(rider.device!.code)}
+                      className="min-h-[36px] inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md border border-brand-border-field hover:border-brand-accent/50 hover:bg-rose-50 text-brand-text-desc hover:text-brand-accent transition-all cursor-pointer"
+                    >
+                      <span>🗑️</span>
+                      {t.admin.deleteChipButton}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteUser(rider)}
+                    className="min-h-[36px] inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-rose-50 border border-brand-accent/30 hover:bg-brand-accent hover:text-white text-brand-accent transition-all cursor-pointer"
+                  >
+                    <span>🗑️</span>
+                    {t.admin.deleteUserButton}
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
         </div>
+      )}
+
+      {/* Modal de confirmación de eliminación */}
+      {deleteTarget && (
+        <ConfirmDeleteModal
+          title={
+            deleteTarget.type === "user"
+              ? t.admin.deleteUserTitle
+              : t.admin.deleteChipTitle
+          }
+          message={
+            deleteTarget.type === "user"
+              ? t.admin.deleteUserMessage
+              : t.admin.deleteChipMessage
+          }
+          details={
+            deleteTarget.type === "user"
+              ? {
+                  [t.admin.columnRider]: `${deleteTarget.rider.fullName || t.admin.riderUnnamed}`,
+                  [t.login.emailLabel]: deleteTarget.rider.email,
+                  ...(deleteTarget.rider.device
+                    ? {
+                        [t.admin.columnChip]: deleteTarget.rider.device.code,
+                        [t.admin.columnStatus]: chipStatusLabel(
+                          deleteTarget.rider.device.status,
+                        ),
+                      }
+                    : {}),
+                }
+              : {
+                  [t.admin.columnChip]: deleteTarget.code,
+                }
+          }
+          onConfirm={handleConfirmDelete}
+          onClose={() => {
+            setDeleteTarget(null);
+            setDeleteError("");
+          }}
+          isLoading={isDeleting}
+          errorMessage={deleteError}
+        />
       )}
     </section>
   );

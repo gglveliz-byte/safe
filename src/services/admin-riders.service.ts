@@ -1,70 +1,51 @@
 /**
  * ==============================================================================
  * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
- * MÓDULO: Administración — Usuarios Registrados y Chips Vinculados
+ * MÓDULO: Administración — Consulta y Eliminación de Usuarios y Chips
  * ARCHIVO: src/services/admin-riders.service.ts
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Consulta de solo lectura para la consola de administración. Devuelve los
- * motociclistas reales registrados en PostgreSQL junto con el chip físico que
- * tienen vinculado (relación 1:1 User ↔ Device del esquema Prisma).
- *
- * No expone datos clínicos ni identificaciones nacionales: la operación del
- * panel requiere nombre, correo, folio, estado del chip y fechas de alta. El
- * PIN de activación permanece cifrado y nunca se incluye en esta respuesta.
- *
- * ENTRADAS: ninguna (consulta global ordenada por fecha de registro).
- * SALIDAS: lista tipada de AdminRiderRecord lista para serializar en la API.
- * DEPENDENCIAS: src/lib/db.ts (Prisma Client sobre Neon PostgreSQL).
+ * Servicio administrativo para consultar motociclistas registrados con sus
+ * fichas médicas y chips vinculados, además de gestionar la eliminación segura
+ * e idempotente de usuarios y chips físicos.
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 500 líneas físicas.
  * - Cero datos hardcodeados, mocks o demos.
  * - Comentarios y mensajes canónicos en Español.
+ * - Transacciones atómicas para operaciones multi-modelo.
  * ==============================================================================
  */
 
 import { db } from "@/lib/db";
 
-/**
- * Chip físico vinculado a la cuenta del motociclista.
- * Refleja exclusivamente columnas reales de la tabla Device.
- */
+/** Chip físico vinculado a la cuenta del motociclista. */
 export interface AdminRiderDevice {
-  /** Folio público grabado en el casco, ej. "SAFE-0001". */
   code: string;
-  /** Ciclo de vida real del kit: UNCLAIMED | ACTIVE | DISABLED. */
   status: string;
-  /** Indica si la antena NFC ya fue grabada en fábrica. */
   isNfcEncoded: boolean;
-  /** UID físico hexadecimal del NTAG216, cuando existe. */
   nfcSerialNumber: string | null;
-  /** Fecha UTC de activación del kit; null si aún está virgen. */
   activatedAt: string | null;
-  /** Fecha UTC de emisión del folio durante la fabricación. */
   createdAt: string;
 }
 
-/**
- * Motociclista registrado en la plataforma y su eventual chip vinculado.
- * medicalProfile puede ser null cuando la cuenta existe pero la ficha clínica
- * aún no fue completada, caso que la vista muestra con un rótulo explícito.
- */
+/** Motociclista registrado en la plataforma y su eventual chip vinculado. */
 export interface AdminRiderRecord {
-  /** Identificador UUID de la cuenta. */
   id: string;
-  /** Correo de acceso normalizado. */
   email: string;
-  /** Nombre completo declarado en la ficha médica, si existe. */
   fullName: string | null;
-  /** Fotografía real servida por Cloudinary, si existe. */
   photoUrl: string | null;
-  /** Estado real del Modo Ruta al momento de la consulta. */
   liveRideActive: boolean;
-  /** Fecha UTC de creación de la cuenta. */
   registeredAt: string;
-  /** Chip físico vinculado o null si la cuenta aún no reclama un kit. */
   device: AdminRiderDevice | null;
+}
+
+/** Resultado de una operación de eliminación administrativa. */
+export interface AdminDeleteResult {
+  success: boolean;
+  notFound: boolean;
+  deletedCount: number;
+  message: string;
 }
 
 /**
@@ -119,4 +100,130 @@ export async function listRegisteredRiders(): Promise<AdminRiderRecord[]> {
         }
       : null,
   }));
+}
+
+/**
+ * Elimina un usuario registrado y sus datos clínicos (cascade).
+ * El chip vinculado queda liberado (SetNull en Device.userId).
+ */
+export async function deleteRegisteredUser(
+  userId: string,
+): Promise<AdminDeleteResult> {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      device: { select: { id: true, code: true } },
+    },
+  });
+
+  if (!user) {
+    return {
+      success: true,
+      notFound: true,
+      deletedCount: 0,
+      message: "El usuario no existe en el sistema.",
+    };
+  }
+
+  await db.$transaction(async (tx) => {
+    if (user.device) {
+      await tx.device.delete({
+        where: { id: user.device.id },
+      });
+    }
+
+    await tx.user.delete({
+      where: { id: userId },
+    });
+  });
+
+  return {
+    success: true,
+    notFound: false,
+    deletedCount: 1,
+    message: `Usuario "${user.email}" eliminado correctamente.`,
+  };
+}
+
+/**
+ * Elimina un chip físico (device) y sus alertas (cascade).
+ * El usuario queda con device=null (liberado para reasignación).
+ */
+export async function deleteDeviceByCode(
+  code: string,
+): Promise<AdminDeleteResult> {
+  const device = await db.device.findUnique({
+    where: { code: code.toUpperCase() },
+    select: {
+      id: true,
+      code: true,
+      userId: true,
+      status: true,
+    },
+  });
+
+  if (!device) {
+    return {
+      success: true,
+      notFound: true,
+      deletedCount: 0,
+      message: `El chip "${code}" no existe en el sistema.`,
+    };
+  }
+
+  await db.device.delete({
+    where: { id: device.id },
+  });
+
+  return {
+    success: true,
+    notFound: false,
+    deletedCount: 1,
+    message: `Chip "${device.code}" eliminado correctamente.`,
+  };
+}
+
+/**
+ * Elimina un usuario registrado Y su chip vinculado en una sola transacción.
+ */
+export async function deleteRegisteredUserWithDevice(
+  userId: string,
+): Promise<AdminDeleteResult> {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    include: {
+      device: true,
+      medicalProfile: true,
+    },
+  });
+
+  if (!user) {
+    return {
+      success: true,
+      notFound: true,
+      deletedCount: 0,
+      message: "El usuario no existe en el sistema.",
+    };
+  }
+
+  await db.$transaction(async (tx) => {
+    if (user.device) {
+      await tx.device.delete({
+        where: { id: user.device.id },
+      });
+    }
+
+    await tx.user.delete({
+      where: { id: userId },
+    });
+  });
+
+  return {
+    success: true,
+    notFound: false,
+    deletedCount: 1,
+    message: `Usuario "${user.email}" y chip "${user.device?.code || "—"}" eliminados correctamente.`,
+  };
 }

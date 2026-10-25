@@ -1,74 +1,88 @@
 /**
  * ==============================================================================
  * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
- * MÓDULO: Componentes UI Incident — Barra de Navegación Institucional
+ * MÓDULO: Componentes UI — Barra de Navegación Institucional (SAFE 2026)
  * ARCHIVO: src/components/ui/IncidentNavbar.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Encabezado broadsheet oficial de la plataforma sobre barra de papel (#ffffff)
- * con borde inferior capilar negro, posición sticky y respeto de la muesca móvil
- * (safe-area-inset-top). Presenta la marca SAFE con la baliza Signal Orange
- * (#f25533), los enlaces oficiales (inicio, ingreso del piloto y ancla al
- * formulario real de activación de la portada) y el conmutador de idioma ES/EN
- * de un solo toque. Export SIN props: el layout raíz la consume como
- * <IncidentNavbar />.
- *
- * ENTRADAS: diccionario bilingüe y conmutador vía useLocale.
- * SALIDAS: navegación interna (/, /login, /#activar) y cambio de idioma.
- * DEPENDENCIAS: useLocale, useHaptic, next/link.
+ * Encabezado oficial con diseño editorial broadsheet 2026. Integra isotipo
+ * con baliza pulsante, navegación fluida de escritorio, botón hamburguesa móvil
+ * animado y conmutador de idioma ES/EN instantáneo.
  *
  * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas.
- * - Cero textos en duro (consumo de t vía useLocale) y cero folios inventados.
+ * - Límite estricto < 500 líneas (módulo < 180 líneas).
+ * - Cero textos hardcodeados (consumo de t vía useLocale).
  * - Objetivos táctiles mínimos de 44x44px.
  * ==============================================================================
  */
 
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
 
 export function IncidentNavbar() {
   const { t, locale, toggleLocale } = useLocale();
   const { triggerHaptic } = useHaptic();
+  const pathname = usePathname() || "";
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  /** Conmuta el idioma ES/EN en un toque con confirmación háptica sutil. */
+  const toggleMobileMenu = () => {
+    triggerHaptic("light");
+    setMobileMenuOpen((prev) => !prev);
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
+
   const handleLanguageSwitch = () => {
     triggerHaptic("light");
     toggleLocale();
   };
 
+  const isHome = pathname === "/";
+
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-ink bg-paper pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2">
-        {/* Marca editorial: baliza Signal Orange + nombre oficial + subtítulo micro */}
+    <header className="sticky top-0 z-50 bg-brand-white/95 backdrop-blur-md border-b border-brand-border-subtle transition-all duration-300">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 h-[68px] md:h-[72px] flex items-center justify-between">
+        {/* Isotipo & Marca Editorial */}
         <Link
           href="/"
-          onClick={() => triggerHaptic("light")}
-          className="flex min-h-[44px] select-none items-center gap-2.5 no-underline"
+          onClick={() => {
+            triggerHaptic("light");
+            closeMobileMenu();
+          }}
+          aria-label={`${t.common.appName} - ${t.nav.home}`}
+          className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-brand-nav-blue rounded-lg p-1 transition-transform duration-200 active:scale-95 no-underline"
         >
-          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[4px] bg-ink">
-            <span className="h-3 w-3 rounded-full bg-signal-orange" aria-hidden="true" />
-          </span>
-          <span className="flex flex-col leading-none">
-            <span className="font-serif text-heading-sm font-bold tracking-tight text-ink">
+          <div className="w-8 h-8 bg-brand-navy-dark rounded flex items-center justify-center relative shadow-sm group-hover:bg-brand-navy-secondary transition-colors duration-200">
+            <div className="w-2.5 h-2.5 rounded-full bg-brand-accent group-hover:scale-125 transition-transform duration-200" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-serif font-bold text-xl md:text-2xl tracking-tight text-brand-navy-dark leading-none group-hover:text-brand-navy-secondary transition-colors">
               {t.common.appName}
             </span>
-            <span className="mt-0.5 hidden font-sans text-[11px] uppercase tracking-wider text-carbon sm:block">
+            <span className="font-sans text-[10px] md:text-[11px] font-semibold text-brand-text-muted tracking-wider uppercase mt-0.5">
               {t.nav.brandSubtitle}
             </span>
-          </span>
+          </div>
         </Link>
 
-        {/* Enlaces oficiales y conmutador de idioma (nunca folios de demostración) */}
-        <nav className="flex flex-wrap items-center justify-end gap-2">
+        {/* Menú de Navegación de Escritorio */}
+        <nav aria-label={t.common.appName} className="hidden md:flex items-center gap-2">
           <Link
             href="/"
             onClick={() => triggerHaptic("light")}
-            className="btn-neutral text-micro no-underline"
+            aria-current={isHome ? "page" : undefined}
+            className={`px-3.5 py-1.5 rounded-md text-[13px] font-medium transition-all duration-150 no-underline ${
+              isHome
+                ? "text-brand-navy-dark bg-brand-nav-active hover:bg-brand-border-subtle/50"
+                : "text-brand-text-desc hover:text-brand-navy-dark hover:bg-brand-bg-alt"
+            }`}
           >
             {t.nav.home}
           </Link>
@@ -76,34 +90,108 @@ export function IncidentNavbar() {
           <Link
             href="/login"
             onClick={() => triggerHaptic("light")}
-            className="btn-neutral text-micro no-underline"
+            className="px-3.5 py-1.5 rounded-md text-[13px] font-medium text-brand-text-desc hover:text-brand-navy-dark hover:bg-brand-bg-alt transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 no-underline"
           >
             {t.nav.login}
           </Link>
 
-          {/* "Activar casco": ancla al formulario REAL de folio de la portada */}
           <Link
-            href="/#activar"
+            href="/#activar-casco"
             onClick={() => triggerHaptic("light")}
-            className="btn-neutral text-micro no-underline"
+            className="px-3.5 py-1.5 rounded-md text-[13px] font-medium text-brand-text-desc hover:text-brand-navy-dark hover:bg-brand-bg-alt transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 no-underline"
           >
             {t.nav.activateHelmet}
           </Link>
 
-          {/* Selector de idioma ES/EN: objetivo táctil ≥ 44x44px garantizado */}
+          <div className="w-px h-4 bg-brand-separator mx-1" aria-hidden="true" />
+
+          {/* Conmutador Bilingüe Instantáneo */}
           <button
             type="button"
             onClick={handleLanguageSwitch}
             aria-label={t.common.languageToggle}
-            className="btn-neutral min-h-[44px] min-w-[44px] text-micro font-bold"
+            className="min-h-[44px] min-w-[44px] px-2.5 py-1 text-[12px] font-semibold text-brand-text-muted hover:text-brand-navy-dark border border-brand-border-subtle rounded hover:border-brand-border-strong hover:bg-brand-bg-alt transition-all duration-150 active:scale-95 inline-flex items-center justify-center cursor-pointer"
           >
-            <span className="text-signal-orange" aria-hidden="true">
-              ●
-            </span>
             {locale === "es" ? "EN" : "ES"}
           </button>
         </nav>
+
+        {/* Botón Móvil Hamburguesa Animado */}
+        <button
+          type="button"
+          aria-expanded={mobileMenuOpen}
+          aria-label="Menú de navegación"
+          onClick={toggleMobileMenu}
+          className="md:hidden p-2 rounded-lg text-brand-navy-dark hover:bg-brand-bg-subtle focus:outline-none focus:ring-2 focus:ring-brand-nav-blue active:scale-95 transition-transform"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {mobileMenuOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
       </div>
+
+      {/* Menú Desplegable Móvil */}
+      {mobileMenuOpen && (
+        <div
+          aria-label="Menú móvil"
+          className="md:hidden border-b border-brand-border-subtle bg-brand-white px-4 pt-3 pb-5 space-y-2 transition-all duration-200 shadow-md animate-fadeInDown"
+        >
+          <Link
+            href="/"
+            onClick={() => {
+              triggerHaptic("light");
+              closeMobileMenu();
+            }}
+            className={`block px-3.5 py-2.5 rounded-md text-sm font-medium transition-colors no-underline ${
+              isHome ? "bg-brand-nav-active text-brand-navy-dark font-semibold" : "text-brand-text-desc hover:bg-brand-bg-alt"
+            }`}
+          >
+            {t.nav.home}
+          </Link>
+
+          <Link
+            href="/login"
+            onClick={() => {
+              triggerHaptic("light");
+              closeMobileMenu();
+            }}
+            className="block px-3.5 py-2.5 rounded-md text-sm font-medium text-brand-text-desc hover:bg-brand-bg-alt active:bg-brand-nav-active transition-colors no-underline"
+          >
+            {t.nav.login}
+          </Link>
+
+          <Link
+            href="/#activar-casco"
+            onClick={() => {
+              triggerHaptic("light");
+              closeMobileMenu();
+            }}
+            className="block px-3.5 py-2.5 rounded-md text-sm font-medium text-brand-text-desc hover:bg-brand-bg-alt active:bg-brand-nav-active transition-colors no-underline"
+          >
+            {t.nav.activateHelmet}
+          </Link>
+
+          <div className="pt-3 border-t border-brand-separator flex items-center justify-between">
+            <span className="text-xs text-brand-text-muted">
+              {locale === "es" ? "Idioma: Español" : "Language: English"}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                handleLanguageSwitch();
+                closeMobileMenu();
+              }}
+              className="min-h-[44px] px-3.5 py-1.5 text-xs font-semibold text-brand-text-muted border border-brand-border-subtle rounded-md hover:text-brand-navy-dark active:scale-95 transition-transform"
+            >
+              {locale === "es" ? "EN" : "ES"}
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

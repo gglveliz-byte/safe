@@ -251,17 +251,17 @@ export function NfcBurstWriterModal({
   const activeDevice = strip[Math.min(currentIndex, strip.length - 1)] ?? device;
 
   return (
-    <div className="fixed inset-0 z-50 bg-ink/60 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in">
-      <div className="w-full sm:max-w-md bg-paper border border-ink rounded-t-[16px] sm:rounded-[12px] p-6 shadow-incident flex flex-col gap-4">
+    <div className="fixed inset-0 z-50 bg-brand-navy-dark/65 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeInDown">
+      <div className="w-full sm:max-w-md bg-brand-white border border-brand-border-subtle rounded-t-2xl sm:rounded-xl p-6 sm:p-7 shadow-2xl flex flex-col gap-4 animate-fadeInUp">
         {/* Tirador visual táctil para móvil */}
-        <div className="w-10 h-1 bg-mist rounded-full mx-auto sm:hidden" />
+        <div className="w-10 h-1 bg-brand-border-subtle rounded-full mx-auto sm:hidden" />
 
-        <div className="flex items-center justify-between border-b border-ink pb-3">
+        <div className="flex items-center justify-between border-b border-brand-separator pb-3">
           <div>
-            <h3 className="font-serif font-bold text-heading-sm text-ink leading-tight">
+            <h3 className="font-serif font-bold text-lg text-brand-navy-dark leading-tight">
               {t.admin.nfcWriterTitle}
             </h3>
-            <span className="font-sans tracking-widest text-micro font-bold text-signal-orange">
+            <span className="font-sans tracking-widest text-xs font-bold text-brand-accent">
               {activeDevice.code}
             </span>
           </div>
@@ -269,44 +269,46 @@ export function NfcBurstWriterModal({
             type="button"
             onClick={onClose}
             aria-label={t.common.cancel}
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-carbon hover:text-ink text-body font-bold cursor-pointer"
+            className="p-1.5 text-brand-text-muted hover:text-brand-navy-dark rounded-md hover:bg-brand-bg-subtle transition-colors cursor-pointer"
           >
-            ✕
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
-        <p className="font-sans text-micro text-carbon leading-relaxed">
+        <p className="font-sans text-xs text-brand-text-desc leading-relaxed">
           {t.admin.nfcWriterSubtitle}
         </p>
 
         {/* Verificación de compatibilidad con Web NFC */}
         {!isSupported && (
-          <div className="p-3 bg-[rgba(255,73,44,0.08)] border border-alert-red rounded-[6px] text-micro text-alert-red font-sans">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-700 font-sans">
             ⚠️ {t.admin.nfcNotSupported}
           </div>
         )}
 
         {/* Opción de bloqueo permanente del chip contra manipulación */}
-        <label className="flex items-start gap-3 cursor-pointer select-none border border-mist p-3 rounded-[6px] bg-concrete">
+        <label className="flex items-start gap-3 cursor-pointer select-none border border-brand-border-subtle p-3 rounded-lg bg-brand-bg-alt hover:border-brand-border-strong transition-colors">
           <input
             type="checkbox"
             checked={lockReadOnly}
             onChange={(e) => setLockReadOnly(e.target.checked)}
             disabled={isWriting}
-            className="mt-1 h-4 w-4 rounded border-ink text-signal-orange focus:ring-0"
+            className="mt-0.5 h-4 w-4 rounded border-brand-border-field text-brand-accent focus:ring-brand-nav-blue"
           />
-          <span className="font-sans text-[12px] text-ink leading-tight">
+          <span className="font-sans text-xs text-brand-navy-dark leading-snug">
             {t.admin.lockReadOnlyLabel}
           </span>
         </label>
 
-        {/* Progreso de la tira secuencial: posición y folio objetivo (datos puros) */}
+        {/* Progreso de la tira secuencial */}
         {isWriting && (
-          <div className="flex items-center justify-between gap-2 px-3 py-2 bg-paper border border-mist rounded-[6px]">
-            <span className="font-sans tracking-widest text-micro font-bold text-ink">
+          <div className="flex items-center justify-between gap-2 px-3.5 py-2.5 bg-brand-nav-active border border-brand-border-subtle rounded-lg">
+            <span className="font-sans text-xs font-bold text-brand-navy-dark">
               #{currentIndex + 1} / {strip.length}
             </span>
-            <span className="font-sans tracking-widest text-micro font-bold text-signal-orange">
+            <span className="font-sans text-xs font-bold text-brand-accent">
               {activeDevice.code}
             </span>
           </div>
@@ -314,39 +316,45 @@ export function NfcBurstWriterModal({
 
         {/* Mensajes de estado */}
         {statusMessage && (
-          <div className="p-3 bg-concrete border border-ink rounded-[6px] text-micro text-ink font-sans text-center font-bold">
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-xs text-emerald-800 font-sans text-center font-semibold">
             {statusMessage}
           </div>
         )}
 
         {errorMessage && (
-          <div className="p-3 bg-[rgba(255,73,44,0.08)] border border-alert-red rounded-[6px] text-micro text-alert-red font-sans text-center">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-700 font-sans text-center">
             ⚠️ {errorMessage}
           </div>
         )}
 
-        {/* Botones de acción (objetivo táctil mínimo ≥44px garantizado) */}
+        {/* Botones de acción */}
         <div className="flex flex-col gap-2 pt-2">
-          <IncidentButton
+          <button
             type="button"
-            variant="emergency"
-            size="lg"
             disabled={!isSupported || isWriting}
-            isLoading={isWriting}
             onClick={handleStartWrite}
-            className="w-full"
+            className="w-full min-h-[44px] inline-flex items-center justify-center px-6 py-3 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary text-xs font-semibold rounded-md shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
           >
-            {isWriting ? t.admin.scanningNfc : t.admin.startNfcScanButton}
-          </IncidentButton>
+            {isWriting ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                {t.admin.scanningNfc}
+              </span>
+            ) : (
+              t.admin.startNfcScanButton
+            )}
+          </button>
 
-          <IncidentButton
+          <button
             type="button"
-            variant="neutral"
             onClick={onClose}
-            className="w-full"
+            className="w-full min-h-[44px] inline-flex items-center justify-center px-6 py-2.5 bg-brand-white border border-brand-border-subtle hover:bg-brand-bg-alt text-brand-text-desc hover:text-brand-navy-dark text-xs font-semibold rounded-md transition-all cursor-pointer"
           >
             {t.common.cancel}
-          </IncidentButton>
+          </button>
         </div>
       </div>
     </div>

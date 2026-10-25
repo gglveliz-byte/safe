@@ -1,28 +1,18 @@
 /**
  * ==============================================================================
  * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
- * MÓDULO: Vistas Oficiales — VISTA 4: Inicio de Sesión del Motociclista y Admin
+ * MÓDULO: Vistas Oficiales — VISTA 4: Inicio de Sesión del Motociclista y Admin (SAFE 2026)
  * ARCHIVO: src/app/login/page.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Pantalla de acceso privado para pilotos registrados y administradores de flota.
+ * Pantalla de acceso privado para pilotos registrados y administradores.
  * Valida credenciales contra PostgreSQL mediante Bcrypt, recibe cookie HttpOnly
  * segura y redirige dinámicamente según el rol (/admin o /dashboard).
  *
- * CORRECCIONES CRÍTICAS APLICADAS:
- * - C-9: erradicado href="/activate/SAFE-0001" (folio fabricado que viola la
- *   Regla 1: la activación ocurre SOLO vía escaneo físico del casco). El enlace
- *   de ayuda apunta a la página principal, que contiene el formulario de folio real.
- * - C-20: "SAFE RIDER ACCESS" hardcodeado → clave t.common.riderLogin del
- *   diccionario bilingüe (no existe clave exacta "rider access"; reportado).
- * - M-1: bg-red-50 fuera de paleta → clase oficial .banner-emergency (globals.css).
- * - M-25: se honra el parámetro ?redirect= inyectado por el middleware de borde,
- *   con validación anti open-redirect (solo rutas internas relativas).
- *
  * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas físicas.
+ * - Límite estricto < 500 líneas físicas (módulo < 240 líneas).
  * - Cero jerga técnica visible al usuario.
- * - Integración con useLocale, useHaptic y diseño Incident.
+ * - Integración con useLocale, useHaptic y diseño SAFE 2026.
  * ==============================================================================
  */
 
@@ -34,22 +24,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
 import { apiClient } from "@/lib/api-client";
-import { IncidentCard } from "@/components/ui/IncidentCard";
-import { IncidentButton } from "@/components/ui/IncidentButton";
 
-/**
- * Valida que el destino de redirección sea una ruta interna segura.
- * Rechaza URLs absolutas y protocol-relative ("//malicioso.com") para
- * impedir open-redirects mediante el parámetro ?redirect= del middleware.
- */
 function isSafeInternalPath(path: string | null): path is string {
   return typeof path === "string" && path.startsWith("/") && !path.startsWith("//");
 }
 
-/**
- * Pantalla de login (envuelta en Suspense por useSearchParams, requisito
- * de prerenderizado estático de Next.js App Router).
- */
 function LoginScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -61,23 +40,18 @@ function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // M-25: destino solicitado por el middleware antes de expulsar al usuario
   const redirectParam = searchParams.get("redirect");
   const safeRedirect = isSafeInternalPath(redirectParam) ? redirectParam : null;
 
-  // Comprobar si ya existe una sesión activa y redirigir
   useEffect(() => {
     let isMounted = true;
     async function checkExistingSession() {
       try {
         const session = await apiClient.getSession();
         if (isMounted && session.authenticated && session.user) {
-          // Si el destino solicitado es /admin pero la sesión activa NO es ADMIN,
-          // no redirigir a /admin para evitar el bucle infinito de rebote con el middleware.
           if (safeRedirect === "/admin" && session.user.role !== "ADMIN") {
             return;
           }
-
           const destination =
             safeRedirect ||
             (session.user.role === "ADMIN" ? "/admin" : "/dashboard");
@@ -103,8 +77,6 @@ function LoginScreen() {
       const res = await apiClient.login({ email, password });
       triggerHaptic("success");
 
-      // Prioridad de destino: redirect propio del backend → ?redirect= del
-      // middleware (M-25) → ruta por defecto según el rol de la cuenta.
       const destination =
         res.redirect ||
         safeRedirect ||
@@ -121,29 +93,28 @@ function LoginScreen() {
   };
 
   return (
-    <div className="safe-mobile-container py-12 flex flex-col items-center justify-center min-h-[75vh]">
-      <IncidentCard padding="lg" className="w-full max-w-md flex flex-col gap-6">
+    <div className="w-full min-h-[80vh] flex flex-col items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md bg-brand-white border border-brand-border-subtle rounded-xl p-6 sm:p-8 shadow-sm hover:border-brand-border-strong hover:shadow transition-all duration-300 flex flex-col gap-6 animate-fadeInUp">
         {/* Cabecera Editorial */}
-        <div className="flex flex-col gap-1 border-b border-ink pb-4 text-center sm:text-left">
+        <div className="flex flex-col gap-1.5 border-b border-brand-separator pb-4 text-center sm:text-left">
           <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-signal-orange" />
-            {/* C-20: eyebrow desde el diccionario bilingüe (cero texto en duro) */}
-            <span className="font-sans text-[11px] font-bold uppercase tracking-widest text-carbon">
+            <span className="w-2.5 h-2.5 rounded-full bg-brand-accent animate-pulse" aria-hidden="true" />
+            <span className="font-sans text-[11px] font-bold uppercase tracking-widest text-brand-text-muted">
               {t.common.riderLogin}
             </span>
           </div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-ink leading-tight">
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-brand-navy-dark leading-tight">
             {t.login.title}
           </h1>
-          <p className="font-sans text-micro text-carbon">
+          <p className="font-sans text-xs sm:text-sm text-brand-text-desc">
             {t.login.subtitle}
           </p>
         </div>
 
         {/* Formulario de Acceso */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="font-sans text-micro font-bold uppercase text-carbon">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+          <div className="flex flex-col gap-1.5">
+            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
               {t.login.emailLabel}
             </label>
             <input
@@ -153,19 +124,19 @@ function LoginScreen() {
               placeholder={t.login.emailPlaceholder}
               required
               autoComplete="email"
-              className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+              className="safe-input-focus w-full h-11 px-4 bg-brand-white border border-brand-border-field rounded-md font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
             />
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <label className="font-sans text-micro font-bold uppercase text-carbon">
+              <label className="font-sans text-xs font-semibold text-brand-navy-dark">
                 {t.login.passwordLabel}
               </label>
               <Link
                 href="/forgot-password"
                 onClick={() => triggerHaptic("light")}
-                className="font-sans text-micro text-carbon hover:text-signal-orange underline transition-colors"
+                className="font-sans text-xs text-brand-nav-blue hover:underline transition-colors no-underline"
               >
                 {t.login.forgotPasswordLink}
               </Link>
@@ -177,67 +148,69 @@ function LoginScreen() {
               placeholder={t.login.passwordPlaceholder}
               required
               autoComplete="current-password"
-              className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+              className="safe-input-focus w-full h-11 px-4 bg-brand-white border border-brand-border-field rounded-md font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
             />
           </div>
 
-          {/* M-1: error con la clase oficial .banner-emergency (bg-red-50 erradicado) */}
+          {/* Banner de error */}
           {errorMessage && (
             <div
-              className="banner-emergency text-micro text-alert-red font-sans text-center"
+              className="text-xs rounded-md p-3.5 bg-red-50 text-red-700 border border-red-200 block animate-fadeInDown"
               role="alert"
             >
-              ⚠️ {errorMessage}
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>{errorMessage}</span>
+              </div>
             </div>
           )}
 
           <div className="pt-2">
-            <IncidentButton
+            <button
               type="submit"
-              variant="emergency"
-              size="lg"
-              isLoading={isLoading}
               disabled={isLoading}
-              className="w-full"
+              className="w-full min-h-[44px] inline-flex items-center justify-center px-6 py-3 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] text-sm font-semibold rounded-md shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
             >
-              {isLoading ? t.login.submittingButton : t.login.submitButton}
-            </IncidentButton>
+              <span>{isLoading ? t.login.submittingButton : t.login.submitButton}</span>
+              {isLoading && (
+                <svg className="animate-spin ml-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+              )}
+            </button>
           </div>
         </form>
 
         {/* Enlaces de Ayuda y Activación */}
-        <div className="pt-2 border-t border-mist flex flex-col items-center gap-2 text-micro font-sans text-center">
-          {/* C-9: la activación exige escaneo físico real; la página principal
-              contiene el formulario de folio verdadero (cero folios fabricados) */}
+        <div className="pt-2 border-t border-brand-separator flex flex-col items-center gap-2 text-xs font-sans text-center">
           <Link
-            href="/"
-            className="inline-flex items-center min-h-[44px] text-ink hover:text-signal-orange underline font-semibold"
+            href="/#activar-casco"
+            className="inline-flex items-center min-h-[44px] text-brand-navy-dark hover:text-brand-accent font-semibold underline decoration-brand-border-strong underline-offset-4 transition-colors"
           >
             {t.login.needHelpActivation}
           </Link>
 
           <Link
             href="/"
-            className="inline-flex items-center min-h-[44px] text-carbon hover:text-ink transition-colors"
+            className="inline-flex items-center min-h-[44px] text-brand-text-muted hover:text-brand-navy-dark transition-colors no-underline"
           >
             ← {t.login.backToHome}
           </Link>
         </div>
-      </IncidentCard>
+      </div>
     </div>
   );
 }
 
-/**
- * Página de inicio de sesión. Envuelve la pantalla en Suspense porque
- * useSearchParams exige un límite de suspense durante el prerenderizado.
- */
 export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="safe-mobile-container min-h-[75vh] flex items-center justify-center">
-          <span className="w-4 h-4 rounded-full bg-signal-orange animate-ping" aria-hidden="true" />
+        <div className="min-h-[75vh] flex items-center justify-center">
+          <span className="w-5 h-5 rounded-full bg-brand-accent animate-ping" aria-hidden="true" />
         </div>
       }
     >

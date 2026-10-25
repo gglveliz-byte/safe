@@ -1,22 +1,16 @@
 /**
  * ==============================================================================
  * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
- * MÓDULO: Administración — Generador de Lotes y Códigos QR
+ * MÓDULO: Administración — Generador de Lotes y Códigos QR (SAFE 2026)
  * ARCHIVO: src/components/admin/BatchGeneratorCard.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Formulario de emisión de un lote físico de chips SAFE. Solicita el nombre
- * logístico del lote y la cantidad de folios (1-100); al enviarse, la vista
- * padre llama a POST /api/admin/batches, que persiste folios secuenciales y
- * PINs criptográficos en PostgreSQL. No imprime QR aquí: la plancha se abre
- * desde el inventario del lote ya emitido, con datos reales.
- *
- * ENTRADAS: valores controlados por la página y callbacks de cambio/emisión.
- * SALIDAS: formulario accesible, aviso de éxito y banner de error.
- * DEPENDENCIAS: useLocale, IncidentButton, IncidentCard.
+ * Formulario de emisión de un lote físico de chips SAFE bajo la estética
+ * editorial SAFE 2026. Persiste folios secuenciales y PINs criptográficos en
+ * PostgreSQL.
  *
  * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas físicas.
+ * - Límite estricto < 500 líneas físicas (módulo < 160 líneas).
  * - Cero textos en duro: 100% diccionario bilingüe.
  * ==============================================================================
  */
@@ -25,37 +19,25 @@
 
 import React from "react";
 import { useLocale } from "@/hooks/useLocale";
-import { IncidentButton } from "@/components/ui/IncidentButton";
-import { IncidentCard } from "@/components/ui/IncidentCard";
 
 export interface BatchGeneratorCardProps {
-  /** Nombre logístico del lote que se va a emitir. */
   batchName: string;
-  /** Cantidad de kits expresada como texto del input controlado. */
   quantity: string;
-  /** Indica que la petición de emisión está en curso. */
   isGenerating: boolean;
-  /** Aviso sobrio de éxito posterior a la emisión. */
   notice: string;
-  /** Error humano devuelto por la emisión. */
+  deleteNotice?: string;
   errorMessage: string;
-  /** Actualiza el nombre del lote. */
   onBatchNameChange: (value: string) => void;
-  /** Actualiza la cantidad de kits. */
   onQuantityChange: (value: string) => void;
-  /** Envía el formulario para emitir el lote. */
   onCreate: (event: React.FormEvent<HTMLFormElement>) => void;
 }
 
-/**
- * Tarjeta de emisión de lotes con validación nativa y mensajes del diccionario.
- * La cantidad 1-100 es la única regla de fábrica; el backend valida con Zod.
- */
 export function BatchGeneratorCard({
   batchName,
   quantity,
   isGenerating,
   notice,
+  deleteNotice = "",
   errorMessage,
   onBatchNameChange,
   onQuantityChange,
@@ -64,12 +46,12 @@ export function BatchGeneratorCard({
   const { t } = useLocale();
 
   return (
-    <IncidentCard padding="md" className="flex flex-col gap-4">
+    <div className="bg-brand-white border border-brand-border-subtle rounded-xl p-6 sm:p-7 shadow-sm hover:border-brand-border-strong flex flex-col gap-5 transition-all">
       <div>
-        <h2 className="font-serif font-bold text-heading-sm text-ink leading-tight">
+        <h2 className="font-serif font-bold text-xl sm:text-2xl text-brand-navy-dark leading-tight">
           {t.admin.batchTitle}
         </h2>
-        <p className="font-sans text-micro text-carbon mt-0.5">
+        <p className="font-sans text-xs sm:text-sm text-brand-text-desc mt-0.5">
           {t.admin.batchSubtitle}
         </p>
       </div>
@@ -77,11 +59,12 @@ export function BatchGeneratorCard({
       <form
         onSubmit={onCreate}
         className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end"
+        noValidate
       >
-        <div className="flex flex-col gap-1 sm:col-span-2">
+        <div className="flex flex-col gap-1.5 sm:col-span-2">
           <label
             htmlFor="admin-batch-name"
-            className="font-sans text-micro font-bold uppercase text-carbon"
+            className="font-sans text-xs font-semibold text-brand-navy-dark"
           >
             {t.admin.batchNameLabel}
           </label>
@@ -92,14 +75,14 @@ export function BatchGeneratorCard({
             onChange={(event) => onBatchNameChange(event.target.value)}
             required
             placeholder={t.admin.batchNamePlaceholder}
-            className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+            className="safe-input-focus h-11 px-4 bg-brand-white border border-brand-border-field rounded-md font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
           />
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <label
             htmlFor="admin-batch-quantity"
-            className="font-sans text-micro font-bold uppercase text-carbon"
+            className="font-sans text-xs font-semibold text-brand-navy-dark"
           >
             {t.admin.quantityLabel}
           </label>
@@ -112,41 +95,57 @@ export function BatchGeneratorCard({
             onChange={(event) => onQuantityChange(event.target.value)}
             required
             placeholder={t.admin.quantityPlaceholder}
-            className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+            className="safe-input-focus h-11 px-4 bg-brand-white border border-brand-border-field rounded-md font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
           />
         </div>
 
         <div className="sm:col-span-3 flex flex-wrap items-center gap-3 pt-1">
-          <IncidentButton
+          <button
             type="submit"
-            variant="emergency"
-            isLoading={isGenerating}
             disabled={isGenerating}
+            className="min-h-[44px] inline-flex items-center justify-center px-6 py-2.5 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] text-sm font-semibold rounded-md shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
           >
-            {isGenerating
-              ? t.admin.generatingBatch
-              : `+ ${t.admin.createBatchButton}`}
-          </IncidentButton>
+            <span>
+              {isGenerating
+                ? t.admin.generatingBatch
+                : `+ ${t.admin.createBatchButton}`}
+            </span>
+            {isGenerating && (
+              <svg className="animate-spin ml-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            )}
+          </button>
         </div>
       </form>
 
       {notice && (
         <div
           role="status"
-          className="p-3 bg-concrete border border-ink rounded-[6px] text-micro text-ink font-sans text-center font-bold"
+          className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 font-sans text-center font-medium"
         >
           ✓ {notice}
+        </div>
+      )}
+
+      {deleteNotice && (
+        <div
+          role="status"
+          className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 font-sans text-center font-medium"
+        >
+          ✓ {deleteNotice}
         </div>
       )}
 
       {errorMessage && (
         <div
           role="alert"
-          className="banner-emergency text-micro text-alert-red font-sans text-center"
+          className="p-3 bg-rose-50 border border-brand-accent/30 rounded-lg text-xs text-brand-accent font-sans text-center font-medium"
         >
           ⚠️ {errorMessage}
         </div>
       )}
-    </IncidentCard>
+    </div>
   );
 }

@@ -1,23 +1,16 @@
 /**
  * ==============================================================================
  * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
- * MÓDULO: Componentes UI Incident — Pie de Página Institucional (Legal Broadsheet)
+ * MÓDULO: Componentes UI — Pie de Página Institucional (SAFE 2026)
  * ARCHIVO: src/components/ui/IncidentFooter.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Pie de página sobrio y editorial sobre concreto (#efefef) con borde superior
- * capilar negro. Provee enlaces permanentes a las páginas legales obligatorias
- * (/terms y /privacy) con área táctil mínima de 44px, la declaración de derechos
- * reservados con el año en curso calculado dinámicamente y la versión del
- * protocolo, todo en microtipografía Arial. Export SIN props: el layout raíz
- * lo consume como <IncidentFooter />.
- *
- * ENTRADAS: diccionario bilingüe vía useLocale; año del reloj del sistema.
- * SALIDAS: navegación a las vistas legales oficiales.
- * DEPENDENCIAS: useLocale, useHaptic, next/link.
+ * Pie de página institucional editorial broadsheet 2026. Muestra la edición oficial,
+ * copyright dinámico sin hardcoding y enlaces permanentes a Términos del Servicio
+ * y Política de Privacidad de Datos Médicos con área táctil accesible mínima de 44px.
  *
  * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas.
+ * - Límite estricto < 500 líneas (módulo < 100 líneas).
  * - Cero textos hardcodeados (100% t vía useLocale; año dinámico).
  * ==============================================================================
  */
@@ -33,46 +26,44 @@ export function IncidentFooter() {
   const { t } = useLocale();
   const { triggerHaptic } = useHaptic();
 
-  // Año en curso calculado dinámicamente (nunca hardcodeado)
+  // Año calculado dinámicamente
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto w-full border-t border-ink bg-concrete pb-[max(32px,env(safe-area-inset-bottom))] pt-8 text-ink">
-      <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-4 px-4 md:flex-row md:gap-6">
-        {/* Identidad, año en curso y protocolo del sistema (micro Arial) */}
-        <div className="flex flex-col items-center gap-1 text-center md:items-start md:text-left">
-          <div className="flex items-center gap-2 font-sans text-micro">
-            <span className="font-serif text-body font-bold text-ink">
+    <footer className="border-t border-brand-border-subtle bg-brand-white py-10 md:py-12 mt-12">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        {/* Identidad Editorial y Derechos de Autor */}
+        <div className="flex flex-col space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="font-serif font-bold text-base text-brand-navy-dark">
               {t.common.appName}
             </span>
-            <span className="text-mist" aria-hidden="true">
-              /
+            <span className="text-xs text-brand-text-muted">/</span>
+            <span className="text-xs font-sans text-brand-text-muted">
+              {t.common.systemVersion}
             </span>
-            <span className="text-carbon">{t.common.systemVersion}</span>
           </div>
-          <p className="font-sans text-micro text-carbon">
+          <p className="text-xs text-brand-text-muted font-sans">
             {"©"} {currentYear} {t.common.appName}. {t.common.allRightsReserved}
           </p>
         </div>
 
-        {/* Enlaces legales permanentes con área táctil mínima de 44px */}
-        <nav className="flex flex-wrap items-center justify-center font-sans text-micro">
+        {/* Enlaces Legales Permanentes */}
+        <nav aria-label={t.common.termsLink} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
           <Link
             href="/terms"
             onClick={() => triggerHaptic("light")}
-            className="inline-flex min-h-[44px] items-center px-2 text-ink underline decoration-ink underline-offset-4 transition-colors hover:text-signal-orange"
+            className="text-xs font-medium text-brand-text-desc hover:text-brand-navy-dark hover:underline underline-offset-4 transition-colors no-underline"
           >
             {t.common.termsLink}
           </Link>
-
-          <span className="text-mist" aria-hidden="true">
+          <span className="hidden sm:inline text-brand-separator" aria-hidden="true">
             •
           </span>
-
           <Link
             href="/privacy"
             onClick={() => triggerHaptic("light")}
-            className="inline-flex min-h-[44px] items-center px-2 text-ink underline decoration-ink underline-offset-4 transition-colors hover:text-signal-orange"
+            className="text-xs font-medium text-brand-text-desc hover:text-brand-navy-dark hover:underline underline-offset-4 transition-colors no-underline"
           >
             {t.common.privacyLink}
           </Link>

@@ -80,9 +80,10 @@ export default function AdminPage() {
   const [selectedDeviceForNfc, setSelectedDeviceForNfc] =
     useState<AdminDeviceItem | null>(null);
 
-  // Ref viva del diccionario: los cargadores leen el texto de respaldo sin
-  // depender de `t`, así conmutar ES/EN NO re-ejecuta la inicialización
-  // (evita el parpadeo del skeleton y recargas innecesarias en la consola).
+  // Estados de eliminación
+  const [deleteNotice, setDeleteNotice] = useState("");
+
+  // Ref viva del diccionario: los textos de respaldo no re-disparan efectos.
   const tRef = useRef(t);
   useEffect(() => {
     tRef.current = t;
@@ -261,19 +262,19 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-10 flex flex-col gap-6">
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:py-10 flex flex-col gap-6 animate-fadeInUp">
       {/* Encabezado editorial de la consola */}
-      <div className="flex flex-col gap-1 border-b border-ink pb-4">
+      <div className="flex flex-col gap-1.5 border-b border-brand-separator pb-4">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-signal-orange" />
-          <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-carbon">
+          <span className="w-2.5 h-2.5 rounded-full bg-brand-accent animate-pulse" aria-hidden="true" />
+          <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-brand-text-muted">
             {t.common.adminPanel} · {t.common.appName}
           </span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-ink leading-tight">
+        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-brand-navy-dark leading-tight">
           {t.admin.title}
         </h1>
-        <p className="font-sans text-micro text-carbon">{t.admin.subtitle}</p>
+        <p className="font-sans text-xs sm:text-sm text-brand-text-desc">{t.admin.subtitle}</p>
       </div>
 
       {/* Resumen operativo global */}
@@ -284,8 +285,8 @@ export default function AdminPage() {
         activeChips={activeChips}
       />
 
-      {/* Navegación interna de la consola: solo dos áreas de trabajo */}
-      <div role="tablist" aria-label={t.admin.consoleLabel} className="grid grid-cols-2 gap-2">
+      {/* Navegación interna de la consola: pestañas con diseño 2026 */}
+      <div role="tablist" aria-label={t.admin.consoleLabel} className="grid grid-cols-2 gap-2.5">
         <button
           type="button"
           role="tab"
@@ -293,14 +294,14 @@ export default function AdminPage() {
           aria-selected={activeTab === "riders"}
           aria-controls="admin-panel-riders"
           onClick={() => setActiveTab("riders")}
-          className={`min-h-[48px] px-4 py-2 inline-flex items-center justify-between gap-2 border rounded-[4px] font-sans text-micro font-bold uppercase tracking-wider transition-all ${
+          className={`min-h-[48px] px-4 py-2.5 inline-flex items-center justify-between gap-2 border rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
             activeTab === "riders"
-              ? "bg-ink text-paper border-ink"
-              : "bg-paper text-ink border-ink hover:bg-concrete"
+              ? "bg-brand-navy-dark text-white border-brand-navy-dark shadow-sm"
+              : "bg-brand-white text-brand-text-desc border-brand-border-subtle hover:border-brand-border-strong hover:bg-brand-bg-alt hover:text-brand-navy-dark"
           }`}
         >
           <span>{t.admin.tabsRiders}</span>
-          <span className="font-normal">({riders.length})</span>
+          <span className="font-normal text-[11px] opacity-80">({riders.length})</span>
         </button>
 
         <button
@@ -310,14 +311,14 @@ export default function AdminPage() {
           aria-selected={activeTab === "qr"}
           aria-controls="admin-panel-qr"
           onClick={() => setActiveTab("qr")}
-          className={`min-h-[48px] px-4 py-2 inline-flex items-center justify-between gap-2 border rounded-[4px] font-sans text-micro font-bold uppercase tracking-wider transition-all ${
+          className={`min-h-[48px] px-4 py-2.5 inline-flex items-center justify-between gap-2 border rounded-lg font-sans text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
             activeTab === "qr"
-              ? "bg-ink text-paper border-ink"
-              : "bg-paper text-ink border-ink hover:bg-concrete"
+              ? "bg-brand-navy-dark text-white border-brand-navy-dark shadow-sm"
+              : "bg-brand-white text-brand-text-desc border-brand-border-subtle hover:border-brand-border-strong hover:bg-brand-bg-alt hover:text-brand-navy-dark"
           }`}
         >
           <span>{t.admin.tabsQr}</span>
-          <span className="font-normal">({batches.length})</span>
+          <span className="font-normal text-[11px] opacity-80">({batches.length})</span>
         </button>
       </div>
 
@@ -334,6 +335,16 @@ export default function AdminPage() {
             isLoading={isLoadingRiders}
             errorMessage={ridersError}
             onRefresh={() => void loadRiders()}
+            onUserDeleted={() => {
+              setDeleteNotice(t.admin.userDeletedNotice);
+              setTimeout(() => setDeleteNotice(""), 4000);
+              void loadRiders();
+            }}
+            onDeviceDeleted={() => {
+              setDeleteNotice(t.admin.deviceDeletedNotice);
+              setTimeout(() => setDeleteNotice(""), 4000);
+              void loadBatches();
+            }}
           />
         </div>
       )}
@@ -372,6 +383,12 @@ export default function AdminPage() {
                 isLoadingDevices={isLoadingDevices}
                 onSelectNfc={(device) => setSelectedDeviceForNfc(device)}
                 onPrintQr={() => setShowPrintSheet(true)}
+                onDeviceDeleted={() => {
+                  setDeleteNotice(t.admin.deviceDeletedNotice);
+                  setTimeout(() => setDeleteNotice(""), 4000);
+                  void loadBatches();
+                  void loadBatchDevices(selectedBatchName);
+                }}
               />
             </>
           )}
@@ -380,7 +397,7 @@ export default function AdminPage() {
 
       {/* Plancha QR del lote seleccionado */}
       {showPrintSheet && (
-        <div className="fixed inset-0 z-50 bg-ink/70 flex items-center justify-center p-2 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-brand-navy-dark/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-6 overflow-y-auto animate-fade-in">
           <div className="w-full max-w-4xl my-auto">
             <QrPrintSheet
               batchName={selectedBatchName}
