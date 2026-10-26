@@ -184,6 +184,18 @@ export async function POST(request: Request): Promise<NextResponse> {
               medications: input.medications ?? null,
               insuranceInfo: input.insuranceInfo ?? null,
               emergencyNumber: input.emergencyNumber ?? null,
+              beneficiaryType: input.beneficiaryType ?? "SELF",
+              country: input.country ?? null,
+              city: input.city ?? null,
+              residentialAddress: input.residentialAddress ?? null,
+              riderPhone: input.riderPhone ?? null,
+              age: input.age ?? null,
+              isOrganDonor: input.isOrganDonor ?? false,
+              medicalFindings: input.medicalFindings ?? null,
+              hasGuardian: input.hasGuardian ?? false,
+              rescueNotes: input.rescueNotes ?? null,
+              frequentLocation: input.frequentLocation ?? null,
+              vehicleInfo: input.vehicleInfo ?? null,
               emergencyContacts: input.emergencyContacts,
               // Idioma preferido para los correos de alerta (hallazgo H-07);
               // el esquema Zod lo entrega como "es" | "en" | undefined.

@@ -171,6 +171,47 @@ export const ActivateDeviceSchema = z
         .max(30, "El número de emergencia no puede superar los 30 caracteres.")
         .optional(),
 
+      /** Beneficiario del chip: SELF (Para Mí), CHILD, PARTNER, FAMILY, OTHER */
+      beneficiaryType: z
+        .enum(["SELF", "CHILD", "PARTNER", "FAMILY", "OTHER"], {
+          errorMap: () => ({ message: "Selecciona para quién es el chip." }),
+        })
+        .default("SELF")
+        .optional(),
+
+      /** Código de país de residencia (ISO 2 o nombre, ej. "EC", "Ecuador"). */
+      country: z.string().trim().max(100).optional(),
+
+      /** Ciudad, estado o provincia de residencia. */
+      city: z.string().trim().max(100).optional(),
+
+      /** Dirección domiciliaria o de residencia. */
+      residentialAddress: z.string().trim().max(250).optional(),
+
+      /** Número celular con código de marcación internacional. */
+      riderPhone: z.string().trim().max(30).optional(),
+
+      /** Edad en años del usuario. */
+      age: z.coerce.number().int().min(0).max(130).optional(),
+
+      /** Checkbox de manifestación de voluntad: donante de órganos. */
+      isOrganDonor: z.boolean().default(false).optional(),
+
+      /** Hallazgos médicos, condiciones preexistentes o antecedentes. */
+      medicalFindings: z.string().trim().max(500).optional(),
+
+      /** Indica si el usuario o menor tiene un tutor responsable. */
+      hasGuardian: z.boolean().default(false).optional(),
+
+      /** Notas de rescate para el personal médico y socorristas. */
+      rescueNotes: z.string().trim().max(1000).optional(),
+
+      /** Lugar de uso frecuente de la pulsera/casco (Deporte, Trabajo, Ruta). */
+      frequentLocation: z.string().trim().max(200).optional(),
+
+      /** Información vehicular / placa / número de chasis. */
+      vehicleInfo: z.string().trim().max(150).optional(),
+
       /**
        * Lista de contactos de emergencia (mínimo 1, máximo 20).
        * EmergencyContactsSchema ya impone:

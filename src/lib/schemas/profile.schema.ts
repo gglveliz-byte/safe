@@ -85,6 +85,42 @@ export const ProfileUpdateSchema = z
     /** Teléfono directo de auxilio médico del motociclista. */
     emergencyNumber: PhoneSchema.optional(),
 
+    /** Beneficiario del chip: SELF (Para Mí), CHILD, PARTNER, FAMILY, OTHER */
+    beneficiaryType: z.enum(["SELF", "CHILD", "PARTNER", "FAMILY", "OTHER"]).optional(),
+
+    /** País de residencia */
+    country: z.string().trim().max(100).optional(),
+
+    /** Ciudad, estado o provincia de residencia */
+    city: z.string().trim().max(100).optional(),
+
+    /** Dirección de residencia */
+    residentialAddress: z.string().trim().max(250).optional(),
+
+    /** Celular del conductor o tutor con código internacional */
+    riderPhone: z.string().trim().max(30).optional(),
+
+    /** Edad en años */
+    age: z.coerce.number().int().min(0).max(130).optional(),
+
+    /** Donante de órganos */
+    isOrganDonor: z.boolean().optional(),
+
+    /** Hallazgos médicos o antecedentes */
+    medicalFindings: z.string().trim().max(500).optional(),
+
+    /** ¿Tiene tutor responsable? */
+    hasGuardian: z.boolean().optional(),
+
+    /** Notas de rescate para emergencias */
+    rescueNotes: z.string().trim().max(1000).optional(),
+
+    /** Lugar de uso frecuente */
+    frequentLocation: z.string().trim().max(200).optional(),
+
+    /** Información vehicular / placa */
+    vehicleInfo: z.string().trim().max(150).optional(),
+
     /** Contactos familiares autorizados para recibir alertas (1 a 20). */
     emergencyContacts: EmergencyContactsSchema.optional(),
   })

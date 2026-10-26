@@ -80,6 +80,30 @@ export interface ActivateKitPayload {
   medications?: string;
   /** Aseguradora o póliza; opcional (máx. 200 caracteres). */
   insuranceInfo?: string;
+  /** Beneficiario: SELF, CHILD, PARTNER, FAMILY, OTHER */
+  beneficiaryType?: string;
+  /** Código o nombre de país */
+  country?: string;
+  /** Ciudad o estado */
+  city?: string;
+  /** Dirección domiciliaria */
+  residentialAddress?: string;
+  /** Teléfono celular del conductor/tutor con prefijo */
+  riderPhone?: string;
+  /** Edad en años */
+  age?: number;
+  /** Voluntad de donación de órganos */
+  isOrganDonor?: boolean;
+  /** Hallazgos médicos */
+  medicalFindings?: string;
+  /** ¿Tiene tutor responsable? */
+  hasGuardian?: boolean;
+  /** Notas de rescate para emergencias */
+  rescueNotes?: string;
+  /** Lugar de uso frecuente */
+  frequentLocation?: string;
+  /** Información vehicular / placa */
+  vehicleInfo?: string;
   /** Contactos de emergencia con id UUID real generado en el cliente. */
   emergencyContacts: EmergencyContactFormDTO[];
   /** Consentimiento legal vinculante: solo el literal true es aceptado. */

@@ -54,6 +54,7 @@ import { IncidentCard } from "@/components/ui/IncidentCard";
 import { IncidentButton } from "@/components/ui/IncidentButton";
 import { CloudinaryPhotoPicker } from "@/components/medical/CloudinaryPhotoPicker";
 import { ContactsRepeater } from "@/components/medical/ContactsRepeater";
+import { CountrySelect } from "@/components/ui/CountrySelect";
 
 /** Props públicos del formulario de edición de la ficha médica. */
 export interface MedicalRecordFormProps {
@@ -249,6 +250,42 @@ export function MedicalRecordForm({
               {t.dashboard.emergencyNumberHelp}
             </p>
           </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
+              {t.activate.countryLabel}
+            </label>
+            <CountrySelect
+              value={profile.country || "EC"}
+              onChange={(code) => onProfileChange({ ...profile, country: code })}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
+              {t.activate.cityLabel}
+            </label>
+            <input
+              type="text"
+              value={profile.city || ""}
+              onChange={(e) => onProfileChange({ ...profile, city: e.target.value })}
+              placeholder={t.activate.cityPlaceholder}
+              className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
+              {t.activate.addressLabel}
+            </label>
+            <input
+              type="text"
+              value={profile.residentialAddress || ""}
+              onChange={(e) => onProfileChange({ ...profile, residentialAddress: e.target.value })}
+              placeholder={t.activate.addressPlaceholder}
+              className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
@@ -292,6 +329,62 @@ export function MedicalRecordForm({
               onChange={(e) => onProfileChange({ ...profile, medications: e.target.value })}
               className="safe-input-focus p-3 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted resize-none"
             />
+          </div>
+        </div>
+
+        {/* Donante de órganos, notas de rescate y datos vehiculares */}
+        <div className="flex flex-col gap-4 pt-3 border-t border-brand-separator">
+          <label className="flex items-center gap-3 min-h-[44px] cursor-pointer select-none p-3 rounded-lg border border-brand-border-field bg-brand-bg-alt hover:bg-brand-white transition-all">
+            <input
+              type="checkbox"
+              checked={Boolean(profile.isOrganDonor)}
+              onChange={(e) => onProfileChange({ ...profile, isOrganDonor: e.target.checked })}
+              className="h-4 w-4 rounded border-brand-border-field text-brand-navy-dark accent-brand-navy-dark cursor-pointer flex-shrink-0"
+            />
+            <span className="font-sans text-xs font-bold text-brand-navy-dark">
+              ❤️ {t.activate.organDonorLabel}
+            </span>
+          </label>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
+              {t.activate.rescueNotesLabel}
+            </label>
+            <textarea
+              rows={3}
+              value={profile.rescueNotes || ""}
+              onChange={(e) => onProfileChange({ ...profile, rescueNotes: e.target.value })}
+              placeholder={t.activate.rescueNotesPlaceholder}
+              className="safe-input-focus p-3 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted resize-none"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="font-sans text-xs font-semibold text-brand-navy-dark">
+                {t.activate.frequentLocationLabel}
+              </label>
+              <input
+                type="text"
+                value={profile.frequentLocation || ""}
+                onChange={(e) => onProfileChange({ ...profile, frequentLocation: e.target.value })}
+                placeholder={t.activate.frequentLocationPlaceholder}
+                className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="font-sans text-xs font-semibold text-brand-navy-dark">
+                {t.activate.vehicleInfoLabel}
+              </label>
+              <input
+                type="text"
+                value={profile.vehicleInfo || ""}
+                onChange={(e) => onProfileChange({ ...profile, vehicleInfo: e.target.value })}
+                placeholder={t.activate.vehicleInfoPlaceholder}
+                className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
+              />
+            </div>
           </div>
         </div>
       </IncidentCard>

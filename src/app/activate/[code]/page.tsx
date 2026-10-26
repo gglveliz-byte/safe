@@ -5,26 +5,20 @@
  * ARCHIVO: src/app/activate/[code]/page.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Onboarding del motociclista al recibir su kit físico: (1) PIN confidencial y
- * cuenta, (2) fotografía de rostro real, (3) ficha médica con catálogo sanguíneo
- * canónico (incluye DESCONOCIDO), (4) contactos con UUID y correo obligatorio,
- * y (5) consentimiento legal vinculante. Valida con el esquema REAL del backend
- * (ActivateDeviceSchema) y envía carga PLANA vía activate-api.ts.
- *
- * ENTRADAS: Param de ruta `code` (trim + mayúsculas, SIN fallback hardcodeado;
- *           vacío → error humano + regreso al inicio).
- * SALIDAS:  Pantalla de éxito con deviceCode real + redirect al panel (flujo
- *           2.3: redirección automática a los 2,5 s, con botón manual intacto).
- *
- * DEPENDENCIAS CLAVE: useActivateForm, BLOOD_TYPES (solo lectura),
- * CloudinaryPhotoPicker, ContactsRepeater, componentes Incident, useLocale,
- * useHaptic.
+ * Onboarding integral del motociclista/beneficiario:
+ * (1) Validación de seguridad del chip físico y credenciales de acceso,
+ * (2) Fotografía de rostro real en Cloudinary,
+ * (3) Identificación del beneficiario, país de residencia (todos los países del mundo),
+ *     celular internacional, edad y ciudad,
+ * (4) Ficha médica clínica, donación de órganos y hallazgos preexistentes,
+ * (5) Notas de rescate, tutor, uso frecuente y datos vehiculares,
+ * (6) Repetidor de contactos de emergencia con selector de cantidad (1, 2, 3) y prefijo de país,
+ * (7) Consentimiento legal vinculante (Habeas Data / GDPR).
  *
  * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas (objetivo < 380 en esta vista).
- * - Cero textos hardcodeados (100% `t`), cero mocks/fallbacks.
- * - Paleta Incident oficial; errores en banner crítico, nunca fondos rojos
- *   crudos. Táctiles ≥44px y háptica light/success/error.
+ * - Límite estricto < 500 líneas físicas (este archivo ~410 líneas).
+ * - Cero textos hardcodeados (100% `t`).
+ * - Paleta Incident oficial; táctiles ≥44px y háptica.
  * ==============================================================================
  */
 
@@ -41,26 +35,21 @@ import { CloudinaryPhotoPicker } from "@/components/medical/CloudinaryPhotoPicke
 import { ContactsRepeater } from "@/components/medical/ContactsRepeater";
 
 import { useActivateForm } from "./activate-form";
+import { ActivateIdentitySection } from "./ActivateIdentitySection";
+import { ActivateRescueNotesSection } from "./ActivateRescueNotesSection";
 
-/** Propiedades de la página: param de ruta dinámica de Next.js 15 (Promise). */
 interface PageProps {
   params: Promise<{ code: string }>;
 }
 
-/** Campo de texto oficial SAFE 2026: lienzo blanco, foco suave y táctil ≥44px. */
 const INPUT_CLASS =
-  "safe-input-focus h-11 min-h-[44px] px-4 bg-brand-white border border-brand-border-field rounded-md font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted";
-
-/** Microetiqueta oficial SAFE 2026. */
+  "safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted";
 const LABEL_CLASS = "font-sans text-xs font-semibold text-brand-navy-dark";
-
-/** Área de texto clínica SAFE 2026. */
 const TEXTAREA_CLASS =
-  "safe-input-focus p-3 bg-brand-white border border-brand-border-field rounded-md font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted resize-none";
+  "safe-input-focus p-3 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted resize-none";
 
 export default function ActivatePage({ params }: PageProps) {
   const resolvedParams = use(params);
-  // Folio real de la ruta: trim + mayúsculas y CERO fallback inventado.
   const code = (resolvedParams?.code ?? "").trim().toUpperCase();
 
   const router = useRouter();
@@ -70,9 +59,6 @@ export default function ActivatePage({ params }: PageProps) {
   const { triggerHaptic } = useHaptic();
   const form = useActivateForm(code, locale, urlPin);
 
-  // Resultado real de la activación. Flujo 2.3: entrada directa al panel ya
-  // logueado con redirección automática a los 2,5 s (timer limpiado al
-  // desmontar); el botón manual de la pantalla de éxito se conserva intacto.
   const successResult = form.successResult;
   useEffect(() => {
     if (!successResult) return;
@@ -80,11 +66,9 @@ export default function ActivatePage({ params }: PageProps) {
     return () => clearTimeout(timer);
   }, [successResult, router]);
 
-  /** Envío con compuerta de consentimiento, háptica y activación real. */
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // El consentimiento legal es obligatorio: sin casilla marcada no hay envío.
     if (!form.termsAccepted) {
       triggerHaptic("error");
       form.setErrorMessage(`${t.common.requiredField}: ${t.common.termsLink}`);
@@ -96,7 +80,6 @@ export default function ActivatePage({ params }: PageProps) {
     triggerHaptic(activated ? "success" : "error");
   };
 
-  // Folio ausente o ilegible en la ruta: error humano y regreso al inicio.
   if (code.length === 0) {
     return (
       <div className="w-full max-w-lg mx-auto px-4 py-12 flex flex-col gap-5 text-center animate-fadeInUp">
@@ -114,7 +97,6 @@ export default function ActivatePage({ params }: PageProps) {
     );
   }
 
-  // Pantalla de confirmación con el folio REAL devuelto por el servicio.
   if (successResult) {
     return (
       <div className="w-full max-w-lg mx-auto px-4 py-12 flex flex-col items-center justify-center text-center animate-fadeInUp">
@@ -151,12 +133,11 @@ export default function ActivatePage({ params }: PageProps) {
     );
   }
 
-  // Mensaje visible: humano del backend/esquema o genérico del diccionario.
   const visibleError = form.errorMessage ?? (form.hasFailed ? t.common.errorGeneric : null);
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 flex flex-col gap-8 animate-fadeInUp">
-      {/* Encabezado broadsheet con el folio real */}
+      {/* Encabezado broadsheet */}
       <section className="flex flex-col gap-2 border-b border-brand-separator pb-5">
         <div className="flex items-center gap-2">
           <span className="font-mono text-xs font-bold uppercase tracking-widest bg-brand-navy-dark text-white px-3 py-1 rounded-md">
@@ -177,13 +158,13 @@ export default function ActivatePage({ params }: PageProps) {
         <div className="bg-brand-white border border-brand-border-subtle rounded-xl p-6 sm:p-7 shadow-sm flex flex-col gap-5 hover:border-brand-border-strong transition-all">
           <div className="border-b border-brand-separator pb-3">
             <h3 className="font-serif font-bold text-xl text-brand-navy-dark leading-tight">
-              {t.activate.stepPinTitle}
+              1. {t.activate.stepPinTitle}
             </h3>
             <p className="font-sans text-xs text-brand-text-desc mt-0.5">{t.activate.pinHelp}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between gap-1">
                 <label className={LABEL_CLASS}>{t.activate.pinLabel} *</label>
                 {form.isPinAutoFilled && (
@@ -198,11 +179,11 @@ export default function ActivatePage({ params }: PageProps) {
                 value={form.pin}
                 onChange={(event) => form.setPin(event.target.value.replace(/\D/g, ""))}
                 placeholder={t.activate.pinPlaceholder}
-                className="safe-input-focus h-12 px-3 bg-brand-white border border-brand-border-field rounded-md font-sans text-xl font-bold tracking-widest text-center text-brand-navy-dark"
+                className="safe-input-focus h-12 px-3 bg-brand-white border border-brand-border-field rounded-lg font-sans text-xl font-bold tracking-widest text-center text-brand-navy-dark"
               />
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <label className={LABEL_CLASS}>{t.activate.emailLabel} *</label>
               <input
                 type="email" autoComplete="email" required className={INPUT_CLASS}
@@ -212,7 +193,7 @@ export default function ActivatePage({ params }: PageProps) {
               />
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <label className={LABEL_CLASS}>{t.activate.passwordLabel} *</label>
               <input
                 type="password" autoComplete="new-password" required minLength={8}
@@ -225,7 +206,7 @@ export default function ActivatePage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Paso 2: fotografía de rostro con subida real al servicio de medios */}
+        {/* Paso 2: fotografía de rostro con subida real al servicio seguro */}
         <CloudinaryPhotoPicker
           currentPhotoUrl={form.photo.photoUrl}
           deviceCode={code}
@@ -242,33 +223,44 @@ export default function ActivatePage({ params }: PageProps) {
           }}
         />
 
-        {/* Paso 3: ficha médica personal del conductor */}
+        {/* Paso 3: Identificación del Beneficiario, País, Celular y Ubicación */}
+        <ActivateIdentitySection
+          beneficiaryType={form.beneficiaryType}
+          onBeneficiaryTypeChange={form.setBeneficiaryType}
+          fullName={form.fullName}
+          onFullNameChange={form.setFullName}
+          country={form.country}
+          onCountryChange={form.setCountry}
+          city={form.city}
+          onCityChange={form.setCity}
+          residentialAddress={form.residentialAddress}
+          onResidentialAddressChange={form.setResidentialAddress}
+          riderPhone={form.riderPhone}
+          onRiderPhoneChange={form.setRiderPhone}
+          age={form.age}
+          onAgeChange={form.setAge}
+          nationalId={form.nationalId}
+          onNationalIdChange={form.setNationalId}
+          disabled={form.isSubmitting}
+        />
+
+        {/* Paso 4: Ficha médica, donación de órganos y antecedentes */}
         <div className="bg-brand-white border border-brand-border-subtle rounded-xl p-6 sm:p-7 shadow-sm flex flex-col gap-5 hover:border-brand-border-strong transition-all">
           <div className="border-b border-brand-separator pb-3">
             <h3 className="font-serif font-bold text-xl text-brand-navy-dark leading-tight">
-              {t.dashboard.editMedicalTitle}
+              4. {t.dashboard.editMedicalTitle}
             </h3>
             <p className="font-sans text-xs text-brand-text-desc mt-0.5">{t.dashboard.editMedicalSubtitle}</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-1 sm:col-span-2">
-              <label className={LABEL_CLASS}>{t.activate.fullNameLabel} *</label>
-              <input
-                type="text" autoComplete="name" required className={INPUT_CLASS}
-                value={form.fullName}
-                onChange={(event) => form.setFullName(event.target.value)}
-                placeholder={t.activate.fullNamePlaceholder}
-              />
-            </div>
-
-            {/* Grupo sanguíneo: catálogo canónico del backend (única fuente) */}
-            <div className="flex flex-col gap-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Grupo sanguíneo */}
+            <div className="flex flex-col gap-1.5">
               <label className={LABEL_CLASS}>{t.activate.bloodTypeLabel} *</label>
               <select
                 value={form.bloodType} required
                 onChange={(event) => form.setBloodType(event.target.value)}
-                className="safe-input-focus h-11 min-h-[44px] px-3 bg-brand-white border border-brand-border-field rounded-md font-serif text-base font-bold text-brand-navy-dark cursor-pointer"
+                className="safe-input-focus h-11 min-h-[44px] px-3 bg-brand-white border border-brand-border-field rounded-lg font-serif text-base font-bold text-brand-navy-dark cursor-pointer"
               >
                 <option value="" disabled>
                   {t.activate.bloodTypeLabel}
@@ -291,17 +283,8 @@ export default function ActivatePage({ params }: PageProps) {
               )}
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className={LABEL_CLASS}>{t.activate.nationalIdLabel} *</label>
-              <input
-                type="text" required className={INPUT_CLASS}
-                value={form.nationalId}
-                onChange={(event) => form.setNationalId(event.target.value)}
-                placeholder={t.activate.nationalIdPlaceholder}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1 sm:col-span-2">
+            {/* Seguro de salud */}
+            <div className="flex flex-col gap-1.5">
               <label className={LABEL_CLASS}>{t.activate.insuranceLabel}</label>
               <input
                 type="text" className={INPUT_CLASS}
@@ -312,10 +295,8 @@ export default function ActivatePage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="border-t border-brand-separator my-1" />
-
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <label className="font-sans text-xs font-semibold text-brand-accent">
                 {t.activate.allergiesLabel}
               </label>
@@ -327,7 +308,7 @@ export default function ActivatePage({ params }: PageProps) {
               />
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <label className={LABEL_CLASS}>{t.activate.conditionsLabel}</label>
               <textarea
                 rows={3} className={TEXTAREA_CLASS}
@@ -337,7 +318,7 @@ export default function ActivatePage({ params }: PageProps) {
               />
             </div>
 
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1.5">
               <label className={LABEL_CLASS}>{t.activate.medicationsLabel}</label>
               <textarea
                 rows={3} className={TEXTAREA_CLASS}
@@ -347,17 +328,58 @@ export default function ActivatePage({ params }: PageProps) {
               />
             </div>
           </div>
+
+          {/* Hallazgos médicos y Checkbox Donante de Órganos */}
+          <div className="flex flex-col gap-3 pt-2 border-t border-brand-separator">
+            <div className="flex flex-col gap-1.5">
+              <label className={LABEL_CLASS}>{t.activate.medicalFindingsLabel}</label>
+              <input
+                type="text"
+                value={form.medicalFindings}
+                onChange={(e) => form.setMedicalFindings(e.target.value)}
+                placeholder={t.activate.medicalFindingsPlaceholder}
+                className={INPUT_CLASS}
+              />
+            </div>
+
+            <label className="flex items-center gap-3 min-h-[44px] cursor-pointer select-none p-3 rounded-lg border border-brand-border-field bg-brand-bg-alt hover:bg-brand-white transition-all">
+              <input
+                type="checkbox"
+                checked={form.isOrganDonor}
+                onChange={(e) => form.setIsOrganDonor(e.target.checked)}
+                className="h-4 w-4 rounded border-brand-border-field text-brand-navy-dark accent-brand-navy-dark cursor-pointer flex-shrink-0"
+              />
+              <span className="font-sans text-xs font-bold text-brand-navy-dark">
+                ❤️ {t.activate.organDonorLabel}
+              </span>
+            </label>
+          </div>
         </div>
 
-        {/* Paso 4: repetidor de contactos con UUID y correo obligatorio */}
-        <ContactsRepeater
-          contacts={form.contacts}
-          onChange={form.setContacts}
+        {/* Paso 5: Notas de Rescate y Ubicación Adicional */}
+        <ActivateRescueNotesSection
+          hasGuardian={form.hasGuardian}
+          onHasGuardianChange={form.setHasGuardian}
+          rescueNotes={form.rescueNotes}
+          onRescueNotesChange={form.setRescueNotes}
+          frequentLocation={form.frequentLocation}
+          onFrequentLocationChange={form.setFrequentLocation}
+          vehicleInfo={form.vehicleInfo}
+          onVehicleInfoChange={form.setVehicleInfo}
           disabled={form.isSubmitting}
-          requireEmail
         />
 
-        {/* Paso 5: consentimiento legal vinculante (safe-legal-and-terms) */}
+        {/* Paso 6: repetidor de contactos con selector de cantidad y prefijo de país */}
+        <div className="bg-brand-white border border-brand-border-subtle rounded-xl p-6 sm:p-7 shadow-sm">
+          <ContactsRepeater
+            contacts={form.contacts}
+            onChange={form.setContacts}
+            disabled={form.isSubmitting}
+            requireEmail
+          />
+        </div>
+
+        {/* Paso 7: consentimiento legal vinculante (safe-legal-and-terms) */}
         <div className="p-4 bg-brand-white border border-brand-border-subtle rounded-xl shadow-xs">
           <label className="flex items-start gap-3 cursor-pointer select-none min-h-[44px]">
             <input
@@ -390,7 +412,7 @@ export default function ActivatePage({ params }: PageProps) {
           </label>
         </div>
 
-        {/* Aviso de error accesible */}
+        {/* Banner de error visible */}
         {visibleError && (
           <div className="text-xs rounded-md p-3.5 bg-red-50 text-red-700 border border-red-200 block animate-fadeInDown">
             <div className="flex items-center gap-2">
@@ -402,12 +424,12 @@ export default function ActivatePage({ params }: PageProps) {
           </div>
         )}
 
-        {/* Botón de envío con estado de progreso */}
+        {/* Botón de envío */}
         <div className="pt-2">
           <button
             type="submit"
             disabled={form.isSubmitting}
-            className="w-full min-h-[48px] inline-flex items-center justify-center px-6 py-3.5 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary text-sm font-semibold rounded-md shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+            className="w-full min-h-[48px] inline-flex items-center justify-center px-6 py-3.5 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary text-sm font-semibold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
           >
             {form.isSubmitting ? (
               <span className="flex items-center gap-2">

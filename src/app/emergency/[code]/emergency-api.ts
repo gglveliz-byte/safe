@@ -71,6 +71,18 @@ export interface PublicEmergencyProfileDTO {
     insuranceInfo: string | null;
     emergencyNumber: string | null;
     photoUrl: string;
+    beneficiaryType?: string;
+    country?: string | null;
+    city?: string | null;
+    residentialAddress?: string | null;
+    riderPhone?: string | null;
+    age?: number | null;
+    isOrganDonor?: boolean;
+    medicalFindings?: string | null;
+    hasGuardian?: boolean;
+    rescueNotes?: string | null;
+    frequentLocation?: string | null;
+    vehicleInfo?: string | null;
     emergencyContacts: PublicEmergencyContactDTO[];
   };
   updatedAt: string;

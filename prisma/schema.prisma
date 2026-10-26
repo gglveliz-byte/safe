@@ -149,6 +149,21 @@ model MedicalProfile {
   medications       String?
   insuranceInfo     String?
   emergencyNumber   String?
+  // Beneficiario del chip: SELF (Para Mí), CHILD, PARTNER, FAMILY, OTHER
+  beneficiaryType   String    @default("SELF")
+  // Ubicación internacional y de residencia
+  country           String?
+  city              String?
+  residentialAddress String?
+  riderPhone        String?
+  age               Int?
+  // Donación de órganos y observaciones clínicas de rescate
+  isOrganDonor      Boolean   @default(false)
+  medicalFindings   String?
+  hasGuardian       Boolean   @default(false)
+  rescueNotes       String?
+  frequentLocation  String?
+  vehicleInfo       String?
   // JSONB nativo: array dinámico tipado por EmergencyContact en
   // src/lib/schemas/common.schema.ts (id, name, relation, phone, email, isPrimary?).
   emergencyContacts Json      @default("[]")

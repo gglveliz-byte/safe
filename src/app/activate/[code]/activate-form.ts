@@ -144,22 +144,38 @@ export function useActivateForm(code: string, locale: Locale, initialPin?: strin
   // Paso 2 — Fotografía de rostro (inicial vacío: sin foto fabricada).
   const [photo, setPhoto] = useState<ActivatePhotoState>({ photoUrl: "" });
 
-  // Paso 3 — Ficha médica personal. bloodType inicia en "" (placeholder
-  // deshabilitado del select) para forzar una decisión consciente del catálogo.
-  // Si selecciona OTRO, customBloodType se vuelve obligatorio.
+  // Paso 3 — Identificación y Ubicación
+  const [beneficiaryType, setBeneficiaryType] = useState("SELF");
   const [fullName, setFullName] = useState("");
+  const [country, setCountry] = useState("EC");
+  const [city, setCity] = useState("");
+  const [residentialAddress, setResidentialAddress] = useState("");
+  const [riderPhone, setRiderPhone] = useState("");
+  const [age, setAge] = useState("");
   const [nationalId, setNationalId] = useState("");
+
+  // Paso 4 — Ficha médica y antecedentes
   const [bloodType, setBloodType] = useState("");
   const [customBloodType, setCustomBloodType] = useState("");
   const [allergies, setAllergies] = useState("");
   const [chronicConditions, setChronicConditions] = useState("");
   const [medications, setMedications] = useState("");
   const [insuranceInfo, setInsuranceInfo] = useState("");
+  const [isOrganDonor, setIsOrganDonor] = useState(false);
+  const [medicalFindings, setMedicalFindings] = useState("");
 
-  // Paso 4 — Contactos de emergencia (inicial vacío: cero familiares demo).
-  const [contacts, setContacts] = useState<EmergencyContactFormDTO[]>([]);
+  // Paso 5 — Notas y Ubicación adicional
+  const [hasGuardian, setHasGuardian] = useState(false);
+  const [rescueNotes, setRescueNotes] = useState("");
+  const [frequentLocation, setFrequentLocation] = useState("");
+  const [vehicleInfo, setVehicleInfo] = useState("");
 
-  // Paso 5 — Consentimiento legal y estados de envío.
+  // Paso 6 — Contactos de emergencia (inicializado con 1 contacto con UUID real)
+  const [contacts, setContacts] = useState<EmergencyContactFormDTO[]>([
+    { id: crypto.randomUUID(), name: "", relation: "", phone: "", email: "", isPrimary: true },
+  ]);
+
+  // Paso 7 — Consentimiento legal y estados de envío.
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -198,6 +214,18 @@ export function useActivateForm(code: string, locale: Locale, initialPin?: strin
       nationalId,
       photoUrl: photo.photoUrl,
       bloodType: resolvedBloodType,
+      beneficiaryType,
+      country: country.trim() || undefined,
+      city: city.trim() || undefined,
+      residentialAddress: residentialAddress.trim() || undefined,
+      riderPhone: riderPhone.trim() || undefined,
+      age: age ? Number(age) : undefined,
+      isOrganDonor,
+      medicalFindings: medicalFindings.trim() || undefined,
+      hasGuardian,
+      rescueNotes: rescueNotes.trim() || undefined,
+      frequentLocation: frequentLocation.trim() || undefined,
+      vehicleInfo: vehicleInfo.trim() || undefined,
       emergencyContacts: contacts.map((contact) => ({
         id: contact.id,
         name: contact.name,
@@ -222,7 +250,9 @@ export function useActivateForm(code: string, locale: Locale, initialPin?: strin
   }, [
     code, pin, email, password, photo, fullName, nationalId, bloodType,
     customBloodType, allergies, chronicConditions, medications, insuranceInfo,
-    contacts, termsAccepted, locale,
+    beneficiaryType, country, city, residentialAddress, riderPhone, age,
+    isOrganDonor, medicalFindings, hasGuardian, rescueNotes, frequentLocation,
+    vehicleInfo, contacts, termsAccepted, locale,
   ]);
 
   /**
@@ -271,6 +301,18 @@ export function useActivateForm(code: string, locale: Locale, initialPin?: strin
         chronicConditions: data.chronicConditions,
         medications: data.medications,
         insuranceInfo: data.insuranceInfo,
+        beneficiaryType: data.beneficiaryType,
+        country: data.country,
+        city: data.city,
+        residentialAddress: data.residentialAddress,
+        riderPhone: data.riderPhone,
+        age: data.age,
+        isOrganDonor: data.isOrganDonor,
+        medicalFindings: data.medicalFindings,
+        hasGuardian: data.hasGuardian,
+        rescueNotes: data.rescueNotes,
+        frequentLocation: data.frequentLocation,
+        vehicleInfo: data.vehicleInfo,
         emergencyContacts: data.emergencyContacts,
         termsAccepted: true,
         locale: data.locale,
@@ -300,18 +342,32 @@ export function useActivateForm(code: string, locale: Locale, initialPin?: strin
     password, setPassword,
     // Paso 2 — Fotografía real.
     photo, setPhoto,
-    // Paso 3 — Ficha médica.
+    // Paso 3 — Identificación y Ubicación
+    beneficiaryType, setBeneficiaryType,
     fullName, setFullName,
+    country, setCountry,
+    city, setCity,
+    residentialAddress, setResidentialAddress,
+    riderPhone, setRiderPhone,
+    age, setAge,
     nationalId, setNationalId,
+    // Paso 4 — Ficha médica y antecedentes
     bloodType, setBloodType,
     customBloodType, setCustomBloodType,
     allergies, setAllergies,
     chronicConditions, setChronicConditions,
     medications, setMedications,
     insuranceInfo, setInsuranceInfo,
-    // Paso 4 — Contactos con UUID.
+    isOrganDonor, setIsOrganDonor,
+    medicalFindings, setMedicalFindings,
+    // Paso 5 — Notas y Ubicación adicional
+    hasGuardian, setHasGuardian,
+    rescueNotes, setRescueNotes,
+    frequentLocation, setFrequentLocation,
+    vehicleInfo, setVehicleInfo,
+    // Paso 6 — Contactos con UUID.
     contacts, setContacts, addContact,
-    // Paso 5 — Consentimiento y estados de envío.
+    // Paso 7 — Consentimiento y estados de envío.
     termsAccepted, setTermsAccepted,
     isSubmitting, errorMessage, hasFailed, successResult,
     setErrorMessage, submit,

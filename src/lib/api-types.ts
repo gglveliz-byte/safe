@@ -40,6 +40,18 @@ export interface MedicalProfileData {
   emergencyNumber?: string | null;
   photoUrl?: string;
   photoPublicId?: string | null;
+  beneficiaryType?: string;
+  country?: string | null;
+  city?: string | null;
+  residentialAddress?: string | null;
+  riderPhone?: string | null;
+  age?: number | null;
+  isOrganDonor?: boolean;
+  medicalFindings?: string | null;
+  hasGuardian?: boolean;
+  rescueNotes?: string | null;
+  frequentLocation?: string | null;
+  vehicleInfo?: string | null;
   contacts: EmergencyContact[];
   emergencyContacts?: EmergencyContact[];
 }

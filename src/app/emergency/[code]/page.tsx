@@ -28,8 +28,8 @@ import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
 import { IncidentCard } from "@/components/ui/IncidentCard";
 import { IncidentAlertBanner } from "@/components/ui/IncidentAlertBanner";
-import { MedicalBadge } from "@/components/medical/MedicalBadge";
 import { EmergencyActionPanel } from "@/components/medical/EmergencyActionPanel";
+import { EmergencyClinicalDetails } from "./EmergencyClinicalDetails";
 import {
   fetchEmergencyProfile,
   dispatchEmergencyAlert,
@@ -349,70 +349,8 @@ export default function EmergencyPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* 3. Ficha Médica de Alto Contraste Solar */}
-      <IncidentCard padding="md" variant="default" className="flex flex-col gap-6">
-        {/* Cabecera con fotografía de reconocimiento y datos del titular */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 pb-5 border-b border-brand-separator">
-          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl border border-brand-border-subtle overflow-hidden bg-brand-bg-alt flex-shrink-0 flex items-center justify-center shadow-xs">
-            {medical.photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={medical.photoUrl} alt={t.activate.photoLabel} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-3xl" aria-hidden="true">👤</span>
-            )}
-          </div>
-          <div className="flex flex-col text-center sm:text-left flex-1 min-w-0">
-            <span className="font-sans text-xs uppercase tracking-wider text-brand-text-muted font-bold">
-              {t.emergency.subtitle}
-            </span>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-navy-dark leading-tight mt-0.5 truncate">
-              {medical.fullName}
-            </h2>
-            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 mt-2 text-xs font-sans text-brand-text-desc">
-              <span>
-                {t.emergency.nationalId}: <strong className="text-brand-navy-dark font-bold">{medical.nationalIdMasked}</strong>
-              </span>
-              <span>•</span>
-              <span>
-                {t.emergency.insurance}: <strong className="text-brand-navy-dark font-bold">{medical.insuranceInfo ?? t.emergency.noInsurance}</strong>
-              </span>
-            </div>
-            <span className="font-sans text-[11px] text-brand-text-muted mt-2">
-              {updatedAtLabel}
-            </span>
-          </div>
-        </div>
-
-        {/* Grupo sanguíneo y alergias severas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <MedicalBadge label={t.emergency.bloodType} value={medical.bloodType} isCritical={true} />
-          <MedicalBadge
-            label={t.emergency.allergies}
-            value={medical.allergies ?? t.emergency.noAllergies}
-            isWarning={medical.allergies !== null}
-          />
-        </div>
-
-        {/* Patologías y medicamentos prescritos */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-          <div className="p-4 bg-brand-bg-alt border border-brand-border-subtle rounded-xl">
-            <span className="font-sans text-xs uppercase font-bold text-brand-text-muted block mb-1">
-              {t.emergency.conditions}
-            </span>
-            <p className="font-sans text-sm font-semibold text-brand-navy-dark leading-snug">
-              {medical.chronicConditions ?? t.emergency.noConditions}
-            </p>
-          </div>
-          <div className="p-4 bg-brand-bg-alt border border-brand-border-subtle rounded-xl">
-            <span className="font-sans text-xs uppercase font-bold text-brand-text-muted block mb-1">
-              {t.emergency.medications}
-            </span>
-            <p className="font-sans text-sm font-semibold text-brand-navy-dark leading-snug">
-              {medical.medications ?? t.emergency.noMedications}
-            </p>
-          </div>
-        </div>
-      </IncidentCard>
+      {/* 3. Ficha Médica de Alto Contraste Solar con Donante, Notas y Ubicación */}
+      <EmergencyClinicalDetails medical={medical} updatedAtLabel={updatedAtLabel} />
 
       {/* 4. Panel de Acciones Críticas (Llamar, WhatsApp, Maps, Copiar Enlace) */}
       <EmergencyActionPanel

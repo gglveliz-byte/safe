@@ -106,6 +106,18 @@ export async function PUT(request: Request): Promise<NextResponse> {
     if (input.medications !== undefined) updateData.medications = input.medications || null;
     if (input.insuranceInfo !== undefined) updateData.insuranceInfo = input.insuranceInfo || null;
     if (input.emergencyNumber !== undefined) updateData.emergencyNumber = input.emergencyNumber || null;
+    if (input.beneficiaryType !== undefined) updateData.beneficiaryType = input.beneficiaryType;
+    if (input.country !== undefined) updateData.country = input.country || null;
+    if (input.city !== undefined) updateData.city = input.city || null;
+    if (input.residentialAddress !== undefined) updateData.residentialAddress = input.residentialAddress || null;
+    if (input.riderPhone !== undefined) updateData.riderPhone = input.riderPhone || null;
+    if (input.age !== undefined) updateData.age = input.age;
+    if (input.isOrganDonor !== undefined) updateData.isOrganDonor = input.isOrganDonor;
+    if (input.medicalFindings !== undefined) updateData.medicalFindings = input.medicalFindings || null;
+    if (input.hasGuardian !== undefined) updateData.hasGuardian = input.hasGuardian;
+    if (input.rescueNotes !== undefined) updateData.rescueNotes = input.rescueNotes || null;
+    if (input.frequentLocation !== undefined) updateData.frequentLocation = input.frequentLocation || null;
+    if (input.vehicleInfo !== undefined) updateData.vehicleInfo = input.vehicleInfo || null;
     if (input.emergencyContacts !== undefined) updateData.emergencyContacts = input.emergencyContacts;
 
     const updatedProfile = await db.medicalProfile.update({
