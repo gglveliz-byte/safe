@@ -143,45 +143,43 @@ export function EmergencyActionPanel({
   );
 
   return (
-    <div className="w-full flex flex-col gap-3 p-4 sm:p-5 bg-paper rounded-[12px] border border-ink shadow-incident">
+    <div className="w-full flex flex-col gap-4 p-5 sm:p-6 bg-brand-white rounded-xl border border-brand-border-subtle shadow-sm">
       {/* Cabecera clínica: baliza de auxilio activo y grupo sanguíneo del paciente */}
-      <div className="flex items-center justify-between gap-3 pb-1 border-b border-mist">
-        <span className="font-sans text-micro uppercase tracking-wider text-carbon font-bold">
-          {t.common.emergencyBadge}
-        </span>
-        <span className="font-sans text-micro uppercase tracking-wider text-carbon font-bold flex items-center gap-2">
+      <div className="flex items-center justify-between gap-3 pb-2 border-b border-brand-separator">
+        <div className="flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-brand-accent animate-pulse" aria-hidden="true" />
+          <span className="font-sans text-xs uppercase tracking-wider text-brand-navy-dark font-bold">
+            {t.common.emergencyBadge}
+          </span>
+        </div>
+        <span className="font-sans text-xs uppercase tracking-wider text-brand-text-muted font-bold flex items-center gap-2">
           {t.emergency.bloodType}
-          <span className="font-serif text-body-lg font-bold text-ink normal-case tracking-normal border-2 border-ink rounded-[4px] px-2 py-0.5 bg-concrete">
+          <span className="font-serif text-base font-bold text-brand-navy-dark border border-brand-border-subtle rounded-md px-2.5 py-0.5 bg-brand-bg-alt">
             {bloodType}
           </span>
         </span>
       </div>
 
-      {/* 1. LLAMAR: acción primaria de máximo contraste (btn-emergency, mínimo
-          48px). El número real a marcar es el texto visible dominante; la clave
-          del diccionario (call911 sólo cuando el destino ES el número de
-          auxilio del perfil, callContact cuando es un familiar) queda como
-          aria-label y micro-línea secundaria: nunca se afirma "911" si el
-          destino marcado es otro. */}
+      {/* 1. LLAMAR: acción primaria de máximo contraste (mínimo 48px) */}
       {callTarget ? (
         <a
           href={`tel:${callTarget}`}
           onClick={() => triggerHaptic("light")}
           aria-label={callLabel}
-          className="btn-emergency w-full flex-col gap-1 py-2"
+          className="w-full flex flex-col items-center justify-center gap-0.5 py-3 px-4 bg-brand-navy-dark hover:bg-brand-navy-secondary text-white rounded-xl font-sans shadow-sm transition-all active:scale-[0.98] min-h-[50px] no-underline"
         >
           <span className="flex items-center gap-2">
             {PhoneIcon}
-            <span className="font-sans text-body-lg font-bold tracking-wide">{callTarget}</span>
+            <span className="font-sans text-lg font-bold tracking-wide">{callTarget}</span>
           </span>
-          <span className="font-sans text-micro uppercase tracking-widest opacity-75">{callLabel}</span>
+          <span className="font-sans text-[11px] uppercase tracking-widest text-slate-300 font-medium">{callLabel}</span>
         </a>
       ) : (
         <button
           type="button"
           disabled
           title={t.emergency.noContacts}
-          className="btn-emergency w-full text-body disabled:opacity-45 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-200 text-slate-500 rounded-xl font-sans font-semibold text-sm cursor-not-allowed opacity-60 min-h-[48px]"
         >
           {PhoneIcon}
           <span>{callLabel}</span>
@@ -197,7 +195,7 @@ export function EmergencyActionPanel({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => triggerHaptic("light")}
-            className="btn-neutral w-full text-micro font-bold no-underline"
+            className="btn-neutral w-full text-xs font-semibold no-underline truncate"
           >
             {ChatIcon}
             <span className="truncate">{t.common.shareWhatsApp}</span>
@@ -207,7 +205,7 @@ export function EmergencyActionPanel({
             type="button"
             disabled
             title={t.emergency.noContacts}
-            className="btn-neutral w-full text-micro font-bold disabled:opacity-45 disabled:cursor-not-allowed"
+            className="btn-neutral w-full text-xs font-semibold disabled:opacity-45 disabled:cursor-not-allowed truncate"
           >
             {ChatIcon}
             <span className="truncate">{t.common.shareWhatsApp}</span>
@@ -221,7 +219,7 @@ export function EmergencyActionPanel({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => triggerHaptic("light")}
-            className="btn-neutral w-full text-micro font-bold no-underline"
+            className="btn-neutral w-full text-xs font-semibold no-underline truncate"
           >
             {MapIcon}
             <span className="truncate">{t.emergency.openInGoogleMaps}</span>
@@ -231,7 +229,7 @@ export function EmergencyActionPanel({
             type="button"
             disabled
             title={t.emergency.gpsDenied}
-            className="btn-neutral w-full text-micro font-bold disabled:opacity-45 disabled:cursor-not-allowed"
+            className="btn-neutral w-full text-xs font-semibold disabled:opacity-45 disabled:cursor-not-allowed truncate"
           >
             {MapIcon}
             <span className="truncate">{t.emergency.openInGoogleMaps}</span>
@@ -243,7 +241,7 @@ export function EmergencyActionPanel({
           type="button"
           onClick={handleCopyLink}
           disabled={!clipboardAvailable}
-          className="btn-neutral w-full text-micro font-bold disabled:opacity-45 disabled:cursor-not-allowed"
+          className="btn-neutral w-full text-xs font-semibold disabled:opacity-45 disabled:cursor-not-allowed truncate"
         >
           {LinkIcon}
           <span className="truncate">

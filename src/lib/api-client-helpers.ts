@@ -104,3 +104,85 @@ export function normalizarContactos(
     };
   });
 }
+
+/** Construye el payload tipado para activar un kit virgen en el backend */
+export function buildActivatePayload(payload: {
+  code: string;
+  activationPin: string;
+  email: string;
+  password?: string;
+  fullName?: string;
+  nationalId?: string;
+  photoUrl?: string;
+  photoPublicId?: string;
+  birthDate?: string;
+  bloodType?: string;
+  allergies?: string;
+  chronicConditions?: string;
+  medications?: string;
+  insuranceInfo?: string;
+  emergencyNumber?: string;
+  emergencyContacts?: EmergencyContact[];
+  medicalData?: import("./api-types").MedicalProfileData;
+  termsAccepted?: boolean;
+  locale?: "es" | "en";
+}): Record<string, unknown> {
+  const md = payload.medicalData;
+  if (!payload.password) throw new Error("La contraseña es obligatoria para activar el kit.");
+  if (!(md?.photoUrl || payload.photoUrl)) throw new Error("La fotografía del piloto es obligatoria.");
+  if (!(md?.bloodType || payload.bloodType)) throw new Error("El grupo sanguíneo es obligatorio.");
+  if (payload.termsAccepted !== true) throw new Error("Debe aceptar los Términos y Condiciones.");
+
+  if (md) {
+    return {
+      code: payload.code.trim().toUpperCase(),
+      activationPin: payload.activationPin.trim(),
+      email: payload.email.trim().toLowerCase(),
+      password: payload.password,
+      fullName: md.fullName.trim(),
+      nationalId: md.nationalId.trim(),
+      photoUrl: md.photoUrl || payload.photoUrl,
+      photoPublicId: md.photoPublicId || undefined,
+      birthDate: md.birthDate || undefined,
+      bloodType: md.bloodType || payload.bloodType,
+      allergies: md.allergies?.trim() || undefined,
+      chronicConditions: (md.chronicConditions || md.conditions || "")?.trim() || undefined,
+      medications: md.medications?.trim() || undefined,
+      insuranceInfo: (md.insuranceInfo || md.insurance || "")?.trim() || undefined,
+      emergencyNumber: md.emergencyNumber?.trim() || undefined,
+      emergencyContacts: normalizarContactos(md.emergencyContacts || md.contacts || []),
+      termsAccepted: payload.termsAccepted,
+      locale: payload.locale || "es",
+    };
+  }
+
+  return {
+    ...payload,
+    code: payload.code.trim().toUpperCase(),
+    activationPin: payload.activationPin.trim(),
+    termsAccepted: payload.termsAccepted,
+  };
+}
+
+/** Construye el cuerpo saneado para la actualización de ficha médica en PUT /api/profile */
+export function buildProfileUpdatePayload(
+  profile: import("./api-types").MedicalProfileData,
+): Record<string, unknown> {
+  const sourceContacts = profile.emergencyContacts || profile.contacts || [];
+  const normalizedContacts = normalizarContactos(sourceContacts);
+
+  return {
+    fullName: profile.fullName?.trim(),
+    nationalId: profile.nationalId?.trim(),
+    photoUrl: profile.photoUrl || undefined,
+    photoPublicId: profile.photoPublicId || undefined,
+    birthDate: profile.birthDate || undefined,
+    bloodType: profile.bloodType?.trim() || undefined,
+    allergies: profile.allergies?.trim() || undefined,
+    chronicConditions: (profile.chronicConditions || profile.conditions || "")?.trim() || undefined,
+    medications: profile.medications?.trim() || undefined,
+    insuranceInfo: (profile.insuranceInfo || profile.insurance || "")?.trim() || undefined,
+    emergencyNumber: profile.emergencyNumber?.trim() || undefined,
+    emergencyContacts: normalizedContacts,
+  };
+}

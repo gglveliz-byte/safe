@@ -270,12 +270,12 @@ export function NfcBurstWriterModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-brand-white sm:bg-brand-navy-dark/90 sm:backdrop-blur-md flex flex-col items-center justify-start p-0 sm:p-4 md:p-6 overflow-y-auto">
+    <div role="dialog" aria-modal="true" aria-labelledby="nfc-writer-title" className="fixed inset-0 z-50 bg-brand-white sm:bg-brand-navy-dark/90 sm:backdrop-blur-md flex flex-col items-center justify-start p-0 sm:p-4 md:p-6 overflow-y-auto">
       <div className="w-full min-h-dvh sm:min-h-0 sm:max-w-4xl lg:max-w-5xl my-0 sm:my-auto bg-brand-white sm:border sm:border-brand-border-subtle rounded-none sm:rounded-2xl p-4 sm:p-5 sm:shadow-2xl flex flex-col justify-between sm:justify-start gap-3">
         {/* Barra superior de título, selector de modo y cierre */}
         <div className="flex items-center justify-between border-b border-brand-separator pb-2.5">
           <div className="flex items-center gap-2">
-            <h3 className="font-serif font-bold text-sm sm:text-lg text-brand-navy-dark leading-tight">
+            <h3 id="nfc-writer-title" className="font-serif font-bold text-sm sm:text-lg text-brand-navy-dark leading-tight">
               {t.admin.nfcWriterTitle}
             </h3>
             <span className="hidden sm:inline font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted bg-brand-bg-alt px-2 py-0.5 rounded border border-brand-border-subtle">

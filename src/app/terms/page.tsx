@@ -29,17 +29,17 @@ export default function TermsPage() {
   const { t } = useLocale();
 
   return (
-    <div className="safe-mobile-container py-8 sm:py-12 flex flex-col gap-8">
+    <div className="w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 flex flex-col gap-8 animate-fadeInUp">
       {/* Encabezado Broadsheet Legal */}
-      <section className="flex flex-col gap-2 border-b border-ink pb-4">
-        <h1 className="font-serif text-heading font-bold text-ink leading-tight">
+      <section className="flex flex-col gap-2 border-b border-brand-separator pb-4">
+        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-brand-navy-dark leading-tight">
           {t.legal.termsTitle}
         </h1>
-        <p className="font-serif text-body text-carbon">
+        <p className="font-sans text-sm sm:text-base text-brand-text-desc">
           {t.legal.termsSubtitle}
         </p>
-        {/* Metadato de última actualización en micro Arial 13px */}
-        <span className="font-sans text-micro text-carbon mt-1">
+        {/* Metadato de última actualización */}
+        <span className="font-sans text-xs text-brand-text-muted mt-1">
           {t.legal.lastUpdated}
         </span>
       </section>
@@ -48,42 +48,40 @@ export default function TermsPage() {
       <div className="flex flex-col gap-6">
         {/* Sección 1 */}
         <IncidentCard padding="md">
-          <h2 className="font-serif text-heading-sm font-bold text-ink mb-2">
+          <h2 className="font-serif text-xl font-bold text-brand-navy-dark mb-2">
             {t.legal.termsSection1Title}
           </h2>
-          <p className="font-serif text-body text-carbon leading-relaxed">
+          <p className="font-sans text-sm text-brand-text-desc leading-relaxed">
             {t.legal.termsSection1Body}
           </p>
         </IncidentCard>
 
-        {/* Sección 2: El Buen Samaritano. El énfasis es puramente tipográfico
-            (cuerpo en tinta y peso medio): el borde Alert Red se reserva en
-            exclusiva para banners críticos de emergencia médica. */}
+        {/* Sección 2: El Buen Samaritano. Énfasis tipográfico en texto Navy Dark */}
         <IncidentCard padding="md">
-          <h2 className="font-serif text-heading-sm font-bold text-ink mb-2">
+          <h2 className="font-serif text-xl font-bold text-brand-navy-dark mb-2">
             {t.legal.termsSection2Title}
           </h2>
-          <p className="font-serif text-body text-ink leading-relaxed font-medium">
+          <p className="font-sans text-sm text-brand-navy-dark leading-relaxed font-semibold">
             {t.legal.termsSection2Body}
           </p>
         </IncidentCard>
 
         {/* Sección 3 */}
         <IncidentCard padding="md">
-          <h2 className="font-serif text-heading-sm font-bold text-ink mb-2">
+          <h2 className="font-serif text-xl font-bold text-brand-navy-dark mb-2">
             {t.legal.termsSection3Title}
           </h2>
-          <p className="font-serif text-body text-carbon leading-relaxed">
+          <p className="font-sans text-sm text-brand-text-desc leading-relaxed">
             {t.legal.termsSection3Body}
           </p>
         </IncidentCard>
 
         {/* Sección 4 */}
         <IncidentCard padding="md">
-          <h2 className="font-serif text-heading-sm font-bold text-ink mb-2">
+          <h2 className="font-serif text-xl font-bold text-brand-navy-dark mb-2">
             {t.legal.termsSection4Title}
           </h2>
-          <p className="font-serif text-body text-carbon leading-relaxed">
+          <p className="font-sans text-sm text-brand-text-desc leading-relaxed">
             {t.legal.termsSection4Body}
           </p>
         </IncidentCard>
@@ -91,9 +89,7 @@ export default function TermsPage() {
 
       <IncidentHairline variant="subtle" />
 
-      {/* Navegación Cruzada hacia Privacidad y Portada: botones neutros
-          canónicos (concreto + borde negro 1px) con área táctil mínima de
-          44px garantizada por la utilidad global .btn-neutral. */}
+      {/* Navegación Cruzada hacia Privacidad y Portada */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link href="/privacy" className="btn-neutral">
           {t.common.privacyLink}

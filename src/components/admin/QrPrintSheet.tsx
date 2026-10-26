@@ -22,7 +22,7 @@
 import React, { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useLocale } from "@/hooks/useLocale";
-import { buildHelmetGatewayClientUrl } from "@/lib/nfc-write-utils";
+import { buildHelmetGatewayClientUrl, resolvePublicBaseUrl } from "@/lib/nfc-write-utils";
 import type { AdminDeviceItem } from "@/lib/api-client";
 
 export interface QrPrintSheetProps {
@@ -34,9 +34,44 @@ export interface QrPrintSheetProps {
 export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps) {
   const { t } = useLocale();
 
+  // URL base dinámica (auto-detectada de LAN / VPS con capacidad de ajuste)
+  const [targetBaseUrl, setTargetBaseUrl] = useState(() => resolvePublicBaseUrl());
+  const [isEditingUrl, setIsEditingUrl] = useState(false);
+  const [customInputUrl, setCustomInputUrl] = useState("");
+
   // Mapa folio → Data URL (PNG base64) del QR generado localmente en memoria
   const [qrDataUrls, setQrDataUrls] = useState<Record<string, string>>({});
   const [generationError, setGenerationError] = useState(false);
+
+  // Auto-descubrimiento de la IP de red local cuando el navegador se encuentra en localhost
+  useEffect(() => {
+    let active = true;
+    if (
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+    ) {
+      fetch("/api/system/network-info")
+        .then((res) => res.json())
+        .then((payload) => {
+          if (!active) return;
+          if (payload.success && payload.data) {
+            const detected =
+              payload.data.envUrl && !payload.data.envUrl.includes("localhost")
+                ? payload.data.envUrl
+                : payload.data.lanUrl || "";
+            if (detected) {
+              setTargetBaseUrl(detected);
+            }
+          }
+        })
+        .catch(() => {
+          // Ignorar fallo si el endpoint no responde
+        });
+    }
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,7 +81,7 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
         const entries = await Promise.all(
           devices.map(async (device) => {
             const dataUrl = await QRCode.toDataURL(
-              buildHelmetGatewayClientUrl(device.code, "qr", device.activationPin),
+              buildHelmetGatewayClientUrl(device.code, "qr", device.activationPin, targetBaseUrl),
               {
                 width: 300,
                 margin: 1,
@@ -73,7 +108,7 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
     return () => {
       cancelled = true;
     };
-  }, [devices]);
+  }, [devices, targetBaseUrl]);
 
   const handlePrint = () => {
     if (typeof window !== "undefined") {
@@ -97,6 +132,59 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
           <p className="font-sans text-xs text-brand-text-muted mt-0.5">
             {t.admin.printSheetHelp}
           </p>
+
+          {/* Selector Inteligente de Enlace Base (LAN Wi-Fi / Dominio VPS) */}
+          <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-brand-separator/60">
+            <span className="font-sans text-xs text-brand-text-desc flex items-center gap-1">
+              <span>🌐</span> Enlace base del kit:
+            </span>
+            {isEditingUrl ? (
+              <div className="flex items-center gap-1.5 flex-1 max-w-sm">
+                <input
+                  type="text"
+                  value={customInputUrl}
+                  onChange={(e) => setCustomInputUrl(e.target.value)}
+                  placeholder="https://tudominio.com o http://192.168.0.35:3000"
+                  className="flex-1 px-2.5 py-1 text-xs font-mono bg-white border border-brand-border-field rounded-md text-brand-navy-dark focus:outline-none focus:ring-1 focus:ring-brand-nav-blue"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (customInputUrl.trim()) {
+                      setTargetBaseUrl(customInputUrl.trim());
+                    }
+                    setIsEditingUrl(false);
+                  }}
+                  className="px-2.5 py-1 text-xs font-semibold bg-brand-navy-dark text-white rounded-md cursor-pointer hover:bg-brand-navy-secondary transition-colors"
+                >
+                  Guardar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingUrl(false)}
+                  className="px-2 py-1 text-xs text-brand-text-muted hover:text-brand-navy-dark cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <code className="font-mono text-xs font-bold text-brand-navy-dark bg-brand-bg-alt px-2 py-0.5 rounded border border-brand-border-subtle">
+                  {targetBaseUrl}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomInputUrl(targetBaseUrl);
+                    setIsEditingUrl(true);
+                  }}
+                  className="text-xs text-brand-nav-blue hover:underline cursor-pointer font-medium"
+                >
+                  Cambiar para VPS / Dominio
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">

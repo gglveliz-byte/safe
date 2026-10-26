@@ -88,6 +88,39 @@ function chipInactiveHtmlResponse(): NextResponse {
 }
 
 /**
+ * Resuelve el origen canónico real desde el que el cliente realizó la petición.
+ *
+ * Prioridad:
+ * 1. Cabeceras del proxy o cliente (X-Forwarded-Host o Host).
+ *    Si el escaneo viene desde el celular por Wi-Fi (ej. Host: 192.168.0.35:3000),
+ *    o desde internet/VPS (ej. Host: safe.tuempresa.com), utiliza ESE host exacto
+ *    para que la redirección 307 permanezca en el mismo dispositivo y dominio.
+ * 2. NEXT_PUBLIC_APP_URL si está configurado en .env y no es localhost.
+ * 3. Origen derivado de request.url o request.nextUrl.
+ */
+function resolveRequestOrigin(request: NextRequest): string {
+  const host =
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host") ||
+    "";
+  const proto =
+    request.headers.get("x-forwarded-proto") ||
+    (request.url.startsWith("https") ? "https" : "http");
+
+  // Si la petición tiene cabecera Host, se utiliza ese host y puerto exactos
+  if (host) {
+    return `${proto}://${host}`;
+  }
+
+  const envUrl = (process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/+$/, "");
+  if (envUrl) {
+    return envUrl;
+  }
+
+  return new URL(request.url).origin;
+}
+
+/**
  * GET /r/[code] — Gateway inteligente del casco.
  *
  * Bifurcación según el estado del Device en PostgreSQL:
@@ -167,11 +200,13 @@ export async function GET(
     //    El motociclista acaba de recibir su kit y debe completarlo:
     //    validar PIN, crear cuenta, registrar perfil médico y contactos.
     //    Si el QR traía el PIN de seguridad, se propaga para auto-asignarlo.
-    //    Se usa 307 (Temporary Redirect) para que el navegador conserve
-    //    el método GET en el salto.
+    //    Se usa el origen resuelto dinámicamente para que el móvil no sea
+    //    desviado a localhost al redirigir (307).
     // ─────────────────────────────────────────────────────────────────
+    const origin = resolveRequestOrigin(request);
+
     if (device.status === "UNCLAIMED" || !device.userId) {
-      const activateUrl = new URL(`/activate/${validatedCode}`, request.url);
+      const activateUrl = new URL(`/activate/${validatedCode}`, origin);
       if (pin) {
         activateUrl.searchParams.set("pin", pin);
       }
@@ -187,7 +222,7 @@ export async function GET(
     // ─────────────────────────────────────────────────────────────────
     if (device.status === "ACTIVE") {
       const emergencyPath = `/emergency/${validatedCode}${v ? `?v=${v}` : ""}`;
-      const emergencyUrl = new URL(emergencyPath, request.url);
+      const emergencyUrl = new URL(emergencyPath, origin);
       return NextResponse.redirect(emergencyUrl, 307);
     }
 

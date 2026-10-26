@@ -59,24 +59,26 @@ export const IncidentButton = React.forwardRef<
       }
     };
 
-    // Estilos por variante canónica (paleta Incident estricta: cero colores Tailwind ajenos)
-    let variantStyles = "bg-concrete text-ink border-ink hover:bg-mist";
+    // Estilos por variante oficial SAFE 2026
+    let variantStyles =
+      "bg-brand-white text-brand-navy-dark border-brand-border-subtle hover:bg-brand-bg-alt hover:border-brand-border-strong shadow-xs";
     if (variant === "emergency") {
-      variantStyles = "bg-ink text-paper border-ink hover:bg-carbon";
-    } else if (variant === "paper") {
-      variantStyles = "bg-paper text-ink border-ink hover:bg-concrete";
-    } else if (variant === "danger") {
-      // Lavado tintado oficial al 8% derivado de Alert Red (#ff492c), idéntico al banner crítico
       variantStyles =
-        "bg-[rgba(255,73,44,0.08)] hover:bg-[rgba(255,73,44,0.14)] text-alert-red border-alert-red";
+        "bg-brand-navy-dark text-white border-transparent hover:bg-brand-navy-secondary shadow-sm";
+    } else if (variant === "paper") {
+      variantStyles =
+        "bg-brand-white text-brand-navy-dark border-brand-border-subtle hover:bg-brand-bg-alt hover:border-brand-border-strong shadow-xs";
+    } else if (variant === "danger") {
+      variantStyles =
+        "bg-brand-accent text-white border-transparent hover:bg-brand-accent-hover shadow-sm";
     }
 
     // Altura y espaciado mínimo para ergonomía móvil (objetivo táctil ≥ 44x44px en TODOS los tamaños)
-    let sizeStyles = "min-h-[44px] px-3 py-2 text-micro";
+    let sizeStyles = "min-h-[44px] px-4 py-2 text-xs font-semibold";
     if (size === "sm") {
-      sizeStyles = "min-h-[44px] px-2.5 py-1.5 text-micro";
+      sizeStyles = "min-h-[44px] px-3 py-1.5 text-xs font-medium";
     } else if (size === "lg") {
-      sizeStyles = "min-h-[50px] px-5 py-3 text-body font-bold";
+      sizeStyles = "min-h-[48px] px-6 py-3 text-sm font-bold";
     }
 
     return (
@@ -88,8 +90,8 @@ export const IncidentButton = React.forwardRef<
         onClick={handleClick}
         className={`
           inline-flex items-center justify-center gap-2
-          font-sans font-medium rounded-[4px] border
-          select-none cursor-pointer transition-all duration-75
+          font-sans rounded-lg border
+          select-none cursor-pointer transition-all duration-150
           active:scale-[0.98] disabled:opacity-45 disabled:cursor-not-allowed
           disabled:active:scale-100 min-w-[44px]
           ${variantStyles}

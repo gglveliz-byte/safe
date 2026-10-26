@@ -34,22 +34,22 @@ export function IncidentAlertBanner({
   action,
   className = "",
 }: IncidentAlertBannerProps) {
-  let containerStyles = "bg-[rgba(255,73,44,0.08)] border-alert-red text-ink";
-  let defaultIconColor = "text-alert-red";
+  let containerStyles = "bg-brand-accent/5 border-brand-accent/30 text-brand-navy-dark";
+  let defaultIconColor = "text-brand-accent";
 
   if (type === "warning") {
-    containerStyles = "bg-[rgba(241,100,30,0.08)] border-ember text-ink";
-    defaultIconColor = "text-ember";
+    containerStyles = "bg-amber-50/70 border-amber-300 text-brand-navy-dark";
+    defaultIconColor = "text-amber-600";
   } else if (type === "info") {
-    containerStyles = "bg-[rgba(22,22,24,0.04)] border-ink text-ink";
-    defaultIconColor = "text-ink";
+    containerStyles = "bg-brand-nav-active border-brand-border-subtle text-brand-navy-dark";
+    defaultIconColor = "text-brand-nav-blue";
   }
 
   return (
     <div
       role="alert"
       className={`
-        rounded-[8px] border p-4 sm:p-5
+        rounded-xl border p-4 sm:p-5
         flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4
         ${containerStyles}
         ${className}
@@ -59,8 +59,7 @@ export function IncidentAlertBanner({
         {icon ? (
           <span className="flex-shrink-0 mt-0.5">{icon}</span>
         ) : (
-          // Icono por defecto: triángulo de advertencia SVG inline trazado con el color
-          // semántico del banner (Alert Red / Ember / Ink). Decorativo: aria-hidden.
+          // Icono por defecto: triángulo de advertencia SVG inline trazado con el color semántico
           <svg
             aria-hidden="true"
             focusable="false"
@@ -79,11 +78,11 @@ export function IncidentAlertBanner({
         )}
         <div className="flex flex-col">
           {title && (
-            <h4 className="font-serif font-bold text-body text-ink leading-tight mb-1">
+            <h4 className="font-serif font-bold text-sm sm:text-base text-brand-navy-dark leading-tight mb-1">
               {title}
             </h4>
           )}
-          <p className="font-serif text-body text-ink leading-relaxed">
+          <p className="font-sans text-xs sm:text-sm text-brand-text-desc leading-relaxed">
             {message}
           </p>
         </div>

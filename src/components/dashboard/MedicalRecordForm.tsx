@@ -102,11 +102,11 @@ export function MedicalRecordForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-6">
-      <div>
-        <h2 className="font-serif text-heading-sm font-bold text-ink">
+      <div className="border-b border-brand-separator pb-4">
+        <h2 className="font-serif text-2xl font-bold text-brand-navy-dark">
           {t.dashboard.editMedicalTitle}
         </h2>
-        <p className="font-sans text-micro text-carbon mt-0.5">
+        <p className="font-sans text-xs sm:text-sm text-brand-text-desc mt-0.5">
           {t.dashboard.editMedicalSubtitle}
         </p>
       </div>
@@ -119,10 +119,10 @@ export function MedicalRecordForm({
       />
 
       {/* Datos Clínicos Principales */}
-      <IncidentCard padding="md" className="flex flex-col gap-4">
+      <IncidentCard padding="md" className="flex flex-col gap-5">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="flex flex-col gap-1 sm:col-span-2">
-            <label className="font-sans text-micro font-bold uppercase text-carbon">
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
               {t.activate.fullNameLabel}
             </label>
             <input
@@ -130,15 +130,14 @@ export function MedicalRecordForm({
               value={profile.fullName}
               onChange={(e) => onProfileChange({ ...profile, fullName: e.target.value })}
               required
-              className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+              className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="font-sans text-micro font-bold uppercase text-carbon">
+          <div className="flex flex-col gap-1.5">
+            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
               {t.activate.bloodTypeLabel}
             </label>
-            {/* M-19: catálogo canónico del backend (erradicado DESCONOCIDO, incluye OTRO con especificación) */}
             <select
               value={profile.bloodType?.startsWith("OTRO") ? "OTRO" : profile.bloodType}
               onChange={(e) => {
@@ -150,7 +149,7 @@ export function MedicalRecordForm({
                 }
               }}
               required
-              className="h-11 px-3 bg-concrete border-2 border-ink rounded-[4px] font-serif text-body font-bold text-ink focus:outline-none cursor-pointer"
+              className="safe-input-focus h-11 min-h-[44px] px-3 bg-brand-white border border-brand-border-field rounded-lg font-serif text-base font-bold text-brand-navy-dark cursor-pointer"
             >
               <option value="">{t.dashboard.bloodTypeUnset}</option>
               {BLOOD_TYPES.map((type) => (
@@ -178,16 +177,15 @@ export function MedicalRecordForm({
                     bloodType: detail ? `OTRO: ${detail}` : "OTRO",
                   });
                 }}
-                className="h-11 px-3 bg-concrete border-2 border-ink rounded-[4px] font-sans text-sm text-ink focus:outline-none mt-1.5"
+                className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark mt-1.5"
               />
             )}
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="font-sans text-micro font-bold uppercase text-carbon">
+          <div className="flex flex-col gap-1.5">
+            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
               {t.dashboard.birthDateLabel}
             </label>
-            {/* P-6: fecha real del piloto; vacía = no declarada (cero inventos) */}
             <input
               type="date"
               value={toInputDate(profile.birthDate)}
@@ -200,12 +198,12 @@ export function MedicalRecordForm({
                     : null,
                 })
               }
-              className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+              className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark"
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="font-sans text-micro font-bold uppercase text-carbon">
+          <div className="flex flex-col gap-1.5">
+            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
               {t.activate.nationalIdLabel}
             </label>
             <input
@@ -213,12 +211,12 @@ export function MedicalRecordForm({
               value={profile.nationalId}
               onChange={(e) => onProfileChange({ ...profile, nationalId: e.target.value })}
               required
-              className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+              className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
             />
           </div>
 
-          <div className="flex flex-col gap-1 sm:col-span-2">
-            <label className="font-sans text-micro font-bold uppercase text-carbon">
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
               {t.activate.insuranceLabel}
             </label>
             <input
@@ -231,14 +229,12 @@ export function MedicalRecordForm({
                   insurance: e.target.value,
                 })
               }
-              className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+              className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
             />
           </div>
 
-          {/* P-6: teléfono de auxilio inmediato. Es el destino real del botón de
-              llamada de la ficha pública de rescate (EmergencyActionPanel). */}
-          <div className="flex flex-col gap-1 sm:col-span-2">
-            <label className="font-sans text-micro font-bold uppercase text-carbon">
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
               {t.dashboard.emergencyNumberLabel}
             </label>
             <input
@@ -247,29 +243,29 @@ export function MedicalRecordForm({
               onChange={(e) =>
                 onProfileChange({ ...profile, emergencyNumber: e.target.value })
               }
-              className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+              className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
             />
-            <p className="font-sans text-[11px] text-carbon">
+            <p className="font-sans text-xs text-brand-text-muted">
               {t.dashboard.emergencyNumberHelp}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-          <div className="flex flex-col gap-1">
-            <label className="font-sans text-micro font-bold uppercase text-alert-red">
+          <div className="flex flex-col gap-1.5">
+            <label className="font-sans text-xs font-semibold text-brand-accent">
               {t.activate.allergiesLabel}
             </label>
             <textarea
               rows={3}
               value={profile.allergies || ""}
               onChange={(e) => onProfileChange({ ...profile, allergies: e.target.value })}
-              className="p-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink resize-none"
+              className="safe-input-focus p-3 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted resize-none"
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="font-sans text-micro font-bold uppercase text-carbon">
+          <div className="flex flex-col gap-1.5">
+            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
               {t.activate.conditionsLabel}
             </label>
             <textarea
@@ -282,19 +278,19 @@ export function MedicalRecordForm({
                   conditions: e.target.value,
                 })
               }
-              className="p-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink resize-none"
+              className="safe-input-focus p-3 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted resize-none"
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="font-sans text-micro font-bold uppercase text-carbon">
+          <div className="flex flex-col gap-1.5">
+            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
               {t.activate.medicationsLabel}
             </label>
             <textarea
               rows={3}
               value={profile.medications || ""}
               onChange={(e) => onProfileChange({ ...profile, medications: e.target.value })}
-              className="p-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink resize-none"
+              className="safe-input-focus p-3 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted resize-none"
             />
           </div>
         </div>
@@ -309,20 +305,20 @@ export function MedicalRecordForm({
         disabled={isSaving}
       />
 
-      {/* C-16/M-1: éxito sobrio en concrete/ink (paleta Incident, cero verdes) */}
+      {/* Éxito sobrio con diseño SAFE 2026 */}
       {noticeMessage && (
         <div
-          className="p-4 bg-concrete border border-ink rounded-[8px] text-micro text-ink font-sans font-bold text-center"
+          className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-sans font-bold text-center"
           role="status"
         >
           ✓ {noticeMessage}
         </div>
       )}
 
-      {/* C-16/M-1: error con la clase oficial .banner-emergency de globals.css */}
+      {/* Error con diseño SAFE 2026 */}
       {errorMessage && (
         <div
-          className="banner-emergency text-micro text-alert-red font-sans font-bold text-center"
+          className="p-4 bg-rose-50 border border-brand-accent/30 rounded-xl text-xs text-brand-accent font-sans font-bold text-center"
           role="alert"
         >
           ⚠️ {errorMessage}

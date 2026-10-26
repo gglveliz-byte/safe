@@ -188,125 +188,88 @@ export default function EmergencyPage({ params }: PageProps) {
   // RAMA 1 — Folio vacío: error humano con regreso al inicio (sin respaldo)
   if (code === "") {
     return (
-      <div className="safe-mobile-container py-6 sm:py-10 flex flex-col gap-6">
+      <div className="w-full max-w-2xl mx-auto px-4 py-8 sm:py-12 flex flex-col gap-6">
         <IncidentAlertBanner type="emergency" title={t.emergency.title} message={t.common.errorGeneric} />
         <a href="/" className="btn-neutral w-full no-underline">{t.common.backToHome}</a>
       </div>
     );
   }
 
-  // Cabecera editorial compartida por los estados de carga y de error
-  const headerBanner = (
-    <IncidentAlertBanner type="emergency" title={t.emergency.title} message={t.emergency.bannerWarning} />
-  );
-
   // Enlace directo a Google Maps: sólo si el despacho devolvió una URL real
   const mapsAction = alertResult?.googleMapsUrl ? (
-    <a href={alertResult.googleMapsUrl} target="_blank" rel="noopener noreferrer"
-      onClick={() => triggerHaptic("light")} className="btn-neutral w-full no-underline font-bold">
+    <a
+      href={alertResult.googleMapsUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={() => triggerHaptic("light")}
+      className="btn-neutral w-full sm:w-auto no-underline font-bold text-xs"
+    >
       {t.emergency.openInGoogleMaps} ↗
     </a>
   ) : undefined;
 
-  // Botón de reintento del despacho dentro del banner de fallo. BRECHA DE
-  // DICCIONARIO (reportada): no existe clave propia de "reenviar alerta"; se
-  // emplea t.nav.emergencyDemo como rótulo temporal junto al ↻.
-  const alertRetryAction = (
-    <button type="button" onClick={handleAlertRetry} className="btn-neutral w-full font-bold">
-      <span aria-hidden="true">↻</span>
-      <span>{t.nav.emergencyDemo}</span>
+  // Botón táctil de alta visibilidad para forzar la adquisición satelital y reenvío de alerta
+  const gpsTactileRetryButton = (
+    <button
+      type="button"
+      onClick={handleAlertRetry}
+      className="w-full py-4 px-4 bg-brand-accent hover:bg-brand-accent-hover text-white rounded-xl font-sans text-sm font-bold tracking-wider uppercase shadow-md border-2 border-white flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform cursor-pointer"
+    >
+      <span className="text-sm font-extrabold flex items-center gap-2">
+        <span aria-hidden="true">🚨</span>
+        <span>{t.emergency.gpsPendingTitle}</span>
+      </span>
+      <span className="text-xs font-bold underline">{t.emergency.gpsRetryButton}</span>
     </button>
   );
 
-  // Banner de estado del despacho: cuatro desenlaces reales, cero afirmaciones
-  // fabricadas. BRECHA DE DICCIONARIO (reportada): falta emergency.throttledNotice;
-  // en la ventana de protección se reutiliza bannerWarning (un escaneo previo ya
-  // despachó el aviso) y NUNCA alertSentNotice (afirmaría un envío nuevo).
-  let alertBanner: React.ReactNode = null;
-  if (alertResult?.wasThrottled) {
-    alertBanner = <IncidentAlertBanner type="warning" message={t.emergency.bannerWarning} action={mapsAction} />;
-  } else if (alertResult && alertResult.emailsSentCount > 0) {
-    // Entregas reales a familiares: único caso que afirma el aviso recibido
-    alertBanner = (
-      <IncidentAlertBanner type="info" title={t.emergency.dispatchedAlert}
-        message={t.emergency.alertSentNotice} action={mapsAction} />
-    );
-  } else if (alertResult) {
-    // Despacho aceptado con cero correos entregados: no se afirma haber avisado
-    alertBanner = <IncidentAlertBanner type="warning" message={t.emergency.bannerWarning} action={mapsAction} />;
-  } else if (alertFailed) {
-    alertBanner = <IncidentAlertBanner type="emergency" message={alertMessage ?? t.common.errorGeneric} action={alertRetryAction} />;
-  }
-
-  // Coordenadas del siniestro: sexagesimal real del despacho + origen del
-  // escaneo. Visible incluso si la ficha falló (el flujo de alerta es propio).
-  const coordinatesSection = alertResult ? (
-    <div className="card-paper flex flex-col gap-3">
-      <span className="font-sans text-micro font-bold uppercase tracking-widest text-carbon">{t.emergency.lastGpsLocation}</span>
-      <span className="font-serif text-heading-sm sm:text-heading font-bold text-ink break-words">{alertResult.dmsFormatted}</span>
-      <span className="font-sans text-micro text-carbon">{t.emergency.scanSourceLabel}{" "}
-        <strong className="uppercase tracking-widest text-ink">{scanSource}</strong></span>
-      {mapsAction}
-    </div>
-  ) : null;
-
-  // RAMA 2 — Carga: skeleton broadsheet con bloques pulsantes sobre papel.
-  // El despacho corre en paralelo: su estado real se muestra si llega antes.
+  // RAMA 2 — Carga: skeleton broadsheet con bloques pulsantes
   if (status === "loading") {
     return (
-      <div className="safe-mobile-container py-6 sm:py-10 flex flex-col gap-6">
-        {headerBanner}
-        <div className="flex items-center gap-2 p-3 bg-paper border border-ink rounded-[8px]">
-          <span className="font-sans text-micro font-bold uppercase tracking-widest bg-ink text-paper px-2 py-0.5 rounded-[4px]">{code}</span>
-          <span className="font-sans text-micro font-bold uppercase text-alert-red">{t.common.emergencyBadge}</span>
+      <div className="w-full max-w-2xl mx-auto px-4 py-6 sm:py-10 flex flex-col gap-6 animate-fadeInUp">
+        <IncidentAlertBanner type="emergency" title={t.emergency.title} message={t.emergency.bannerWarning} />
+        <div className="flex items-center gap-2 p-3 bg-brand-white border border-brand-border-subtle rounded-xl shadow-xs">
+          <span className="font-mono text-xs font-bold uppercase tracking-widest bg-brand-navy-dark text-white px-3 py-1 rounded-md">{code}</span>
+          <span className="font-sans text-xs font-bold uppercase text-brand-accent">{t.common.emergencyBadge}</span>
         </div>
-        {alertBanner}
         <div className="card-paper flex flex-col gap-4" aria-hidden="true">
           <div className="flex items-center gap-4">
-            <div className="w-24 h-24 rounded-[8px] bg-mist animate-pulse flex-shrink-0" />
+            <div className="w-24 h-24 rounded-xl bg-slate-100 animate-pulse flex-shrink-0" />
             <div className="flex-1 flex flex-col gap-2">
-              <div className="h-4 w-2/3 bg-mist rounded-[4px] animate-pulse" />
-              <div className="h-3 w-1/2 bg-fog rounded-[4px] animate-pulse" />
-              <div className="h-3 w-1/3 bg-fog rounded-[4px] animate-pulse" />
+              <div className="h-5 w-2/3 bg-slate-100 rounded animate-pulse" />
+              <div className="h-4 w-1/2 bg-slate-100 rounded animate-pulse" />
+              <div className="h-3 w-1/3 bg-slate-100 rounded animate-pulse" />
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="h-24 bg-mist rounded-[8px] animate-pulse" />
-            <div className="h-24 bg-mist rounded-[8px] animate-pulse" />
+            <div className="h-24 bg-slate-100 rounded-xl animate-pulse" />
+            <div className="h-24 bg-slate-100 rounded-xl animate-pulse" />
           </div>
-          <div className="h-20 bg-fog rounded-[8px] animate-pulse" />
-          <div className="h-20 bg-fog rounded-[8px] animate-pulse" />
+          <div className="h-20 bg-slate-100 rounded-xl animate-pulse" />
+          <div className="h-20 bg-slate-100 rounded-xl animate-pulse" />
         </div>
       </div>
     );
   }
 
-  // RAMA 3 — Error humano de la ficha: mensaje real del backend + reintento +
-  // inicio. El flujo de alerta SIGUE su curso: el banner de estado del despacho
-  // y las coordenadas del siniestro se muestran igual (el backend tiene su
-  // propio respaldo de posición). Sin datos de ficha no hay acciones de llamada.
+  // RAMA 3 — Error humano de la ficha
   if (status === "error" || !profile) {
     return (
-      <div className="safe-mobile-container py-6 sm:py-10 flex flex-col gap-6">
-        {headerBanner}
-        <IncidentAlertBanner type="emergency" message={humanMessage ?? t.common.errorGeneric} />
-        <div className="card-paper flex flex-col sm:flex-row gap-3">
+      <div className="w-full max-w-2xl mx-auto px-4 py-6 sm:py-10 flex flex-col gap-6 animate-fadeInUp">
+        <IncidentAlertBanner type="emergency" title={t.emergency.title} message={humanMessage ?? t.common.errorGeneric} />
+        <div className="bg-brand-white border border-brand-border-subtle rounded-xl p-4 shadow-sm flex flex-col sm:flex-row gap-3">
           <button type="button" onClick={handleRetry} className="btn-neutral flex-1 font-bold">
             <span aria-hidden="true">↻</span>
             <span>{t.nav.emergencyDemo}</span>
           </button>
-          <a href="/" className="btn-neutral flex-1 no-underline font-bold">{t.common.backToHome}</a>
+          <a href="/" className="btn-neutral flex-1 no-underline font-bold text-center">{t.common.backToHome}</a>
         </div>
-        {alertBanner}
-        {coordinatesSection}
+        {alertResult?.locationOrigin === "PENDING_GPS" && gpsTactileRetryButton}
       </div>
     );
   }
 
-  // Metadato micro con la fecha REAL de actualización del registro (la fecha es
-  // dato, no copy). BRECHA DE DICCIONARIO (reportada): falta
-  // emergency.recordUpdatedLabel; se exhibe sólo la fecha formateada según el
-  // idioma activo, sin la clave estática t.legal.lastUpdated concatenada.
+  // Metadato micro con la fecha real de actualización del registro
   const updatedAtDate = new Date(profile.updatedAt);
   const updatedAtLabel = Number.isNaN(updatedAtDate.getTime())
     ? profile.updatedAt
@@ -314,82 +277,144 @@ export default function EmergencyPage({ params }: PageProps) {
 
   const medical = profile.profile;
 
-  // RAMA 4 — Ficha médica real de alto contraste solar
+  // RAMA 4 — Ficha médica real de alto contraste solar (SAFE 2026)
   return (
-    <div className="safe-mobile-container py-6 sm:py-10 flex flex-col gap-6">
-      {headerBanner}
-
-      {/* Identificador del casco y estado de la captura satelital */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 p-3 bg-paper border border-ink rounded-[8px]">
-        <div className="flex items-center gap-2">
-          <span className="font-sans text-micro font-bold uppercase tracking-widest bg-ink text-paper px-2 py-0.5 rounded-[4px]">{code}</span>
-          <span className="font-sans text-micro font-bold uppercase text-alert-red">{t.common.emergencyBadge}</span>
+    <div className="w-full max-w-2xl mx-auto px-4 py-6 sm:py-10 flex flex-col gap-6 animate-fadeInUp">
+      {/* 1. Barra de Identidad del Casco y Telemetría Satelital */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-brand-white border border-brand-border-subtle rounded-xl shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <span className="font-mono text-xs font-bold uppercase tracking-widest bg-brand-navy-dark text-white px-3 py-1 rounded-md">
+            {code}
+          </span>
+          <span className="font-sans text-xs font-bold uppercase text-brand-accent tracking-wider flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-brand-accent animate-ping" />
+            {t.common.emergencyBadge}
+          </span>
         </div>
-        <div className="font-sans text-micro font-semibold flex items-center gap-2">
+        <div className="font-sans text-xs font-semibold flex items-center gap-2">
           {gpsStatus === "acquiring" && (
-            <span className="text-carbon flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-signal-orange animate-ping" />{t.emergency.gpsAcquiring}
+            <span className="text-brand-text-muted flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-brand-accent animate-pulse" />
+              {t.emergency.gpsAcquiring}
             </span>
           )}
           {gpsStatus === "ready" && (
-            <span className="text-ink flex items-center gap-1 font-bold">
-              <span className="w-2 h-2 rounded-full bg-ink" />{t.emergency.gpsReady}
+            <span className="text-emerald-700 font-bold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-600" />
+              {t.emergency.gpsReady}
             </span>
           )}
-          {gpsStatus === "denied" && <span className="text-ember">⚠️ {t.emergency.gpsDenied}</span>}
+          {gpsStatus === "denied" && (
+            <span className="text-amber-700 font-semibold flex items-center gap-1">
+              ⚠️ {t.emergency.gpsDenied}
+            </span>
+          )}
         </div>
       </div>
 
-      {/* Estado real del despacho y coordenadas del siniestro */}
-      {alertBanner}
-      {coordinatesSection}
+      {/* 2. Banner de Estado del Despacho y Ubicación Satelital */}
+      {alertResult?.locationOrigin === "PENDING_GPS" && (
+        <div className="flex flex-col gap-3">
+          <IncidentAlertBanner
+            type="emergency"
+            title={t.emergency.gpsPendingTitle}
+            message={t.emergency.gpsPendingNotice}
+          />
+          {gpsTactileRetryButton}
+        </div>
+      )}
 
-      {/* Ficha Médica de Alto Contraste Solar (sólo datos reales del registro) */}
-      <IncidentCard padding="md" variant="emergency" className="flex flex-col gap-6">
-        {/* Cabecera con fotografía de reconocimiento y nombre del piloto */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 pb-4 border-b border-ink">
-          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[8px] border-2 border-ink overflow-hidden bg-concrete flex-shrink-0 flex items-center justify-center">
+      {alertResult && alertResult.locationOrigin !== "PENDING_GPS" && alertResult.emailsSentCount > 0 && (
+        <IncidentAlertBanner
+          type="info"
+          title={t.emergency.dispatchedAlert}
+          message={`${t.emergency.alertSentNotice} (${alertResult.dmsFormatted})`}
+          action={mapsAction}
+        />
+      )}
+
+      {alertResult && alertResult.locationOrigin !== "PENDING_GPS" && alertResult.emailsSentCount === 0 && (
+        <IncidentAlertBanner
+          type="warning"
+          title={t.emergency.title}
+          message={`${t.emergency.bannerWarning} (${alertResult.dmsFormatted})`}
+          action={mapsAction}
+        />
+      )}
+
+      {alertFailed && (
+        <div className="flex flex-col gap-3">
+          <IncidentAlertBanner type="emergency" message={alertMessage ?? t.common.errorGeneric} />
+          {gpsTactileRetryButton}
+        </div>
+      )}
+
+      {/* 3. Ficha Médica de Alto Contraste Solar */}
+      <IncidentCard padding="md" variant="default" className="flex flex-col gap-6">
+        {/* Cabecera con fotografía de reconocimiento y datos del titular */}
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 pb-5 border-b border-brand-separator">
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl border border-brand-border-subtle overflow-hidden bg-brand-bg-alt flex-shrink-0 flex items-center justify-center shadow-xs">
             {medical.photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={medical.photoUrl} alt={t.activate.photoLabel} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-heading" aria-hidden="true">👤</span>
+              <span className="text-3xl" aria-hidden="true">👤</span>
             )}
           </div>
-          <div className="flex flex-col text-center sm:text-left flex-1">
-            <span className="font-sans text-micro uppercase tracking-wider text-carbon font-bold">{t.emergency.subtitle}</span>
-            <h2 className="font-serif text-heading-sm sm:text-heading font-bold text-ink leading-tight mt-0.5">{medical.fullName}</h2>
-            <span className="font-sans text-micro text-carbon mt-1">
-              {t.emergency.nationalId}: <strong className="text-ink">{medical.nationalIdMasked}</strong>
+          <div className="flex flex-col text-center sm:text-left flex-1 min-w-0">
+            <span className="font-sans text-xs uppercase tracking-wider text-brand-text-muted font-bold">
+              {t.emergency.subtitle}
             </span>
-            <span className="font-sans text-micro text-carbon mt-0.5">
-              {t.emergency.insurance}: <strong className="text-ink">{medical.insuranceInfo ?? t.emergency.noInsurance}</strong>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-navy-dark leading-tight mt-0.5 truncate">
+              {medical.fullName}
+            </h2>
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1 mt-2 text-xs font-sans text-brand-text-desc">
+              <span>
+                {t.emergency.nationalId}: <strong className="text-brand-navy-dark font-bold">{medical.nationalIdMasked}</strong>
+              </span>
+              <span>•</span>
+              <span>
+                {t.emergency.insurance}: <strong className="text-brand-navy-dark font-bold">{medical.insuranceInfo ?? t.emergency.noInsurance}</strong>
+              </span>
+            </div>
+            <span className="font-sans text-[11px] text-brand-text-muted mt-2">
+              {updatedAtLabel}
             </span>
-            <span className="font-sans text-micro text-carbon mt-2">{updatedAtLabel}</span>
           </div>
         </div>
 
-        {/* Grupo sanguíneo y alergias severas (insignias críticas solares) */}
+        {/* Grupo sanguíneo y alergias severas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <MedicalBadge label={t.emergency.bloodType} value={medical.bloodType} isCritical={true} />
-          <MedicalBadge label={t.emergency.allergies} value={medical.allergies ?? t.emergency.noAllergies}
-            isWarning={medical.allergies !== null} />
+          <MedicalBadge
+            label={t.emergency.allergies}
+            value={medical.allergies ?? t.emergency.noAllergies}
+            isWarning={medical.allergies !== null}
+          />
         </div>
 
-        {/* Patologías y medicamentos prescritos (null → frase del diccionario) */}
+        {/* Patologías y medicamentos prescritos */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-          <div className="p-4 bg-concrete border border-ink rounded-[8px]">
-            <span className="font-sans text-micro uppercase font-bold text-carbon block mb-1">{t.emergency.conditions}</span>
-            <p className="font-serif text-body font-bold text-ink leading-snug">{medical.chronicConditions ?? t.emergency.noConditions}</p>
+          <div className="p-4 bg-brand-bg-alt border border-brand-border-subtle rounded-xl">
+            <span className="font-sans text-xs uppercase font-bold text-brand-text-muted block mb-1">
+              {t.emergency.conditions}
+            </span>
+            <p className="font-sans text-sm font-semibold text-brand-navy-dark leading-snug">
+              {medical.chronicConditions ?? t.emergency.noConditions}
+            </p>
           </div>
-          <div className="p-4 bg-concrete border border-ink rounded-[8px]">
-            <span className="font-sans text-micro uppercase font-bold text-carbon block mb-1">{t.emergency.medications}</span>
-            <p className="font-serif text-body font-bold text-ink leading-snug">{medical.medications ?? t.emergency.noMedications}</p>
+          <div className="p-4 bg-brand-bg-alt border border-brand-border-subtle rounded-xl">
+            <span className="font-sans text-xs uppercase font-bold text-brand-text-muted block mb-1">
+              {t.emergency.medications}
+            </span>
+            <p className="font-sans text-sm font-semibold text-brand-navy-dark leading-snug">
+              {medical.medications ?? t.emergency.noMedications}
+            </p>
           </div>
         </div>
       </IncidentCard>
 
-      {/* Panel de acciones críticas con props congeladas (llamadas reales) */}
+      {/* 4. Panel de Acciones Críticas (Llamar, WhatsApp, Maps, Copiar Enlace) */}
       <EmergencyActionPanel
         riderName={medical.fullName}
         bloodType={medical.bloodType}
@@ -398,24 +423,40 @@ export default function EmergencyPage({ params }: PageProps) {
         contacts={medical.emergencyContacts}
       />
 
-      {/* Contactos de aviso inmediato reales (sólo teléfono, sin correos) */}
-      <IncidentCard padding="md" className="flex flex-col gap-3">
-        <h3 className="font-serif font-bold text-heading-sm text-ink pb-2 border-b border-mist">{t.emergency.emergencyContacts}</h3>
+      {/* 5. Contactos de Aviso Inmediato */}
+      <IncidentCard padding="md" className="flex flex-col gap-4">
+        <h3 className="font-serif font-bold text-xl text-brand-navy-dark pb-3 border-b border-brand-separator">
+          {t.emergency.emergencyContacts}
+        </h3>
         {medical.emergencyContacts.length === 0 ? (
-          <p className="font-serif text-body text-carbon">{t.emergency.noContacts}</p>
+          <p className="font-sans text-sm text-brand-text-desc">{t.emergency.noContacts}</p>
         ) : (
           <div className="flex flex-col gap-3">
             {medical.emergencyContacts.map((contact) => (
-              <div key={contact.id} className={`flex items-center justify-between gap-3 p-3 rounded-[8px] ${contact.isPrimary ? "bg-paper border-2 border-ink" : "bg-concrete border border-mist"}`}>
+              <div
+                key={contact.id}
+                className={`flex items-center justify-between gap-3 p-3.5 rounded-xl border transition-all ${
+                  contact.isPrimary
+                    ? "bg-brand-white border-brand-accent/40 shadow-xs"
+                    : "bg-brand-bg-alt border-brand-border-subtle"
+                }`}
+              >
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-2">
-                    {contact.isPrimary && <span className="w-2 h-2 rounded-full bg-signal-orange flex-shrink-0" aria-hidden="true" />}
-                    <strong className="font-serif text-body text-ink truncate">{contact.name}</strong>
+                    {contact.isPrimary && (
+                      <span className="w-2 h-2 rounded-full bg-brand-accent flex-shrink-0" aria-hidden="true" />
+                    )}
+                    <strong className="font-sans text-sm font-bold text-brand-navy-dark truncate">
+                      {contact.name}
+                    </strong>
                   </div>
-                  <span className="font-sans text-micro text-carbon">{contact.relation}</span>
+                  <span className="font-sans text-xs text-brand-text-muted mt-0.5">{contact.relation}</span>
                 </div>
-                <a href={`tel:${contact.phone}`} onClick={() => triggerHaptic("light")}
-                  className="btn-neutral min-h-[44px] text-micro font-bold no-underline flex-shrink-0">
+                <a
+                  href={`tel:${contact.phone}`}
+                  onClick={() => triggerHaptic("light")}
+                  className="btn-neutral min-h-[44px] text-xs font-bold no-underline flex-shrink-0"
+                >
                   📞 {contact.phone}
                 </a>
               </div>
@@ -424,10 +465,14 @@ export default function EmergencyPage({ params }: PageProps) {
         )}
       </IncidentCard>
 
-      {/* Cláusula legal del Buen Samaritano y aviso de contraste solar */}
-      <div className="p-4 bg-paper border border-mist rounded-[8px] text-center">
-        <p className="font-sans text-micro text-carbon leading-relaxed">⚖️ {t.emergency.emergencyWarningText}</p>
-        <p className="font-sans text-micro text-carbon mt-1">{t.emergency.solarContrastNotice}</p>
+      {/* 6. Cláusula Legal del Buen Samaritano */}
+      <div className="p-4 bg-brand-bg-alt border border-brand-border-subtle rounded-xl text-center">
+        <p className="font-sans text-xs text-brand-text-muted leading-relaxed">
+          ⚖️ {t.emergency.emergencyWarningText}
+        </p>
+        <p className="font-sans text-xs text-brand-text-muted mt-1">
+          {t.emergency.solarContrastNotice}
+        </p>
       </div>
     </div>
   );

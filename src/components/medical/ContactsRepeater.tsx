@@ -144,15 +144,15 @@ export function ContactsRepeater<T extends ContactEditableBase>({
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           {contacts.map((contact, index) => (
             <div
               key={contact.id}
-              className="p-4 bg-paper border border-ink rounded-[8px] flex flex-col gap-3 shadow-incident"
+              className="p-5 bg-brand-bg-alt border border-brand-border-subtle rounded-xl flex flex-col gap-4 shadow-xs"
             >
               {/* Cabecera de la tarjeta: posición en la lista y acción de quitar */}
-              <div className="flex items-center justify-between gap-3 border-b border-mist pb-2">
-                <span className="font-sans text-micro font-bold text-carbon truncate">
+              <div className="flex items-center justify-between gap-3 border-b border-brand-separator pb-3">
+                <span className="font-sans text-xs font-bold text-brand-navy-dark truncate">
                   {index + 1}. {contact.name || t.activate.contactNameLabel}
                 </span>
 
@@ -160,16 +160,16 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                   type="button"
                   onClick={() => handleRemove(contact.id)}
                   disabled={disabled}
-                  className="min-h-[44px] min-w-[44px] px-3 inline-flex items-center justify-center bg-transparent border-0 rounded-[4px] font-sans text-micro font-bold text-alert-red underline cursor-pointer hover:opacity-70 active:opacity-60 disabled:opacity-45 disabled:cursor-not-allowed"
+                  className="min-h-[44px] px-3 inline-flex items-center justify-center bg-transparent border-0 rounded-md font-sans text-xs font-bold text-brand-accent hover:text-brand-accent-hover hover:underline cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed"
                 >
                   {t.activate.removeContactButton}
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {/* Nombre completo del contacto */}
-                <div className="flex flex-col gap-1">
-                  <label className="font-sans text-[11px] font-semibold uppercase text-carbon">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-sans text-xs font-semibold text-brand-navy-dark">
                     {t.activate.contactNameLabel}
                   </label>
                   <input
@@ -181,13 +181,13 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                     disabled={disabled}
                     required
                     placeholder={t.activate.contactNameLabel}
-                    className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+                    className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
                   />
                 </div>
 
-                {/* Teléfono móvil con código de país (teclado numérico móvil) */}
-                <div className="flex flex-col gap-1">
-                  <label className="font-sans text-[11px] font-semibold uppercase text-carbon">
+                {/* Teléfono móvil con código de país */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-sans text-xs font-semibold text-brand-navy-dark">
                     {t.activate.contactPhoneLabel}
                   </label>
                   <input
@@ -199,18 +199,13 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                     disabled={disabled}
                     required
                     placeholder={t.activate.contactPhoneLabel}
-                    className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+                    className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
                   />
                 </div>
 
-                {/*
-                  Parentesco: LEE relation o relationship (el panel del Director 2
-                  solo garantiza relationship; el backend solo relation) y al
-                  escribir SETEA AMBOS campos para mantener las dos orillas
-                  consistentes sin adaptadores intermedios.
-                */}
-                <div className="flex flex-col gap-1">
-                  <label className="font-sans text-[11px] font-semibold uppercase text-carbon">
+                {/* Parentesco */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-sans text-xs font-semibold text-brand-navy-dark">
                     {t.activate.contactRelationshipLabel}
                   </label>
                   <input
@@ -225,17 +220,13 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                     disabled={disabled}
                     required
                     placeholder={t.activate.contactRelationshipLabel}
-                    className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+                    className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
                   />
                 </div>
 
-                {/*
-                  Correo del aviso satelital. BRECHA DE DICCIONARIO REPORTADA:
-                  no existe t.activate.contactEmailLabel ni placeholder propio;
-                  se reutilizan las claves genéricas emailLabel/emailPlaceholder.
-                */}
-                <div className="flex flex-col gap-1">
-                  <label className="font-sans text-[11px] font-semibold uppercase text-carbon">
+                {/* Correo del aviso satelital */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-sans text-xs font-semibold text-brand-navy-dark">
                     {t.activate.emailLabel}
                   </label>
                   <input
@@ -247,16 +238,12 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                     disabled={disabled}
                     required={requireEmail}
                     placeholder={t.activate.emailPlaceholder}
-                    className="h-11 px-3 bg-concrete border border-ink rounded-[4px] font-sans text-micro text-ink focus:outline-none focus:ring-1 focus:ring-ink"
+                    className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
                   />
                 </div>
               </div>
 
-              {/*
-                Contacto principal: el label completo es el objetivo táctil
-                (min-h-[44px]). BRECHA DE DICCIONARIO REPORTADA: no existe una
-                clave "primaryContactLabel"; se usa la más cercana disponible.
-              */}
+              {/* Contacto principal */}
               <label className="flex items-center gap-3 min-h-[44px] cursor-pointer select-none">
                 <input
                   type="checkbox"
@@ -265,9 +252,9 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                     handlePrimaryChange(contact.id, e.target.checked)
                   }
                   disabled={disabled}
-                  className="h-5 w-5 border-ink accent-ink cursor-pointer flex-shrink-0"
+                  className="h-4 w-4 rounded border-brand-border-field text-brand-navy-dark accent-brand-navy-dark cursor-pointer flex-shrink-0"
                 />
-                <span className="font-sans text-micro text-ink">
+                <span className="font-sans text-xs font-semibold text-brand-navy-dark">
                   {t.emergency.emergencyContacts}
                 </span>
               </label>
@@ -276,7 +263,7 @@ export function ContactsRepeater<T extends ContactEditableBase>({
         </div>
       )}
 
-      {/* Añadir otro familiar: variant "paper" oficial, deshabilitado al tope de 20 */}
+      {/* Añadir otro familiar */}
       <div>
         <IncidentButton
           type="button"

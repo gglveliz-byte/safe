@@ -53,14 +53,14 @@ export function LiveRideCard({
           </span>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-serif font-bold text-heading-sm text-ink leading-tight">
+              <h3 className="font-serif font-bold text-xl text-brand-navy-dark leading-tight">
                 {t.dashboard.liveRideTitle}
               </h3>
               {isLiveRideActive && (
-                <span className="w-2.5 h-2.5 rounded-full bg-signal-orange animate-ping" />
+                <span className="w-2.5 h-2.5 rounded-full bg-brand-accent animate-ping" />
               )}
             </div>
-            <p className="font-sans text-micro text-carbon mt-1 max-w-lg">
+            <p className="font-sans text-xs text-brand-text-desc mt-1 max-w-lg">
               {t.dashboard.liveRideDescription}
             </p>
           </div>
@@ -81,24 +81,18 @@ export function LiveRideCard({
 
       {/* Indicadores de Estado de Pantalla Activa y Satélites */}
       {isLiveRideActive && (
-        <div className="p-3 bg-concrete border border-ink rounded-[6px] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-micro font-sans">
-          <span className="font-semibold text-ink flex flex-wrap items-center gap-2">
-            <span className="text-signal-orange" aria-hidden="true">●</span>
+        <div className="p-3.5 bg-brand-bg-alt border border-brand-border-subtle rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs font-sans">
+          <span className="font-semibold text-brand-navy-dark flex flex-wrap items-center gap-2">
+            <span className="text-brand-accent" aria-hidden="true">●</span>
             {t.dashboard.liveRideWarning}
-            {/* P-7: rótulo propio del bloqueo de pantalla. Antes reusaba
-                `common.emergencyBadge` ("Ficha de Auxilio"), que no describe
-                nada de esto; la brecha de diccionario queda cerrada. */}
             {isScreenLocked && (
-              <span className="px-2 py-1 bg-ink text-paper rounded-[4px] font-sans text-[11px] font-bold uppercase tracking-widest">
+              <span className="px-2 py-0.5 bg-brand-navy-dark text-white rounded-md font-sans text-[10px] font-bold uppercase tracking-widest">
                 {t.dashboard.wakeLockOn}
               </span>
             )}
           </span>
-          {/* M-4: font-mono erradicado; coordenadas en sans con tracking amplio.
-              P-7: la etiqueta técnica "GPS:" se reemplaza por el rótulo humano
-              del diccionario. */}
           {lastCoords && (
-            <span className="font-sans tracking-widest text-carbon text-[11px]">
+            <span className="font-mono tracking-wider text-brand-text-muted text-xs">
               {t.dashboard.satelliteLabel}:{" "}
               {lastCoords.lat.toFixed(5)}, {lastCoords.lng.toFixed(5)}
               {lastHeartbeatTime
@@ -110,6 +104,15 @@ export function LiveRideCard({
           )}
         </div>
       )}
+
+      {/* Consejo de Seguridad y Resiliencia GPS para el Piloto */}
+      <div className="p-3.5 bg-brand-nav-active border border-brand-border-subtle rounded-xl flex items-start gap-2.5 text-xs font-sans">
+        <span className="text-brand-accent text-base flex-shrink-0" aria-hidden="true">💡</span>
+        <div className="flex flex-col gap-0.5">
+          <span className="font-bold text-brand-navy-dark uppercase tracking-wider">{t.dashboard.liveRideSafetyTip}</span>
+          <span className="text-brand-text-desc leading-relaxed">{t.dashboard.liveRideSafetyTipDesc}</span>
+        </div>
+      </div>
     </IncidentCard>
   );
 }

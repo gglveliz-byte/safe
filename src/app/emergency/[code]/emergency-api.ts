@@ -174,6 +174,7 @@ export interface DispatchAlertResult {
   alertId: string;
   dmsFormatted: string;
   googleMapsUrl: string;
+  locationOrigin?: string;
   emailsSentCount: number;
   wasThrottled: boolean;
   createdAt: string;

@@ -83,41 +83,32 @@ export default function PrivacyPage() {
   ];
 
   return (
-    <div className="safe-mobile-container py-8 sm:py-12 flex flex-col gap-8">
-      {/* ==================================================================== */}
-      {/* Encabezado Broadsheet Legal: titular serif grande, entradilla y fecha */}
-      {/* de vigencia en microetiqueta Arial, cerrados por hairline de tinta.   */}
-      {/* ==================================================================== */}
-      <section className="flex flex-col gap-2 border-b border-ink pb-4">
-        <h1 className="font-serif text-heading font-bold text-ink leading-tight">
+    <div className="w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 flex flex-col gap-8 animate-fadeInUp">
+      {/* Encabezado Broadsheet Legal */}
+      <section className="flex flex-col gap-2 border-b border-brand-separator pb-4">
+        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-brand-navy-dark leading-tight">
           {t.legal.privacyTitle}
         </h1>
-        <p className="font-serif text-body text-carbon">
+        <p className="font-sans text-sm sm:text-base text-brand-text-desc">
           {t.legal.privacySubtitle}
         </p>
-        {/* Metadato de última actualización en micro Arial 13px */}
-        <span className="font-sans text-micro text-carbon mt-1">
+        {/* Metadato de última actualización */}
+        <span className="font-sans text-xs text-brand-text-muted mt-1">
           {t.legal.lastUpdated}
         </span>
       </section>
 
-      {/* ==================================================================== */}
-      {/* Hoja editorial única (card-paper: papel blanco, borde capilar negro,  */}
-      {/* radio 12px y sombra ultraligera) con las cuatro cláusulas separadas   */}
-      {/* por hairlines sutiles, al estilo de un boletín técnico impreso.       */}
-      {/* ==================================================================== */}
+      {/* Hoja editorial con las cuatro cláusulas */}
       <IncidentCard padding="lg">
         {privacySections.map((section, index) => (
           <React.Fragment key={section.title}>
-            {/* Hairline divisorio entre cláusulas (nunca antes de la primera) */}
+            {/* Hairline divisorio entre cláusulas */}
             {index > 0 && <IncidentHairline variant="subtle" margin="lg" />}
             <section>
-              {/* Título de cláusula: serif bold 24px (token heading-sm) */}
-              <h2 className="font-serif text-heading-sm font-bold text-ink mb-2">
+              <h2 className="font-serif text-xl font-bold text-brand-navy-dark mb-2">
                 {section.title}
               </h2>
-              {/* Cuerpo de lectura cómoda: serif 16px con interlineado relajado */}
-              <p className="font-serif text-body text-carbon leading-relaxed">
+              <p className="font-sans text-sm text-brand-text-desc leading-relaxed">
                 {section.body}
               </p>
             </section>
@@ -127,11 +118,7 @@ export default function PrivacyPage() {
 
       <IncidentHairline variant="subtle" />
 
-      {/* ==================================================================== */}
-      {/* Navegación al pie: retorno a la portada y enlace cruzado a Términos.  */}
-      {/* Botones neutros canónicos (concreto + borde negro 1px, radio 4px)     */}
-      {/* con área táctil mínima garantizada de 44px vía .btn-neutral.          */}
-      {/* ==================================================================== */}
+      {/* Navegación al pie: retorno a la portada y enlace cruzado a Términos */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link href="/" className="btn-neutral">
           {t.common.backToHome}

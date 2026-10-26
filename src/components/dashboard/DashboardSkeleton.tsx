@@ -46,17 +46,17 @@ export function DashboardSkeleton() {
         padding="lg"
         className="w-full max-w-md text-center flex flex-col items-center gap-3"
       >
-        {/* Indicador pulsante de actividad (sin texto fabricado) */}
+        {/* Indicador pulsante de actividad */}
         <span
-          className="w-4 h-4 rounded-full bg-signal-orange animate-ping"
+          className="w-4 h-4 rounded-full bg-brand-accent animate-ping"
           aria-hidden="true"
         />
-        <h2 className="font-serif text-xl font-bold text-ink">
+        <h2 className="font-serif text-xl font-bold text-brand-navy-dark">
           {t.dashboard.title}
         </h2>
         {/* Anuncio accesible del estado de carga con clave real del diccionario */}
         <p
-          className="font-sans text-micro text-carbon"
+          className="font-sans text-xs text-brand-text-muted"
           role="status"
           aria-live="polite"
         >

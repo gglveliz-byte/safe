@@ -90,16 +90,16 @@ body {
   margin-right: auto;
 }
 
-/* Botón Neutro Canónico Incident */
+/* Botón Neutro Canónico Incident (SAFE 2026) */
 .btn-neutral {
-  background-color: var(--color-concrete);
-  border: 1px solid var(--color-ink);
-  border-radius: 4px;
-  padding: 8px 14px;
-  font-family: var(--font-arial-system-sans);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 13px;
-  font-weight: 500;
-  color: var(--color-ink);
+  font-weight: 600;
+  color: var(--color-navy-dark);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -107,14 +107,20 @@ body {
   gap: 8px;
   min-height: 44px;
   min-width: 44px;
-  transition: transform 0.08s ease, background-color 0.1s ease;
+  transition: transform 0.08s ease, background-color 0.15s ease, border-color 0.15s ease;
   user-select: none;
   text-decoration: none;
+  box-shadow: 0 1px 2px rgba(11, 31, 58, 0.04);
+}
+
+.btn-neutral:hover {
+  background-color: var(--color-bg-alt);
+  border-color: var(--color-border-strong);
 }
 
 .btn-neutral:active {
   transform: scale(0.98);
-  background-color: var(--color-mist);
+  background-color: var(--color-bg-subtle);
 }
 
 .btn-neutral:disabled {
@@ -123,14 +129,14 @@ body {
   transform: none;
 }
 
-/* Botón de Emergencia Primario (Alto Contraste) */
+/* Botón de Emergencia Primario (Alto Contraste SAFE 2026) */
 .btn-emergency {
-  background-color: var(--color-ink);
-  color: var(--color-paper);
-  border: 1px solid var(--color-ink);
-  border-radius: 4px;
+  background-color: var(--color-navy-dark);
+  color: var(--color-white);
+  border: 1px solid var(--color-navy-dark);
+  border-radius: 8px;
   padding: 10px 18px;
-  font-family: var(--font-arial-system-sans);
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -140,38 +146,42 @@ body {
   gap: 10px;
   min-height: 48px;
   min-width: 44px;
-  transition: transform 0.08s ease, opacity 0.1s ease;
+  transition: transform 0.08s ease, background-color 0.15s ease, opacity 0.1s ease;
   user-select: none;
   text-decoration: none;
+  box-shadow: 0 2px 4px rgba(11, 31, 58, 0.08);
+}
+
+.btn-emergency:hover {
+  background-color: var(--color-navy-secondary);
 }
 
 .btn-emergency:active {
   transform: scale(0.98);
-  opacity: 0.9;
 }
 
-/* Tarjeta de papel broadsheet */
+/* Tarjeta de papel broadsheet (SAFE 2026) */
 .card-paper {
-  background-color: var(--color-paper);
-  border: 1px solid var(--color-ink);
+  background-color: var(--color-white);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 12px;
   padding: 20px 24px;
-  box-shadow: 0px 4px 6px -2px rgba(22, 22, 24, 0.04), 0px 8px 15px -3px rgba(22, 22, 24, 0.02);
+  box-shadow: 0px 2px 8px -2px rgba(11, 31, 58, 0.04), 0px 1px 3px rgba(11, 31, 58, 0.02);
 }
 
 /* Banner de Emergencia Médica Tintado */
 .banner-emergency {
-  background-color: rgba(255, 73, 44, 0.08);
-  border: 1px solid var(--color-alert-red);
-  border-radius: 8px;
+  background-color: rgba(255, 81, 56, 0.05);
+  border: 1px solid rgba(255, 81, 56, 0.35);
+  border-radius: 12px;
   padding: 14px 18px;
 }
 
 /* Banner de Advertencia Tintado */
 .banner-warning {
-  background-color: rgba(241, 100, 30, 0.08);
-  border: 1px solid var(--color-ember);
-  border-radius: 8px;
+  background-color: rgba(244, 81, 54, 0.05);
+  border: 1px solid rgba(244, 81, 54, 0.35);
+  border-radius: 12px;
   padding: 14px 18px;
 }
 
@@ -179,7 +189,7 @@ body {
 .hairline {
   border: 0;
   height: 1px;
-  background-color: var(--color-ink);
+  background-color: var(--color-separator);
   margin-top: 24px;
   margin-bottom: 24px;
 }
@@ -187,7 +197,7 @@ body {
 .hairline-subtle {
   border: 0;
   height: 1px;
-  background-color: var(--color-mist);
+  background-color: var(--color-border-subtle);
   margin-top: 16px;
   margin-bottom: 16px;
 }

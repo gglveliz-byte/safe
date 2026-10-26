@@ -57,6 +57,24 @@ import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { MedicalRecordForm } from "@/components/dashboard/MedicalRecordForm";
 import { NoChipNotice } from "@/components/dashboard/NoChipNotice";
 
+/**
+ * Calcula la distancia Haversine en metros entre dos coordenadas decimales.
+ * Utilizado para el umbral de movimiento (>15m) en telemetría de Modo Ruta.
+ */
+function calculateDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const { t } = useLocale();
@@ -69,6 +87,9 @@ export default function DashboardPage() {
   const [isLiveRideActive, setIsLiveRideActive] = useState(false);
   const [lastCoords, setLastCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [lastHeartbeatTime, setLastHeartbeatTime] = useState<string | null>(null);
+
+  // Referencia a la última posición transmitida y marca temporal para optimizar batería y red
+  const lastSentPositionRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
 
   // Activación de Screen WakeLock para mantener la pantalla despierta en el manillar
   const { isLocked: isScreenLocked } = useWakeLock(isLiveRideActive);
@@ -179,21 +200,37 @@ export default function DashboardPage() {
 
   // Función atómica para capturar y emitir posición GPS a /api/gps/heartbeat
   const sendCurrentPosition = useCallback(
-    (isActiveStatus: boolean) => {
+    (isActiveStatus: boolean, force = false) => {
       if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
         return;
       }
 
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
-          const coords = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          };
-          setLastCoords(coords);
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const now = Date.now();
+
+          setLastCoords({ lat, lng });
+
+          // Optimización de batería y servidor: sólo emitir si se movió > 15m o pasaron > 60s o es forzado
+          if (!force && lastSentPositionRef.current && isActiveStatus) {
+            const distance = calculateDistanceMeters(
+              lastSentPositionRef.current.lat,
+              lastSentPositionRef.current.lng,
+              lat,
+              lng,
+            );
+            const elapsedMs = now - lastSentPositionRef.current.time;
+            if (distance < 15 && elapsedMs < 60000) {
+              return; // Posición estacionaria: evita consumo de batería y saturación de red
+            }
+          }
+
+          lastSentPositionRef.current = { lat, lng, time: now };
           const result = await apiClient.sendGpsHeartbeat(
-            coords.lat,
-            coords.lng,
+            lat,
+            lng,
             isActiveStatus,
           );
           if (result.success && result.recordedAt) {
@@ -214,11 +251,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (isLiveRideActive) {
-      sendCurrentPosition(true);
+      sendCurrentPosition(true, true);
       heartbeatIntervalRef.current = setInterval(() => {
-        sendCurrentPosition(true);
+        sendCurrentPosition(true, false);
       }, 20000); // 20s (dentro del rango requerido de 15 a 30s)
     } else {
+      lastSentPositionRef.current = null;
       if (heartbeatIntervalRef.current) {
         clearInterval(heartbeatIntervalRef.current);
         heartbeatIntervalRef.current = null;
@@ -308,10 +346,10 @@ export default function DashboardPage() {
   // P-4: la ficha no se pudo cargar por un problema de red o del servicio.
   if (loadError) {
     return (
-      <div className="safe-mobile-container py-8 sm:py-12 flex flex-col gap-6">
+      <div className="w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 flex flex-col gap-6 animate-fadeInUp">
         <div
           role="alert"
-          className="banner-emergency text-micro text-alert-red font-sans text-center font-bold"
+          className="p-4 bg-red-50 border border-brand-accent/30 rounded-xl text-xs text-brand-accent font-sans text-center font-bold"
         >
           ⚠️ {loadError}
         </div>
@@ -343,23 +381,23 @@ export default function DashboardPage() {
           : "";
 
   return (
-    <div className="safe-mobile-container py-8 sm:py-12 flex flex-col gap-8">
+    <div className="w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 flex flex-col gap-8 animate-fadeInUp">
       {/* Encabezado del Panel (el cierre de sesión vive en la barra privada) */}
-      <div className="flex flex-col gap-2 border-b border-ink pb-4">
+      <div className="flex flex-col gap-2 border-b border-brand-separator pb-4">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-signal-orange" />
+          <span className="w-2.5 h-2.5 rounded-full bg-brand-accent animate-pulse" />
           {/* M-4: folio en sans serif con tracking amplio (legibilidad de códigos) */}
-          <span className="font-sans text-micro font-bold uppercase tracking-widest text-carbon">
+          <span className="font-mono text-xs font-bold uppercase tracking-widest text-brand-text-muted">
             {helmetFolio}
             {deviceStatusLabel ? ` · ${deviceStatusLabel}` : ""}
           </span>
         </div>
-        <h1 className="font-serif text-3xl font-bold text-ink leading-tight mt-0.5">
+        <h1 className="font-serif text-3xl font-bold text-brand-navy-dark leading-tight mt-0.5">
           {t.dashboard.title}
         </h1>
-        <p className="font-sans text-micro text-carbon">
+        <p className="font-sans text-xs sm:text-sm text-brand-text-desc">
           {t.dashboard.welcomeBack}:{" "}
-          <strong className="text-ink">
+          <strong className="text-brand-navy-dark font-semibold">
             {profile.fullName || dashboardData?.user.email}
           </strong>
         </p>

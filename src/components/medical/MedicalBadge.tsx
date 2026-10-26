@@ -47,23 +47,22 @@ export function MedicalBadge({
   isWarning = false,
   className = "",
 }: MedicalBadgeProps) {
-  // La severidad solo modifica el grosor y color oficial del borde;
-  // el fondo papel y la tinta negra del valor nunca cambian (contraste solar).
-  let borderClass = "border border-ink";
+  // Severidad clínica con colores oficiales SAFE 2026
+  let containerStyles = "border border-brand-border-subtle bg-brand-white";
   if (isCritical) {
-    borderClass = "border-2 border-alert-red";
+    containerStyles = "border-2 border-brand-accent bg-brand-accent/5";
   } else if (isWarning) {
-    borderClass = "border-2 border-ember";
+    containerStyles = "border-2 border-amber-400 bg-amber-50/50";
   }
 
   return (
     <div
-      className={`rounded-[8px] ${borderClass} bg-paper p-4 sm:p-5 flex flex-col justify-between shadow-incident ${className}`}
+      className={`rounded-xl ${containerStyles} p-4 sm:p-5 flex flex-col justify-between shadow-sm transition-all ${className}`}
     >
-      <span className="font-sans text-micro uppercase tracking-wider text-carbon font-semibold mb-1">
+      <span className="font-sans text-[11px] uppercase tracking-wider text-brand-text-muted font-bold mb-1">
         {label}
       </span>
-      <span className="font-serif text-heading-sm sm:text-heading font-bold leading-none break-words text-ink">
+      <span className="font-serif text-2xl sm:text-3xl font-bold leading-none break-words text-brand-navy-dark">
         {value}
       </span>
     </div>

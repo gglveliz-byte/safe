@@ -41,6 +41,8 @@ import {
   normalizarContactos,
   ensureContactUuid,
   HttpApiError,
+  buildActivatePayload,
+  buildProfileUpdatePayload,
 } from "./api-client-helpers";
 
 export { HttpApiError, ensureContactUuid };
@@ -203,48 +205,7 @@ export const apiClient = {
     termsAccepted?: boolean;
     locale?: "es" | "en";
   }): Promise<{ success: boolean; redirect: string }> {
-    const md = payload.medicalData;
-
-    // [C5-C8] Cero datos sensibles fabricados: el esquema del backend exige
-    // contraseña real, fotografía existente, grupo sanguíneo declarado por el
-    // piloto y consentimiento legal explícito (literal true) del llamador.
-    if (!payload.password) throw new Error("La contraseña es obligatoria para activar el kit.");
-    if (!(md?.photoUrl || payload.photoUrl)) throw new Error("La fotografía del piloto es obligatoria.");
-    if (!(md?.bloodType || payload.bloodType)) throw new Error("El grupo sanguíneo es obligatorio.");
-    if (payload.termsAccepted !== true) throw new Error("Debe aceptar los Términos y Condiciones.");
-
-    let body: Record<string, unknown>;
-    if (md) {
-      body = {
-        code: payload.code.trim().toUpperCase(),
-        activationPin: payload.activationPin.trim(),
-        email: payload.email.trim().toLowerCase(),
-        password: payload.password,
-        fullName: md.fullName.trim(),
-        nationalId: md.nationalId.trim(),
-        photoUrl: md.photoUrl || payload.photoUrl,
-        photoPublicId: md.photoPublicId || undefined,
-        birthDate: md.birthDate || undefined,
-        bloodType: md.bloodType || payload.bloodType,
-        allergies: md.allergies?.trim() || undefined,
-        chronicConditions: (md.chronicConditions || md.conditions || "")?.trim() || undefined,
-        medications: md.medications?.trim() || undefined,
-        insuranceInfo: (md.insuranceInfo || md.insurance || "")?.trim() || undefined,
-        emergencyNumber: md.emergencyNumber?.trim() || undefined,
-        // Contactos reales: sin ids inventados ni parentescos supuestos.
-        emergencyContacts: normalizarContactos(md.emergencyContacts || md.contacts || []),
-        termsAccepted: payload.termsAccepted,
-        locale: payload.locale || "es",
-      };
-    } else {
-      body = {
-        ...payload,
-        code: payload.code.trim().toUpperCase(),
-        activationPin: payload.activationPin.trim(),
-        termsAccepted: payload.termsAccepted,
-      };
-    }
-
+    const body = buildActivatePayload(payload);
     const res = await fetch("/api/devices/activate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -374,33 +335,7 @@ export const apiClient = {
 
   /** Actualiza la ficha médica y contactos de auxilio en PostgreSQL */
   async updateProfile(profile: Partial<MedicalProfileData>): Promise<{ success: boolean }> {
-    const sourceContacts = profile.emergencyContacts || profile.contacts || [];
-    // [M8] Contactos reales: sin ids fabricados ni parentesco "Familiar"
-    // supuesto; si la relación falta, la clave se omite y el backend valida.
-    const normalizedContacts = normalizarContactos(sourceContacts);
-
-    // [B3] ProfileUpdateSchema solo acepta string|undefined (.optional()):
-    // enviar null provocaba un rechazo 400. JSON.stringify omite
-    // automáticamente las claves con undefined, así que el campo ausente
-    // simplemente no se modifica en PostgreSQL.
-    const payload = {
-      fullName: profile.fullName?.trim(),
-      nationalId: profile.nationalId?.trim(),
-      photoUrl: profile.photoUrl || undefined,
-      photoPublicId: profile.photoPublicId || undefined,
-      birthDate: profile.birthDate || undefined,
-      // Cero grupo sanguíneo fabricado: si el piloto no lo ha declarado, la
-      // clave se OMITE (enviar "" rechazaría el enum del backend y antes se
-      // colaba "O+" como valor por defecto, un dato clínico inventado).
-      bloodType: profile.bloodType?.trim() || undefined,
-      allergies: profile.allergies?.trim() || undefined,
-      chronicConditions: (profile.chronicConditions || profile.conditions || "")?.trim() || undefined,
-      medications: profile.medications?.trim() || undefined,
-      insuranceInfo: (profile.insuranceInfo || profile.insurance || "")?.trim() || undefined,
-      emergencyNumber: profile.emergencyNumber?.trim() || undefined,
-      emergencyContacts: normalizedContacts,
-    };
-
+    const payload = buildProfileUpdatePayload(profile as MedicalProfileData);
     const res = await fetch("/api/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },

@@ -155,10 +155,10 @@ export async function POST(request: Request): Promise<NextResponse> {
       throw new AppError("VALIDATION_ERROR", "El casco no tiene perfil médico.", 400);
     }
 
-    // 7. Determinación de coordenadas: GPS del escáner o fallback del Modo Ruta.
+    // 7. Determinación de coordenadas: GPS del escáner, fallback del Modo Ruta o PENDING_GPS.
     let lat: number;
     let lng: number;
-    let locationOrigin: "SCANNER_DEVICE_GPS" | "RIDER_FALLBACK_GPS";
+    let locationOrigin: "SCANNER_DEVICE_GPS" | "RIDER_FALLBACK_GPS" | "PENDING_GPS";
 
     if (input.latitude !== undefined && input.longitude !== undefined) {
       // Coordenadas aportadas por el escáner (teléfono del rescatista).
@@ -171,15 +171,25 @@ export async function POST(request: Request): Promise<NextResponse> {
       lng = device.user.lastKnownLng;
       locationOrigin = "RIDER_FALLBACK_GPS";
     } else {
-      // Sin coordenadas disponibles: no se puede despachar sin ubicación.
-      throw new AppError("VALIDATION_ERROR", "No se pudo obtener la ubicación.", 400);
+      // Resiliencia de emergencia: NUNCA se aborta con 400. Se marca PENDING_GPS
+      // y se despacha de inmediato el aviso médico a los familiares notificando
+      // que el casco fue escaneado en carretera y las coordenadas están pendientes.
+      lat = 0;
+      lng = 0;
+      locationOrigin = "PENDING_GPS";
     }
 
-    // 8. Conversión SIEMPRE previa de coordenadas decimales a DMS y URL
-    //    oficial de Google Maps (hallazgo H-06): la alerta suprimida también
-    //    persiste la posición real; lo único que el cooldown suprime son los
-    //    correos, nunca la información auditora de la alerta.
-    const mapsData = buildGoogleMapsDirectData(lat, lng, device.user.medicalProfile.fullName);
+    // 8. Conversión de coordenadas decimales a DMS y URL oficial de Google Maps.
+    // Si la ubicación está pendiente, se prepara información descriptiva sin falsear ubicación.
+    const mapsData =
+      locationOrigin === "PENDING_GPS"
+        ? {
+            dmsFormatted: "Ubicación satelital pendiente (reintentando)",
+            googleMapsUrl: "",
+            whatsappShareUrl: "",
+            whatsappText: `*ALERTA MÉDICA:* El casco de *${device.user.medicalProfile.fullName}* fue escaneado en carretera. Coordenadas pendientes de adquisición.`,
+          }
+        : buildGoogleMapsDirectData(lat, lng, device.user.medicalProfile.fullName);
 
     // 9. Despacho atómico anti-TOCTOU (hallazgo H-10): un candado consultivo
     //    por dispositivo serializa los escaneos simultáneos del mismo casco.
@@ -188,7 +198,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     //    despacha — se actualiza la referencia de última alerta del dispositivo.
     const { alert, shouldDispatch } = await db.$transaction(async (tx) => {
       // 9a. Candado consultivo a nivel de transacción (se libera con el commit).
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${device.id}))`;
+      // Se utiliza $executeRaw porque pg_advisory_xact_lock devuelve tipo 'void' en PostgreSQL.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${device.id}))`;
 
       // 9b. Re-lectura del estado de cooldown YA bajo la protección del candado.
       const freshDevice = await tx.device.findUnique({
@@ -252,6 +263,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         createdAt: alert.createdAt.toISOString(),
         dmsFormatted: mapsData.dmsFormatted,
         googleMapsUrl: mapsData.googleMapsUrl,
+        locationOrigin,
         emailsSentCount: 0,
         wasThrottled: true,
       });
@@ -309,6 +321,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       createdAt: alert.createdAt.toISOString(),
       dmsFormatted: mapsData.dmsFormatted,
       googleMapsUrl: mapsData.googleMapsUrl,
+      locationOrigin,
       emailsSentCount: mailResult.sentCount,
       wasThrottled: false,
     });

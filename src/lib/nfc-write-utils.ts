@@ -45,32 +45,61 @@ export interface NdefReaderLike {
 }
 
 /**
- * Resuelve la URL base pública canónica de la plataforma.
- * Prioridad: NEXT_PUBLIC_APP_URL. Respaldo dinámico en el origen actual.
+ * Resuelve la URL base pública canónica de la plataforma de forma inteligente.
+ *
+ * Jerarquía dinámica:
+ * 1. Si se provee una URL personalizada explícita (ej. seleccionada en la consola).
+ * 2. Si el navegador está navegando desde una IP de red local (ej. 192.168.x.x, 10.x.x.x)
+ *    o desde un dominio real (VPS, producción, túnel): usa `window.location.origin`
+ *    para que los stickers y chips reflejen exactamente la dirección activa accesible.
+ * 3. Si `NEXT_PUBLIC_APP_URL` está configurado y NO es localhost (ej. VPS o dominio cloud).
+ * 4. Si `NEXT_PUBLIC_APP_URL` está configurado (incluso localhost para SSR o pruebas).
+ * 5. Respaldo: `window.location.origin`.
  */
-export function resolvePublicBaseUrl(): string {
-  const envUrl = (process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/+$/, "");
-  if (envUrl) {
-    return envUrl;
+export function resolvePublicBaseUrl(customBaseUrl?: string): string {
+  if (customBaseUrl && customBaseUrl.trim()) {
+    return customBaseUrl.trim().replace(/\/+$/, "");
   }
+
+  const envUrl = (process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/+$/, "");
+  const isEnvLocalhost = !envUrl || envUrl.includes("localhost") || envUrl.includes("127.0.0.1");
+
   if (typeof window !== "undefined" && window.location?.origin) {
+    const hostname = window.location.hostname;
+    const isBrowserLocalhost =
+      hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+
+    // Si el usuario está operando el panel desde una IP real o dominio (ej. 192.168.0.35 o VPS):
+    if (!isBrowserLocalhost) {
+      return window.location.origin;
+    }
+
+    // Si el navegador está en localhost pero el .env tiene una IP o dominio público:
+    if (!isEnvLocalhost) {
+      return envUrl;
+    }
+
     return window.location.origin;
   }
-  return "";
+
+  return envUrl || "";
 }
 
 /**
  * Construye la URL del gateway del casco (/r/[code]?v=nfc|qr) desde el cliente.
  * Si se pasa `pin`, se adjunta en el querystring para auto-asignación del kit virgen.
+ * Permite especificar `customBaseUrl` para previsualizar o imprimir para dominios VPS.
  */
 export function buildHelmetGatewayClientUrl(
   code: string,
   source: "nfc" | "qr",
   pin?: string,
+  customBaseUrl?: string,
 ): string {
   const cleanCode = encodeURIComponent(code.trim().toUpperCase());
   const pinParam = pin ? `&pin=${encodeURIComponent(pin.trim())}` : "";
-  return `${resolvePublicBaseUrl()}/r/${cleanCode}?v=${source}${pinParam}`;
+  const base = resolvePublicBaseUrl(customBaseUrl);
+  return `${base}/r/${cleanCode}?v=${source}${pinParam}`;
 }
 
 /**
@@ -80,8 +109,9 @@ export async function generateLocalQrDataUrl(
   code: string,
   size = 200,
   pin?: string,
+  customBaseUrl?: string,
 ): Promise<string> {
-  const url = buildHelmetGatewayClientUrl(code, "qr", pin);
+  const url = buildHelmetGatewayClientUrl(code, "qr", pin, customBaseUrl);
   return await QRCode.toDataURL(url, {
     margin: 1,
     width: size,
@@ -98,8 +128,9 @@ export async function generateLocalQrDataUrl(
 export async function generateAdminUrlQr(
   path = "/admin",
   size = 180,
+  customBaseUrl?: string,
 ): Promise<string> {
-  const base = resolvePublicBaseUrl();
+  const base = resolvePublicBaseUrl(customBaseUrl);
   const fullUrl = `${base}${path}`;
   return await QRCode.toDataURL(fullUrl, {
     margin: 1,

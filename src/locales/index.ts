@@ -84,6 +84,10 @@ export interface Dictionary {
     scanSourceLabel: string;
     emergencyWarningText: string;
     solarContrastNotice: string;
+    gpsPendingTitle: string;
+    gpsPendingNotice: string;
+    gpsRetryButton: string;
+    gpsRetrySuccess: string;
   };
   activate: {
     title: string;
@@ -163,6 +167,8 @@ export interface Dictionary {
     emergencyNumberHelp: string;
     bloodTypeUnset: string;
     bloodTypeRequired: string;
+    liveRideSafetyTip: string;
+    liveRideSafetyTipDesc: string;
   };
   admin: {
     title: string;

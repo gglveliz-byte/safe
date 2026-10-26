@@ -44,10 +44,10 @@ export function NoChipNotice() {
           ⛑️
         </span>
         <div className="flex flex-col gap-1">
-          <h2 className="font-serif font-bold text-heading-sm text-ink leading-tight">
+          <h2 className="font-serif font-bold text-xl text-brand-navy-dark leading-tight">
             {t.dashboard.noChipTitle}
           </h2>
-          <p className="font-sans text-micro text-carbon">
+          <p className="font-sans text-xs text-brand-text-desc">
             {t.dashboard.noChipHelp}
           </p>
         </div>

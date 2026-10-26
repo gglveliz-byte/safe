@@ -79,6 +79,10 @@ export const es: Dictionary = {
     scanSourceLabel: "Método de lectura:",
     emergencyWarningText: "El testigo o socorrista actúa amparado por el principio del Buen Samaritano.",
     solarContrastNotice: "Pantalla optimizada para máxima visibilidad bajo luz solar directa.",
+    gpsPendingTitle: "UBICACIÓN SATELITAL PENDIENTE",
+    gpsPendingNotice: "Estamos recolectando las coordenadas automáticamente lo más pronto posible. Mantente atento: el sistema está reintentando.",
+    gpsRetryButton: "👆 ACTIVAR GPS Y ENVIAR ALERTA CON MAPA",
+    gpsRetrySuccess: "✓ Coordenadas satelitales transmitidas con éxito a familiares",
   },
   activate: {
     title: "VINCULAR KIT DE SEGURIDAD AL CASCO",
@@ -158,6 +162,8 @@ export const es: Dictionary = {
     emergencyNumberHelp: "Número al que los socorristas pueden llamar por ti en el lugar del siniestro.",
     bloodTypeUnset: "Aún no lo he declarado",
     bloodTypeRequired: "Declarar tu grupo sanguíneo protege tu vida: elige tu tipo de sangre o selecciona OTRO para especificar.",
+    liveRideSafetyTip: "Tu Red de Respaldo Satelital",
+    liveRideSafetyTipDesc: "Activa el Modo Ruta cada vez que ruedes y lleva tu teléfono contigo. Así, si sufres un siniestro y el testigo que escanea tu casco no tiene GPS, el sistema enviará automáticamente tu última posición a tus seres queridos.",
   },
   admin: {
     title: "CENTRO DE ADMINISTRACIÓN SAFE",

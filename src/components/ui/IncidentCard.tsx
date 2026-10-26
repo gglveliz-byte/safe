@@ -29,14 +29,14 @@ export function IncidentCard({
   className = "",
   ...props
 }: IncidentCardProps) {
-  // Bordes según el estado semántico de atención médica (siempre 1px capilar, solo cambia el color)
-  let borderStyles = "border-ink";
+  // Bordes y superficies según el estado oficial SAFE 2026
+  let borderStyles = "border-brand-border-subtle bg-brand-white";
   if (variant === "emergency") {
-    borderStyles = "border-alert-red";
+    borderStyles = "border-brand-accent/40 bg-brand-white";
   } else if (variant === "warning") {
-    borderStyles = "border-ember";
+    borderStyles = "border-brand-accent-hover/40 bg-brand-white";
   } else if (variant === "subtle") {
-    borderStyles = "border-mist";
+    borderStyles = "border-brand-border-subtle bg-brand-bg-alt";
   }
 
   // Padding ergonómico canónico: sm=16px, md=20-24px, lg=28-32px
@@ -50,8 +50,8 @@ export function IncidentCard({
   return (
     <div
       className={`
-        bg-paper text-ink rounded-[12px] border
-        shadow-incident transition-shadow duration-150
+        text-brand-navy-dark rounded-xl border
+        shadow-sm transition-all duration-150
         ${borderStyles}
         ${paddingStyles}
         ${className}

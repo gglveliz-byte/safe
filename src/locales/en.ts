@@ -79,6 +79,10 @@ export const en: Dictionary = {
     scanSourceLabel: "Scan source:",
     emergencyWarningText: "First responders and bystanders act protected under the Good Samaritan principle.",
     solarContrastNotice: "Screen optimized for maximum readability under direct outdoor sunlight.",
+    gpsPendingTitle: "SATELLITE LOCATION PENDING",
+    gpsPendingNotice: "We are automatically collecting GPS coordinates as soon as possible. Please stay tuned: system is actively retrying.",
+    gpsRetryButton: "👆 ACTIVATE GPS & SEND ALERT WITH MAP",
+    gpsRetrySuccess: "✓ Satellite coordinates successfully transmitted to family",
   },
   activate: {
     title: "LINK SAFETY KIT TO HELMET",
@@ -158,6 +162,8 @@ export const en: Dictionary = {
     emergencyNumberHelp: "The number first responders can call for you at the scene.",
     bloodTypeUnset: "I have not declared it yet",
     bloodTypeRequired: "Declaring your blood type protects your life: choose your blood type or select OTHER to specify.",
+    liveRideSafetyTip: "Your Satellite Rescue Backup",
+    liveRideSafetyTipDesc: "Activate Live Ride Mode every time you ride and keep your phone mounted or with you. If you crash and the rescuer scanning your helmet has no GPS, SAFE will automatically route your last road location to loved ones.",
   },
   admin: {
     title: "SAFE ADMINISTRATION CENTER",

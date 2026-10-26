@@ -225,10 +225,10 @@ export function CloudinaryPhotoPicker({
   };
 
   return (
-    <div className="w-full flex flex-col gap-4 p-5 bg-paper border border-ink rounded-[12px] shadow-incident">
+    <div className="w-full flex flex-col gap-4 p-5 sm:p-6 bg-brand-white border border-brand-border-subtle rounded-xl shadow-sm">
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
         {/* Previsualización cuadrada facial (96px móvil / 112px escritorio) */}
-        <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-[8px] border-2 border-ink bg-concrete overflow-hidden flex-shrink-0 flex items-center justify-center">
+        <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border border-brand-border-subtle bg-brand-bg-alt overflow-hidden flex-shrink-0 flex items-center justify-center shadow-xs">
           {displayPhotoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -237,17 +237,17 @@ export function CloudinaryPhotoPicker({
               className="w-full h-full object-cover"
             />
           ) : (
-            <span aria-hidden="true" className="text-heading-sm select-none">
+            <span aria-hidden="true" className="text-3xl select-none">
               👤
             </span>
           )}
 
-          {/* Velo de tránsito con spinner CSS plano (borde ink/mist, cero gradientes) */}
+          {/* Velo de tránsito con spinner CSS animado */}
           {isUploading && (
-            <div className="absolute inset-0 bg-paper/80 flex items-center justify-center">
+            <div className="absolute inset-0 bg-brand-white/80 flex items-center justify-center">
               <span
                 aria-hidden="true"
-                className="w-6 h-6 rounded-full border-2 border-ink border-t-mist animate-spin"
+                className="w-6 h-6 rounded-full border-2 border-brand-navy-dark border-t-transparent animate-spin"
               />
             </div>
           )}
@@ -255,10 +255,10 @@ export function CloudinaryPhotoPicker({
 
         {/* Etiqueta, ayuda contextual y control de captura */}
         <div className="flex flex-col items-center sm:items-start text-center sm:text-left flex-1">
-          <label className="font-serif font-bold text-body text-ink">
+          <label className="font-serif font-bold text-base sm:text-lg text-brand-navy-dark">
             {t.activate.photoLabel}
           </label>
-          <p id={helpTextId} className="font-sans text-micro text-carbon mt-1 mb-3">
+          <p id={helpTextId} className="font-sans text-xs text-brand-text-muted mt-1 mb-3">
             {t.activate.photoUploadHelp}
           </p>
 
@@ -277,7 +277,7 @@ export function CloudinaryPhotoPicker({
           {/* Botón neutro canónico (min-height 44px garantizado por .btn-neutral) */}
           <button
             type="button"
-            className="btn-neutral"
+            className="btn-neutral min-h-[44px] px-4 py-2 font-semibold text-xs rounded-lg"
             onClick={handleTriggerClick}
             disabled={isControlDisabled}
             aria-describedby={helpTextId}
