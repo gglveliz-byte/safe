@@ -523,4 +523,28 @@ export const apiClient = {
     const device = (json?.data?.device ?? undefined) as AdminDeviceItem | undefined;
     return { success: true, device };
   },
+
+  /** Elimina un lote completo de chips de forma atómica */
+  async deleteAdminBatch(batchName: string): Promise<{ success: boolean; deletedCount: number; message: string }> {
+    const res = await fetch(`/api/admin/batches/${encodeURIComponent(batchName.trim())}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return json.data || { success: false, deletedCount: 0, message: "" };
+  },
+
+  /** Purga completa de datos de motociclistas y chips físicos (conserva administradores) */
+  async purgeAllAdminData(): Promise<{ success: boolean; deletedRiders: number; deletedDevices: number; message: string }> {
+    const res = await fetch("/api/admin/purge", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return json.data || { success: false, deletedRiders: 0, deletedDevices: 0, message: "" };
+  },
 };

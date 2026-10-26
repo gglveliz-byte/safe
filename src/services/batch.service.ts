@@ -322,3 +322,38 @@ export async function encodeNfc(input: EncodeNfcInput): Promise<{
     encodedAt: encodedAt.toISOString(),
   };
 }
+
+/**
+ * Elimina un lote completo de chips de forma atómica.
+ * Libera a cualquier usuario asociado y elimina en cascada las alertas.
+ */
+export async function deleteBatchByName(batchName: string): Promise<{
+  success: boolean;
+  deletedCount: number;
+  message: string;
+}> {
+  const devices = await db.device.findMany({
+    where: { batchName },
+    select: { id: true, userId: true },
+  });
+
+  if (devices.length === 0) {
+    return {
+      success: true,
+      deletedCount: 0,
+      message: `El lote "${batchName}" no existe o ya estaba vacío.`,
+    };
+  }
+
+  // Borrar todos los dispositivos del lote (cascade borra alertas de emergencia)
+  const result = await db.device.deleteMany({
+    where: { batchName },
+  });
+
+  return {
+    success: true,
+    deletedCount: result.count,
+    message: `Lote "${batchName}" con ${result.count} kits eliminado correctamente.`,
+  };
+}
+

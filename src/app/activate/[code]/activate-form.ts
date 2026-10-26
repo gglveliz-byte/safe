@@ -35,7 +35,7 @@
 
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { ActivateDeviceSchema } from "@/lib/schemas/activate.schema";
 import { getDictionary, type Dictionary, type Locale } from "@/locales";
@@ -128,9 +128,16 @@ function humanizeValidationIssue(issue: ValidationIssue | undefined, t: Dictiona
  * @param code   Folio del casco (trim + mayúsculas, aplicado por la página).
  * @param locale Idioma activo del conductor; viaja al backend para los correos.
  */
-export function useActivateForm(code: string, locale: Locale) {
-  // Paso 1 — PIN confidencial y credenciales de la nueva cuenta.
-  const [pin, setPin] = useState("");
+export function useActivateForm(code: string, locale: Locale, initialPin?: string) {
+  // Paso 1 — PIN confidencial (auto-completado si proviene del QR) y credenciales.
+  const [pin, setPin] = useState(initialPin || "");
+
+  useEffect(() => {
+    if (initialPin && !pin) {
+      setPin(initialPin);
+    }
+  }, [initialPin, pin]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -139,9 +146,11 @@ export function useActivateForm(code: string, locale: Locale) {
 
   // Paso 3 — Ficha médica personal. bloodType inicia en "" (placeholder
   // deshabilitado del select) para forzar una decisión consciente del catálogo.
+  // Si selecciona OTRO, customBloodType se vuelve obligatorio.
   const [fullName, setFullName] = useState("");
   const [nationalId, setNationalId] = useState("");
   const [bloodType, setBloodType] = useState("");
+  const [customBloodType, setCustomBloodType] = useState("");
   const [allergies, setAllergies] = useState("");
   const [chronicConditions, setChronicConditions] = useState("");
   const [medications, setMedications] = useState("");
@@ -175,6 +184,11 @@ export function useActivateForm(code: string, locale: Locale) {
    * cuando el conductor los declaró (texto no vacío), evitando claves superfluas.
    */
   const buildCandidate = useCallback((): Record<string, unknown> => {
+    const resolvedBloodType =
+      bloodType === "OTRO"
+        ? (customBloodType.trim() ? `OTRO: ${customBloodType.trim()}` : "OTRO")
+        : bloodType;
+
     const candidate: Record<string, unknown> = {
       code,
       activationPin: pin,
@@ -183,7 +197,7 @@ export function useActivateForm(code: string, locale: Locale) {
       fullName,
       nationalId,
       photoUrl: photo.photoUrl,
-      bloodType,
+      bloodType: resolvedBloodType,
       emergencyContacts: contacts.map((contact) => ({
         id: contact.id,
         name: contact.name,
@@ -207,8 +221,8 @@ export function useActivateForm(code: string, locale: Locale) {
     return candidate;
   }, [
     code, pin, email, password, photo, fullName, nationalId, bloodType,
-    allergies, chronicConditions, medications, insuranceInfo, contacts,
-    termsAccepted, locale,
+    customBloodType, allergies, chronicConditions, medications, insuranceInfo,
+    contacts, termsAccepted, locale,
   ]);
 
   /**
@@ -219,6 +233,14 @@ export function useActivateForm(code: string, locale: Locale) {
   const submit = useCallback(async (): Promise<boolean> => {
     setErrorMessage(null);
     setHasFailed(false);
+
+    // Validación estricta: Si eligió OTRO, debe especificar obligatoriamente
+    if (bloodType === "OTRO" && !customBloodType.trim()) {
+      const t = getDictionary(locale);
+      setErrorMessage(`${t.activate.customBloodTypeLabel}: ${t.common.requiredField}`);
+      setHasFailed(true);
+      return false;
+    }
 
     // Fase 1 — Validación local con el esquema certificado (solo lectura).
     const validation = ActivateDeviceSchema.safeParse(buildCandidate());
@@ -273,7 +295,7 @@ export function useActivateForm(code: string, locale: Locale) {
 
   return {
     // Paso 1 — PIN y cuenta (valores + setters individuales).
-    pin, setPin,
+    pin, setPin, isPinAutoFilled: Boolean(initialPin && pin === initialPin),
     email, setEmail,
     password, setPassword,
     // Paso 2 — Fotografía real.
@@ -282,6 +304,7 @@ export function useActivateForm(code: string, locale: Locale) {
     fullName, setFullName,
     nationalId, setNationalId,
     bloodType, setBloodType,
+    customBloodType, setCustomBloodType,
     allergies, setAllergies,
     chronicConditions, setChronicConditions,
     medications, setMedications,

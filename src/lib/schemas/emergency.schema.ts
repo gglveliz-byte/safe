@@ -176,6 +176,8 @@ export const EmergencyScanQuerySchema = z.object({
       }),
     })
     .optional(),
+  /** PIN de seguridad del kit físico transmitido opcionalmente en el QR de alta. */
+  pin: z.string().trim().optional(),
 });
 
 /**

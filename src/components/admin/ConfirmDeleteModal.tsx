@@ -76,12 +76,12 @@ export function ConfirmDeleteModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-brand-navy-dark/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-50 bg-brand-navy-dark/90 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-fade-in"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-delete-title"
     >
-      <div className="w-full max-w-md bg-brand-white border border-brand-border-subtle rounded-2xl p-6 sm:p-7 shadow-2xl flex flex-col gap-5 transition-all">
+      <div className="w-full max-w-full sm:max-w-md bg-brand-white border-t sm:border border-brand-border-subtle rounded-t-2xl sm:rounded-2xl p-5 sm:p-7 shadow-2xl flex flex-col gap-4 transition-all">
         {/* Cabecera con icono de advertencia */}
         <div className="flex items-start gap-3.5 border-b border-brand-separator pb-4">
           <div className="w-10 h-10 rounded-full bg-rose-50 border border-brand-accent/30 flex items-center justify-center shrink-0 text-brand-accent text-lg">

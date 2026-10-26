@@ -136,11 +136,11 @@ export const PhoneSchema = z
   );
 
 /**
- * Catálogo clínico canónico de grupos sanguíneos (única fuente en todo el
- * proyecto: la UI y la BD lo reutilizan; prohibido duplicar la lista).
- * "DESCONOCIDO" cubre el alta en taller sin examen médico.
+ * Catálogo clínico canónico de grupos sanguíneos estándar (ABO/Rh).
+ * Erradicado 'DESCONOCIDO' por exigencia de seguridad médica en carretera.
+ * Se añade 'OTRO' para requerir especificación obligatoria de variantes raras.
  */
-export const BLOOD_TYPES = [
+export const STANDARD_BLOOD_TYPES = [
   "O+",
   "O-",
   "A+",
@@ -149,17 +149,31 @@ export const BLOOD_TYPES = [
   "B-",
   "AB+",
   "AB-",
-  "DESCONOCIDO",
+] as const;
+
+export const BLOOD_TYPES = [
+  ...STANDARD_BLOOD_TYPES,
+  "OTRO",
 ] as const;
 
 /**
  * Validación del grupo sanguíneo declarado por el motociclista. Consumido por
  * ActivateDeviceSchema y ProfileUpdateSchema; se almacena en MedicalProfile
  * y se muestra en la ficha médica pública de emergencia (vista `/emergency/[code]`).
+ * Prohíbe explícitamente 'DESCONOCIDO' y acepta formatos estándar o especificaciones 'OTRO: ...'.
  */
-export const BloodTypeSchema = z.enum(BLOOD_TYPES, {
-  errorMap: () => ({ message: "Selecciona un tipo de sangre válido del catálogo médico." }),
-});
+export const BloodTypeSchema = z
+  .string({
+    required_error: "El grupo sanguíneo es obligatorio.",
+    invalid_type_error: "El grupo sanguíneo debe escribirse como texto.",
+  })
+  .trim()
+  .min(2, "Selecciona o especifica un tipo de sangre válido.")
+  .max(60, "El grupo sanguíneo no puede superar los 60 caracteres.")
+  .refine(
+    (val) => val.toUpperCase() !== "DESCONOCIDO",
+    "El grupo sanguíneo no puede ser 'DESCONOCIDO'. Selecciona tu tipo real u OTRO especificando tu caso.",
+  );
 
 /**
  * Un familiar o persona de auxilio registrado en el JSONB `emergencyContacts`

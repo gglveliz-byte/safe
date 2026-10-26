@@ -137,7 +137,7 @@ export async function GET(
     //    inyectadas por un cliente manipulado y valida `v` contra el
     //    catálogo nfc|qr|direct; un valor inválido sí se rechaza con 400.
     // ─────────────────────────────────────────────────────────────────
-    const { v } = await parseQuery(request.url, EmergencyScanQuerySchema);
+    const { v, pin } = await parseQuery(request.url, EmergencyScanQuerySchema);
 
     // ─────────────────────────────────────────────────────────────────
     // 3. CONSULTA DEL ESTADO DEL CASCO EN POSTGRESQL
@@ -166,14 +166,15 @@ export async function GET(
     // 5. CASCO VIRGEN (UNCLAIMED) O SIN CUENTA (hallazgo H-04) → ACTIVACIÓN
     //    El motociclista acaba de recibir su kit y debe completarlo:
     //    validar PIN, crear cuenta, registrar perfil médico y contactos.
-    //    La guarda también cubre el chip "zombi": status ACTIVE cuyo
-    //    userId quedó null al borrarse la cuenta (relación SetNull); sin
-    //    ella el gateway enviaría al escáner a una ficha médica vacía.
+    //    Si el QR traía el PIN de seguridad, se propaga para auto-asignarlo.
     //    Se usa 307 (Temporary Redirect) para que el navegador conserve
     //    el método GET en el salto.
     // ─────────────────────────────────────────────────────────────────
     if (device.status === "UNCLAIMED" || !device.userId) {
       const activateUrl = new URL(`/activate/${validatedCode}`, request.url);
+      if (pin) {
+        activateUrl.searchParams.set("pin", pin);
+      }
       return NextResponse.redirect(activateUrl, 307);
     }
 

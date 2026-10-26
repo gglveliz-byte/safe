@@ -32,7 +32,7 @@
 
 import React, { use, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
@@ -64,9 +64,11 @@ export default function ActivatePage({ params }: PageProps) {
   const code = (resolvedParams?.code ?? "").trim().toUpperCase();
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlPin = searchParams?.get("pin") || "";
   const { locale, t } = useLocale();
   const { triggerHaptic } = useHaptic();
-  const form = useActivateForm(code, locale);
+  const form = useActivateForm(code, locale, urlPin);
 
   // Resultado real de la activación. Flujo 2.3: entrada directa al panel ya
   // logueado con redirección automática a los 2,5 s (timer limpiado al
@@ -182,7 +184,14 @@ export default function ActivatePage({ params }: PageProps) {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="flex flex-col gap-1">
-              <label className={LABEL_CLASS}>{t.activate.pinLabel} *</label>
+              <div className="flex items-center justify-between gap-1">
+                <label className={LABEL_CLASS}>{t.activate.pinLabel} *</label>
+                {form.isPinAutoFilled && (
+                  <span className="font-sans text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    {t.activate.pinAutoAssignedBadge}
+                  </span>
+                )}
+              </div>
               <input
                 type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6}
                 required
@@ -270,6 +279,16 @@ export default function ActivatePage({ params }: PageProps) {
                   </option>
                 ))}
               </select>
+              {form.bloodType === "OTRO" && (
+                <input
+                  type="text"
+                  required
+                  className={`${INPUT_CLASS} mt-1.5`}
+                  value={form.customBloodType}
+                  onChange={(event) => form.setCustomBloodType(event.target.value)}
+                  placeholder={t.activate.customBloodTypePlaceholder}
+                />
+              )}
             </div>
 
             <div className="flex flex-col gap-1">

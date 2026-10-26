@@ -138,12 +138,17 @@ export function MedicalRecordForm({
             <label className="font-sans text-micro font-bold uppercase text-carbon">
               {t.activate.bloodTypeLabel}
             </label>
-            {/* M-19: catálogo canónico completo del backend (incluye DESCONOCIDO).
-                P-1: la primera opción está vacía; el sistema NUNCA preselecciona
-                un grupo sanguíneo, porque sería un dato clínico inventado. */}
+            {/* M-19: catálogo canónico del backend (erradicado DESCONOCIDO, incluye OTRO con especificación) */}
             <select
-              value={profile.bloodType}
-              onChange={(e) => onProfileChange({ ...profile, bloodType: e.target.value })}
+              value={profile.bloodType?.startsWith("OTRO") ? "OTRO" : profile.bloodType}
+              onChange={(e) => {
+                const nextVal = e.target.value;
+                if (nextVal === "OTRO") {
+                  onProfileChange({ ...profile, bloodType: "OTRO" });
+                } else {
+                  onProfileChange({ ...profile, bloodType: nextVal });
+                }
+              }}
               required
               className="h-11 px-3 bg-concrete border-2 border-ink rounded-[4px] font-serif text-body font-bold text-ink focus:outline-none cursor-pointer"
             >
@@ -154,6 +159,28 @@ export function MedicalRecordForm({
                 </option>
               ))}
             </select>
+            {(profile.bloodType === "OTRO" || profile.bloodType?.startsWith("OTRO")) && (
+              <input
+                type="text"
+                required
+                placeholder={t.activate.customBloodTypePlaceholder}
+                value={
+                  profile.bloodType.startsWith("OTRO: ")
+                    ? profile.bloodType.slice(6)
+                    : profile.bloodType === "OTRO"
+                    ? ""
+                    : profile.bloodType
+                }
+                onChange={(e) => {
+                  const detail = e.target.value.trim();
+                  onProfileChange({
+                    ...profile,
+                    bloodType: detail ? `OTRO: ${detail}` : "OTRO",
+                  });
+                }}
+                className="h-11 px-3 bg-concrete border-2 border-ink rounded-[4px] font-sans text-sm text-ink focus:outline-none mt-1.5"
+              />
+            )}
           </div>
 
           <div className="flex flex-col gap-1">

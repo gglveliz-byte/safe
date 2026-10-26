@@ -5,17 +5,16 @@
  * ARCHIVO: src/components/admin/RidersTable.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Tabla operativa de cuentas RIDER reales con el chip SAFE que tienen
- * vinculado. Permite:
- * 1. Buscar instantáneamente por nombre, correo o folio.
- * 2. Actualizar la lista contra GET /api/admin/riders.
- * 3. Eliminar un usuario registrado (con chip) vía DELETE /api/admin/riders/:userId.
- * 4. Eliminar un chip físico (libera al usuario) vía DELETE /api/admin/devices/:code.
+ * Tabla operativa de cuentas RIDER reales con su chip SAFE vinculado:
+ * 1. Búsqueda instantánea local por nombre, correo o folio.
+ * 2. Paginación elegante de 20 motociclistas por página para evitar listas infinitas.
+ * 3. Actualización contra GET /api/admin/riders.
+ * 4. Eliminación de usuario (con chip) vía DELETE /api/admin/riders/:userId.
+ * 5. Eliminación de chip individual (libera al usuario) vía DELETE /api/admin/devices/:code.
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 500 líneas físicas.
- * - Cero usuarios de demostración: los datos provienen de PostgreSQL.
- * - Objetivos táctiles mínimos de 44x44px.
+ * - Cero usuarios inventados: datos reales de Neon PostgreSQL.
  * - 100% bilingüe vía useLocale().
  * ==============================================================================
  */
@@ -44,6 +43,8 @@ export interface RidersTableProps {
   onDeviceDeleted?: (code: string) => void;
 }
 
+const PAGE_SIZE = 20;
+
 /** Convierte una fecha ISO a texto local legible; vacío si no existe. */
 function formatDate(value: string | null, locale: "es" | "en"): string {
   if (!value) return "";
@@ -56,9 +57,6 @@ function formatDate(value: string | null, locale: "es" | "en"): string {
   }).format(date);
 }
 
-/**
- * Tabla de usuarios con búsqueda local instantánea y operaciones de eliminación.
- */
 export function RidersTable({
   riders,
   isLoading,
@@ -70,6 +68,7 @@ export function RidersTable({
   const { t, locale } = useLocale();
   const { triggerHaptic } = useHaptic();
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
   // Estado del modal de confirmación
   const [deleteTarget, setDeleteTarget] = useState<
@@ -96,28 +95,33 @@ export function RidersTable({
     });
   }, [query, riders]);
 
-  /** Rotula el estado real del chip según el enum de PostgreSQL. */
+  // Paginación de 20 elementos por vista
+  const totalPages = Math.max(1, Math.ceil(filteredRiders.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const startIndex = (currentPage - 1) * PAGE_SIZE;
+  const paginatedRiders = filteredRiders.slice(
+    startIndex,
+    startIndex + PAGE_SIZE,
+  );
+
   const chipStatusLabel = (status: string): string => {
     if (status === "ACTIVE") return t.common.statusActive;
     if (status === "DISABLED") return t.admin.statusDisabled;
     return t.common.statusUnclaimed;
   };
 
-  /** Abre el modal de confirmación para eliminar un usuario + chip. */
   const handleDeleteUser = (rider: AdminRiderItem) => {
     triggerHaptic("light");
     setDeleteTarget({ type: "user", rider });
     setDeleteError("");
   };
 
-  /** Abre el modal de confirmación para eliminar un chip (libera al usuario). */
   const handleDeleteDevice = (code: string) => {
     triggerHaptic("light");
     setDeleteTarget({ type: "device", code });
     setDeleteError("");
   };
 
-  /** Ejecuta la eliminación confirmada. */
   const handleConfirmDelete = async (): Promise<boolean> => {
     if (!deleteTarget) return false;
     setIsDeleting(true);
@@ -148,13 +152,13 @@ export function RidersTable({
   };
 
   return (
-    <section className="bg-brand-white border border-brand-border-subtle rounded-xl p-6 sm:p-7 shadow-sm hover:border-brand-border-strong flex flex-col gap-5 transition-all">
+    <section className="bg-brand-white border border-brand-border-subtle rounded-xl p-5 sm:p-6 shadow-xs hover:border-brand-border-strong flex flex-col gap-4 transition-all">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="font-serif font-bold text-xl sm:text-2xl text-brand-navy-dark leading-tight">
             {t.admin.ridersTitle}{" "}
             <span className="font-sans text-xs font-normal text-brand-text-muted">
-              ({riders.length})
+              ({filteredRiders.length} de {riders.length})
             </span>
           </h2>
           <p className="font-sans text-xs sm:text-sm text-brand-text-desc mt-0.5">
@@ -166,7 +170,7 @@ export function RidersTable({
           type="button"
           onClick={onRefresh}
           disabled={isLoading}
-          className="min-h-[44px] self-start sm:self-auto inline-flex items-center justify-center px-4 py-2 bg-brand-white border border-brand-border-field hover:bg-brand-bg-alt text-brand-navy-dark text-xs font-semibold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer disabled:opacity-60"
+          className="min-h-[40px] self-start sm:self-auto inline-flex items-center justify-center px-3.5 py-1.5 bg-brand-white border border-brand-border-field hover:bg-brand-bg-alt text-brand-navy-dark text-xs font-semibold rounded-lg shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer disabled:opacity-60"
         >
           <span className={isLoading ? "animate-spin mr-1.5" : "mr-1.5"}>↻</span>
           {t.admin.ridersRefresh}
@@ -177,10 +181,13 @@ export function RidersTable({
         <input
           type="search"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            setPage(1);
+          }}
           placeholder={t.admin.ridersSearchPlaceholder}
           aria-label={t.admin.ridersSearchPlaceholder}
-          className="safe-input-focus h-11 w-full px-4 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
+          className="safe-input-focus h-10 w-full px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
         />
       </div>
 
@@ -216,9 +223,8 @@ export function RidersTable({
           </p>
         </div>
       ) : (
-        <div className="border border-brand-border-subtle rounded-xl bg-brand-white overflow-hidden shadow-sm">
-          {/* Cabecera de columnas en pantallas medianas */}
-          <div className="hidden md:grid md:grid-cols-[1.5fr_1.1fr_1fr_1fr_1.1fr] gap-3 px-5 py-3 bg-brand-bg-alt border-b border-brand-border-subtle text-[11px] font-bold uppercase tracking-wider text-brand-text-muted">
+        <div className="border border-brand-border-subtle rounded-xl bg-brand-white overflow-hidden shadow-xs">
+          <div className="hidden md:grid md:grid-cols-[1.5fr_1.1fr_1fr_1fr_1.1fr] gap-3 px-4 py-2.5 bg-brand-bg-alt border-b border-brand-border-subtle text-[11px] font-bold uppercase tracking-wider text-brand-text-muted">
             <span>{t.admin.columnRider}</span>
             <span>{t.admin.columnChip}</span>
             <span>{t.admin.columnStatus}</span>
@@ -227,12 +233,11 @@ export function RidersTable({
           </div>
 
           <ul className="divide-y divide-brand-separator">
-            {filteredRiders.map((rider) => (
+            {paginatedRiders.map((rider) => (
               <li
                 key={rider.id}
-                className="grid grid-cols-1 md:grid-cols-[1.5fr_1.1fr_1fr_1fr_1.1fr] gap-2 md:gap-3 px-5 py-3.5 items-center hover:bg-brand-bg-alt/40 transition-colors"
+                className="grid grid-cols-1 md:grid-cols-[1.5fr_1.1fr_1fr_1fr_1.1fr] gap-2 md:gap-3 px-4 py-3 items-center hover:bg-brand-bg-alt/40 transition-colors"
               >
-                {/* Identidad del motociclista */}
                 <div className="flex flex-col gap-0.5 min-w-0">
                   <span className="font-serif text-sm font-bold text-brand-navy-dark truncate">
                     {rider.fullName || t.admin.riderUnnamed}
@@ -248,7 +253,6 @@ export function RidersTable({
                   )}
                 </div>
 
-                {/* Chip físico vinculado */}
                 <div className="flex flex-col gap-1 min-w-0">
                   <span className="md:hidden font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted">
                     {t.admin.columnChip}
@@ -277,7 +281,6 @@ export function RidersTable({
                   )}
                 </div>
 
-                {/* Estado del kit */}
                 <div className="flex flex-col gap-1">
                   <span className="md:hidden font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted">
                     {t.admin.columnStatus}
@@ -299,7 +302,6 @@ export function RidersTable({
                   )}
                 </div>
 
-                {/* Fechas de alta y activación */}
                 <div className="flex flex-col gap-0.5 text-xs text-brand-text-desc">
                   <span className="md:hidden font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted">
                     {t.admin.columnDates}
@@ -320,13 +322,12 @@ export function RidersTable({
                   </span>
                 </div>
 
-                {/* Acciones de eliminación */}
                 <div className="flex flex-wrap md:flex-col gap-1.5 md:items-end justify-start pt-1 md:pt-0">
                   {rider.device && (
                     <button
                       type="button"
                       onClick={() => handleDeleteDevice(rider.device!.code)}
-                      className="min-h-[36px] inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md border border-brand-border-field hover:border-brand-accent/50 hover:bg-rose-50 text-brand-text-desc hover:text-brand-accent transition-all cursor-pointer"
+                      className="min-h-[32px] inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md border border-brand-border-field hover:border-brand-accent/50 hover:bg-rose-50 text-brand-text-desc hover:text-brand-accent transition-all cursor-pointer"
                     >
                       <span>🗑️</span>
                       {t.admin.deleteChipButton}
@@ -335,7 +336,7 @@ export function RidersTable({
                   <button
                     type="button"
                     onClick={() => handleDeleteUser(rider)}
-                    className="min-h-[36px] inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-rose-50 border border-brand-accent/30 hover:bg-brand-accent hover:text-white text-brand-accent transition-all cursor-pointer"
+                    className="min-h-[32px] inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-rose-50 border border-brand-accent/30 hover:bg-brand-accent hover:text-white text-brand-accent transition-all cursor-pointer"
                   >
                     <span>🗑️</span>
                     {t.admin.deleteUserButton}
@@ -344,6 +345,45 @@ export function RidersTable({
               </li>
             ))}
           </ul>
+
+          {/* Barra de Paginación */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 bg-brand-bg-alt border-t border-brand-border-subtle text-xs font-sans">
+              <span className="text-brand-text-muted">
+                {startIndex + 1} - {Math.min(startIndex + PAGE_SIZE, filteredRiders.length)} de {filteredRiders.length}
+              </span>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={currentPage <= 1}
+                  onClick={() => {
+                    setPage((p) => Math.max(1, p - 1));
+                    triggerHaptic("light");
+                  }}
+                  className="px-3 py-1.5 border border-brand-border-field rounded-md bg-brand-white text-brand-navy-dark disabled:opacity-40 hover:bg-brand-bg-alt transition-colors cursor-pointer"
+                >
+                  ← {t.admin.paginationPrev}
+                </button>
+
+                <span className="px-2 font-semibold text-brand-navy-dark">
+                  {currentPage} / {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => {
+                    setPage((p) => Math.min(totalPages, p + 1));
+                    triggerHaptic("light");
+                  }}
+                  className="px-3 py-1.5 border border-brand-border-field rounded-md bg-brand-white text-brand-navy-dark disabled:opacity-40 hover:bg-brand-bg-alt transition-colors cursor-pointer"
+                >
+                  {t.admin.paginationNext} →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

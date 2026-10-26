@@ -46,7 +46,7 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
         const entries = await Promise.all(
           devices.map(async (device) => {
             const dataUrl = await QRCode.toDataURL(
-              buildHelmetGatewayClientUrl(device.code, "qr"),
+              buildHelmetGatewayClientUrl(device.code, "qr", device.activationPin),
               {
                 width: 300,
                 margin: 1,
@@ -82,11 +82,11 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
   };
 
   return (
-    <div className="qr-print-sheet w-full bg-brand-white border border-brand-border-subtle rounded-2xl p-6 sm:p-8 shadow-2xl">
-      {/* Barra de Controles (Oculta en Impresión) */}
-      <div className="no-print flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-brand-separator mb-6">
+    <div className="qr-print-sheet w-full min-h-dvh sm:min-h-0 bg-brand-white border-0 sm:border border-brand-border-subtle rounded-none sm:rounded-2xl p-4 sm:p-8 shadow-none sm:shadow-2xl flex-1 flex flex-col">
+      {/* Barra de Controles (Oculta en Impresión) - Sticky en la parte superior del modal */}
+      <div className="no-print sticky top-0 z-20 bg-brand-white flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-3 sm:pb-4 border-b border-brand-separator mb-4 sm:mb-6 pt-1">
         <div>
-          <h3 className="font-serif font-bold text-2xl text-brand-navy-dark leading-tight">
+          <h3 className="font-serif font-bold text-xl sm:text-2xl text-brand-navy-dark leading-tight">
             {t.admin.printSheetTitle}
           </h3>
           <p className="font-sans text-xs sm:text-sm text-brand-text-desc mt-1">
@@ -99,12 +99,12 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] px-5 py-2.5 bg-brand-white border border-brand-border-field hover:bg-brand-bg-alt text-brand-navy-dark font-sans text-xs font-semibold rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer"
+              className="flex-1 sm:flex-initial min-h-[44px] px-4 py-2 bg-brand-white border border-brand-border-field hover:bg-brand-bg-alt text-brand-navy-dark font-sans text-xs font-semibold rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer text-center"
             >
               {t.common.cancel}
             </button>
@@ -112,7 +112,7 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
           <button
             type="button"
             onClick={handlePrint}
-            className="min-h-[44px] inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-brand-navy-dark hover:bg-brand-navy-secondary text-white font-sans text-xs font-semibold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer"
+            className="flex-1 sm:flex-initial min-h-[44px] inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-brand-navy-dark hover:bg-brand-navy-secondary text-white font-sans text-xs font-semibold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer text-center"
           >
             <span>🖨️</span>
             {t.admin.printQrsButton}
@@ -122,13 +122,13 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
 
       {/* Aviso de fallo en la generación local (oculto al imprimir) */}
       {generationError && (
-        <div className="no-print p-3 mb-6 bg-rose-50 border border-brand-accent/30 rounded-lg text-xs text-brand-accent font-sans text-center font-medium">
+        <div className="no-print p-3 mb-4 sm:mb-6 bg-rose-50 border border-brand-accent/30 rounded-lg text-xs text-brand-accent font-sans text-center font-medium">
           ⚠️ {t.common.errorGeneric}
         </div>
       )}
 
-      {/* Cuadrícula de Stickers Imprimibles (3 columnas en papel broadsheet) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 print:grid-cols-3 print:gap-6">
+      {/* Cuadrícula de Stickers Imprimibles (3 columnas en papel broadsheet, hasta 5 en pantalla grande) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 print:grid-cols-3 print:gap-6 flex-1 pb-16 sm:pb-8">
         {devices.map((device) => (
           <div
             key={device.code}

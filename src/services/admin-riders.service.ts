@@ -227,3 +227,34 @@ export async function deleteRegisteredUserWithDevice(
     message: `Usuario "${user.email}" y chip "${user.device?.code || "—"}" eliminados correctamente.`,
   };
 }
+
+/**
+ * Purga completa de desarrollo/fábrica:
+ * Elimina todos los motociclistas (User con rol RIDER), sus perfiles médicos,
+ * todas las alertas de emergencia y todos los chips físicos (Device).
+ * Mantiene intactas las cuentas con rol ADMIN.
+ */
+export async function purgeAllRidersAndDevices(): Promise<{
+  success: boolean;
+  deletedRiders: number;
+  deletedDevices: number;
+  message: string;
+}> {
+  return await db.$transaction(async (tx) => {
+    // 1. Eliminar todos los dispositivos (cascade borra alertas de emergencia)
+    const devicesDeleted = await tx.device.deleteMany({});
+
+    // 2. Eliminar todos los usuarios con rol RIDER (cascade borra MedicalProfile)
+    const ridersDeleted = await tx.user.deleteMany({
+      where: { role: "RIDER" },
+    });
+
+    return {
+      success: true,
+      deletedRiders: ridersDeleted.count,
+      deletedDevices: devicesDeleted.count,
+      message: `Purga completa: ${ridersDeleted.count} pilotos y ${devicesDeleted.count} chips eliminados. Las cuentas ADMIN se conservaron.`,
+    };
+  });
+}
+
