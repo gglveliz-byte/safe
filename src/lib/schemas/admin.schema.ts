@@ -33,7 +33,10 @@ export const CreateBatchSchema = z
       .trim()
       .min(3, "El nombre del lote debe tener al menos 3 caracteres.")
       .max(80, "El nombre del lote no puede superar los 80 caracteres.")
-      .regex(/^[A-Za-z0-9-_.\s]+$/, "El nombre del lote contiene caracteres no válidos."),
+      .regex(
+        /^[\p{L}\p{N}\s\-_.,#():/]+$/u,
+        "El nombre del lote contiene caracteres no válidos.",
+      ),
 
     /** Cantidad de dispositivos secuenciales a generar en este lote (1 a 100). */
     quantity: z.coerce

@@ -166,6 +166,7 @@ export default function AdminPage() {
       setNotice(t.admin.batchSuccessNotice);
       setTimeout(() => setNotice(""), 4500);
       setSelectedBatchName(created.batchName);
+      setActiveTab("qr");
       await loadBatches();
       await loadBatchDevices(created.batchName);
       return true;

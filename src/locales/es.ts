@@ -236,6 +236,8 @@ export const es: Dictionary = {
     batchNamePlaceholder: "Ej. Lote-Quito-Sur-01",
     quantityLabel: "Cantidad de Kits Físicos a Emitir",
     quantityPlaceholder: "Ej. 25",
+    batchNameError: "El nombre del lote debe tener entre 3 y 80 caracteres.",
+    batchQuantityError: "La cantidad debe ser un número entero entre 1 y 100 kits.",
     generatingBatch: "Generando folios y códigos criptográficos...",
     generatedBatchesTitle: "Lotes emitidos",
     batchListHint: "Selecciona un lote para imprimir su plancha QR o grabar sus antenas.",

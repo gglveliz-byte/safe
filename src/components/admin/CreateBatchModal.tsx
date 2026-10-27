@@ -65,16 +65,16 @@ export function CreateBatchModal({
     setErrorMessage("");
 
     const name = batchName.trim();
-    if (!name) {
+    if (!name || name.length < 3 || name.length > 80) {
       triggerHaptic("error");
-      setErrorMessage(t.admin.batchNamePlaceholder);
+      setErrorMessage(t.admin.batchNameError);
       return;
     }
 
     const qty = parseInt(quantity, 10);
     if (Number.isNaN(qty) || qty < 1 || qty > 100) {
       triggerHaptic("error");
-      setErrorMessage(t.admin.quantityPlaceholder);
+      setErrorMessage(t.admin.batchQuantityError);
       return;
     }
 
@@ -99,12 +99,15 @@ export function CreateBatchModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-brand-navy-dark/90 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-fade-in"
+      className="fixed inset-0 z-50 bg-brand-navy-dark/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in"
       role="dialog"
       aria-modal="true"
       aria-labelledby="create-batch-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isSubmitting) onClose();
+      }}
     >
-      <div className="w-full max-w-full sm:max-w-lg bg-brand-white border-t sm:border border-brand-border-subtle rounded-t-2xl sm:rounded-2xl p-5 sm:p-7 shadow-2xl flex flex-col gap-4 transition-all">
+      <div className="w-full max-w-lg bg-brand-white border border-brand-border-subtle rounded-2xl p-5 sm:p-7 shadow-2xl flex flex-col gap-4 my-auto transition-all">
         {/* Cabecera del modal */}
         <div className="flex items-start justify-between border-b border-brand-separator pb-4">
           <div>
@@ -154,6 +157,9 @@ export function CreateBatchModal({
               placeholder={t.admin.batchNamePlaceholder}
               required
               disabled={isSubmitting}
+              autoCapitalize="words"
+              autoComplete="off"
+              spellCheck={false}
               className="safe-input-focus h-11 px-4 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
             />
           </div>
@@ -170,10 +176,12 @@ export function CreateBatchModal({
               type="number"
               min={1}
               max={100}
+              inputMode="numeric"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               required
               disabled={isSubmitting}
+              autoComplete="off"
               className="safe-input-focus h-11 px-4 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
             />
           </div>

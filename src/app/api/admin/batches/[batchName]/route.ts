@@ -37,7 +37,12 @@ export async function DELETE(
       throw new Error("Nombre de lote inválido.");
     }
 
-    const decodedName = decodeURIComponent(batchName.trim());
+    let decodedName = batchName.trim();
+    try {
+      decodedName = decodeURIComponent(decodedName);
+    } catch {
+      // Si ya viene decodificado o tiene caracteres no escapados, conserva el valor
+    }
     const result = await deleteBatchByName(decodedName);
 
     return successResponse(result, 200);

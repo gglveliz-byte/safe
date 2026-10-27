@@ -236,6 +236,8 @@ export const en: Dictionary = {
     batchNamePlaceholder: "e.g. Batch-Alpine-Route-01",
     quantityLabel: "Number of Physical Kits to Issue",
     quantityPlaceholder: "e.g. 25",
+    batchNameError: "Batch name must be between 3 and 80 characters.",
+    batchQuantityError: "Quantity must be an integer between 1 and 100 kits.",
     generatingBatch: "Generating unique codes and cryptographic keys...",
     generatedBatchesTitle: "Issued batches",
     batchListHint: "Select a batch to print its QR sheet or write its antennas.",

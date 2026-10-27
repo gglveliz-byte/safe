@@ -241,6 +241,8 @@ export interface Dictionary {
     batchNamePlaceholder: string;
     quantityLabel: string;
     quantityPlaceholder: string;
+    batchNameError: string;
+    batchQuantityError: string;
     generatingBatch: string;
     generatedBatchesTitle: string;
     batchListHint: string;
