@@ -21,6 +21,7 @@ import React from "react";
 import Link from "next/link";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 
 export function IncidentFooter() {
   const { t } = useLocale();
@@ -33,8 +34,9 @@ export function IncidentFooter() {
     <footer className="border-t border-brand-border-subtle bg-brand-white py-10 md:py-12 mt-12">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         {/* Identidad Editorial y Derechos de Autor */}
-        <div className="flex flex-col space-y-1">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col space-y-1.5">
+          <div className="flex items-center gap-2.5">
+            <BrandLogo size="xs" />
             <span className="font-serif font-bold text-base text-brand-navy-dark">
               {t.common.appName}
             </span>

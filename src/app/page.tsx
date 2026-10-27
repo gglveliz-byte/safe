@@ -35,6 +35,7 @@ import { HelmetActivationSection } from "@/components/landing/HelmetActivationSe
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { GoldenHourSection } from "@/components/landing/GoldenHourSection";
 import { DemoMedicalModal } from "@/components/landing/DemoMedicalModal";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 
 export default function HomePage() {
   const { t } = useLocale();
@@ -58,12 +59,9 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           {/* Columna Izquierda: Información Editorial (aprox. 58%) */}
           <div className="lg:col-span-7 flex flex-col justify-center">
-            {/* Tag Superior con Baliza Sónar Pulsante */}
-            <div className="flex items-center gap-2.5 mb-5 animate-fadeInDown">
-              <span className="relative flex h-2.5 w-2.5 flex-shrink-0" aria-hidden="true">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-accent opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-accent" />
-              </span>
+            {/* Tag Superior con Baliza Sónar y Logotipo Oficial */}
+            <div className="flex items-center gap-3 mb-5 animate-fadeInDown">
+              <BrandLogo size="xs" ringVariant="accent" />
               <span className="font-sans text-[11px] md:text-[12px] font-semibold text-brand-text-muted tracking-[0.14em] uppercase">
                 {t.landing.badgeText}
               </span>

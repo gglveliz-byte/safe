@@ -23,6 +23,7 @@ import Link from "next/link";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
 import { apiClient } from "@/lib/api-client";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 
 /** Áreas privadas que comparten esta barra. */
 export type ConsoleArea = "admin" | "rider";
@@ -58,12 +59,7 @@ export function ConsoleTopBar({ area }: ConsoleTopBarProps) {
           onClick={() => triggerHaptic("light")}
           className="flex min-h-[40px] select-none items-center gap-2 sm:gap-3 no-underline group min-w-0"
         >
-          <div className="w-7 h-7 sm:w-8 sm:h-8 bg-brand-navy-dark rounded flex items-center justify-center relative shadow-sm group-hover:bg-brand-navy-secondary transition-colors duration-200 flex-shrink-0">
-            <span
-              className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-brand-accent group-hover:scale-125 transition-transform duration-200"
-              aria-hidden="true"
-            />
-          </div>
+          <BrandLogo size="sm" className="sm:w-9 sm:h-9" />
           <div className="flex flex-col min-w-0">
             <span className="font-serif text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-brand-navy-dark leading-none group-hover:text-brand-navy-secondary transition-colors truncate">
               {t.common.appName}

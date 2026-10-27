@@ -24,6 +24,7 @@ import Link from "next/link";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
 import { apiClient } from "@/lib/api-client";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 
 export default function ForgotPasswordPage() {
   const { t, locale } = useLocale();
@@ -58,8 +59,11 @@ export default function ForgotPasswordPage() {
     <div className="w-full min-h-[80vh] flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md bg-brand-white border border-brand-border-subtle rounded-xl p-6 sm:p-8 shadow-sm hover:border-brand-border-strong hover:shadow transition-all duration-300 flex flex-col gap-6 animate-fadeInUp">
         {/* Cabecera Editorial */}
-        <div className="flex flex-col gap-1.5 border-b border-brand-separator pb-4 text-center sm:text-left">
-          <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+        <div className="flex flex-col gap-1.5 border-b border-brand-separator pb-4 text-center">
+          <div className="flex justify-center mb-2">
+            <BrandLogo size="lg" ringVariant="accent" />
+          </div>
+          <div className="flex items-center justify-center gap-2 mb-1">
             <span className="w-2.5 h-2.5 rounded-full bg-brand-accent animate-pulse" aria-hidden="true" />
             <span className="font-sans text-[11px] font-bold uppercase tracking-widest text-brand-text-muted">
               {t.forgotPassword.badge}

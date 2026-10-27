@@ -47,8 +47,8 @@ export const metadata: Metadata = {
     title: "SAFE",
   },
   icons: {
-    icon: "/icons/icon-192.svg",
-    apple: "/icons/icon-192.svg",
+    icon: "/branding/safe-logo-dark.jpg",
+    apple: "/branding/safe-logo-dark.jpg",
   },
 };
 

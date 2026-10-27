@@ -30,6 +30,7 @@ import { IncidentCard } from "@/components/ui/IncidentCard";
 import { IncidentAlertBanner } from "@/components/ui/IncidentAlertBanner";
 import { EmergencyActionPanel } from "@/components/medical/EmergencyActionPanel";
 import { EmergencyClinicalDetails } from "./EmergencyClinicalDetails";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 import {
   fetchEmergencyProfile,
   dispatchEmergencyAlert,
@@ -283,6 +284,7 @@ export default function EmergencyPage({ params }: PageProps) {
       {/* 1. Barra de Identidad del Casco y Telemetría Satelital */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-brand-white border border-brand-border-subtle rounded-xl shadow-xs">
         <div className="flex items-center gap-2.5">
+          <BrandLogo size="xs" />
           <span className="font-mono text-xs font-bold uppercase tracking-widest bg-brand-navy-dark text-white px-3 py-1 rounded-md">
             {code}
           </span>

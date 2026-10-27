@@ -37,6 +37,7 @@ import { ContactsRepeater } from "@/components/medical/ContactsRepeater";
 import { useActivateForm } from "./activate-form";
 import { ActivateIdentitySection } from "./ActivateIdentitySection";
 import { ActivateRescueNotesSection } from "./ActivateRescueNotesSection";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 
 interface PageProps {
   params: Promise<{ code: string }>;
@@ -139,7 +140,8 @@ export default function ActivatePage({ params }: PageProps) {
     <div className="w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 flex flex-col gap-8 animate-fadeInUp">
       {/* Encabezado broadsheet */}
       <section className="flex flex-col gap-2 border-b border-brand-separator pb-5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
+          <BrandLogo size="sm" />
           <span className="font-mono text-xs font-bold uppercase tracking-widest bg-brand-navy-dark text-white px-3 py-1 rounded-md">
             {code}
           </span>

@@ -23,6 +23,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
+import { BrandLogo } from "@/components/ui/BrandLogo";
 
 export function IncidentNavbar() {
   const { t, locale, toggleLocale } = useLocale();
@@ -59,9 +60,7 @@ export function IncidentNavbar() {
           aria-label={`${t.common.appName} - ${t.nav.home}`}
           className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-brand-nav-blue rounded-lg p-1 transition-transform duration-200 active:scale-95 no-underline"
         >
-          <div className="w-8 h-8 bg-brand-navy-dark rounded flex items-center justify-center relative shadow-sm group-hover:bg-brand-navy-secondary transition-colors duration-200">
-            <div className="w-2.5 h-2.5 rounded-full bg-brand-accent group-hover:scale-125 transition-transform duration-200" />
-          </div>
+          <BrandLogo size="md" />
           <div className="flex flex-col">
             <span className="font-serif font-bold text-xl md:text-2xl tracking-tight text-brand-navy-dark leading-none group-hover:text-brand-navy-secondary transition-colors">
               {t.common.appName}
