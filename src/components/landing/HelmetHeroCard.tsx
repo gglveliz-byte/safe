@@ -20,8 +20,7 @@ import React from "react";
 import Image from "next/image";
 import { useLocale } from "@/hooks/useLocale";
 
-const HELMET_IMAGE_URL =
-  "https://lh3.googleusercontent.com/aida/AEtjO1V5KJm4hVi5uWY9xzvTWzA4_ameErdGp8NxTgvOsJXjUMc1BvudOQMttUs2-Tmezrz5eatAypmyJqoFGooWnRClzWu0pUHi8wXQL8mXWqQzyukcm-5L9sVE8fkdiV3VFIE43sgYGIdE6pM1dhCkBiiyVoIVtOMUIGitJ0SqK0j7MP9xNUa8pTldKDZfG0OKTpwPXnc7C0d-fgQ_RpUGDmoyQl9nEiQ3lFLEayfLYsp9y9gE8e8kmBaJofLw";
+const HELMET_IMAGE_URL = "/branding/safe-badge-helmet.jpg";
 
 export function HelmetHeroCard() {
   const { t } = useLocale();
