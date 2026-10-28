@@ -414,11 +414,11 @@ export default function AdminPage() {
 
       {/* Plancha QR del lote */}
       {showPrintSheet && (
-        <div className="fixed inset-0 z-50 bg-brand-white sm:bg-brand-navy-dark/85 sm:backdrop-blur-md flex flex-col items-center justify-start p-0 sm:p-6 md:p-8 overflow-y-auto">
-          <div className="w-full min-h-dvh sm:min-h-0 sm:max-w-5xl lg:max-w-6xl my-0 sm:my-4 flex flex-col bg-brand-white sm:rounded-2xl sm:shadow-2xl sm:border border-brand-border-subtle">
-            <QrPrintSheet batchName={selectedBatchName} devices={devices} onClose={() => setShowPrintSheet(false)} />
-          </div>
-        </div>
+        <QrPrintSheet
+          batchName={selectedBatchName}
+          devices={devices}
+          onClose={() => setShowPrintSheet(false)}
+        />
       )}
 
       {/* Grabador y Limpiador NFC Móvil en Ráfaga */}

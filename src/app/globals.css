@@ -76,7 +76,6 @@ body {
   min-height: 100dvh;
 }
 
-
 /* Contenedor móvil con adaptación a muesca (notch) e indicador de inicio */
 .safe-mobile-container {
   padding-top: max(16px, env(safe-area-inset-top));
@@ -298,39 +297,98 @@ body {
   }
 }
 
-/* Estilo para impresión de stickers QR (admin) */
+/* ══════════════ IMPRESIÓN OFICIAL DE PLANCHA QR (SAFE 2026) ══════════════ */
 @media print {
+  @page {
+    size: letter portrait;
+    margin: 10mm;
+  }
+
+  /* Reset completo de fondo, scroll y desbordamientos en papel / PDF */
+  html,
   body {
     background-color: #ffffff !important;
+    color: #0B1F3A !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
-  .no-print {
+
+  /* Oculta de forma tajante (display: none) toda la aplicación externa */
+  body > *:not(#qr-print-portal) {
     display: none !important;
   }
+
+  /* El portal de stickers pasa a flujo de página físico (sin modo modal) */
+  #qr-print-portal {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    z-index: auto !important;
+  }
+
+  /* Despoja la tarjeta modal de sombras, bordes de pantalla y límites de altura */
+  #qr-print-portal .qr-modal-card {
+    max-height: none !important;
+    height: auto !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  #qr-print-portal .qr-modal-body {
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+  }
+
+  /* Elementos de control en pantalla no imprimibles */
+  .no-print,
+  #qr-print-portal .no-print {
+    display: none !important;
+  }
+
   .print-only {
     display: block !important;
   }
 
-  /*
-   * Aisla la plancha QR: oculta visualmente la consola completa y deja visible
-   * únicamente la hoja de stickers generada localmente, sin navbar ni footer.
-   */
-  body * {
-    visibility: hidden !important;
-  }
-  .qr-print-sheet,
-  .qr-print-sheet * {
-    visibility: visible !important;
-  }
-  .qr-print-sheet {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
+  /* Cuadrícula de stickers: 3 columnas simétricas para hoja carta / A4 */
+  #qr-print-portal .qr-stickers-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 14px !important;
     padding: 0 !important;
-    border: 0 !important;
-    border-radius: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Cada sticker individual es indivisible: jamás se corta a la mitad de una hoja */
+  #qr-print-portal .qr-sticker-item {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border: 2px solid #0B1F3A !important;
+    background-color: #ffffff !important;
     box-shadow: none !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+    margin: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }
