@@ -42,8 +42,9 @@ import { AdminMetrics } from "@/components/admin/AdminMetrics";
 import { AdminSkeleton } from "@/components/admin/AdminSkeleton";
 import { CreateBatchModal } from "@/components/admin/CreateBatchModal";
 import { ConfirmPurgeModal } from "@/components/admin/ConfirmPurgeModal";
+import { WhatsAppManager } from "@/components/admin/WhatsAppManager";
 
-type AdminTab = "riders" | "qr";
+type AdminTab = "riders" | "qr" | "whatsapp";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -339,6 +340,23 @@ export default function AdminPage() {
               {batches.length}
             </span>
           </button>
+
+          <button
+            type="button"
+            role="tab"
+            id="admin-tab-whatsapp"
+            aria-selected={activeTab === "whatsapp"}
+            aria-controls="admin-panel-whatsapp"
+            onClick={() => setActiveTab("whatsapp")}
+            className={`min-h-[38px] px-3.5 py-1.5 inline-flex items-center gap-2 rounded-lg font-sans text-xs font-bold transition-all cursor-pointer ${
+              activeTab === "whatsapp"
+                ? "bg-brand-navy-dark text-white shadow-xs"
+                : "text-brand-text-desc hover:text-brand-navy-dark hover:bg-brand-bg-alt"
+            }`}
+          >
+            <span>💬</span>
+            <span>WhatsApp Cloud</span>
+          </button>
         </div>
 
         {/* Métricas compactas integradas */}
@@ -403,6 +421,13 @@ export default function AdminPage() {
                 onBatchDeleted={handleBatchDeleted}
               />
           )}
+        </div>
+      )}
+
+      {/* Área 3: WhatsApp Cloud API & Plantillas Oficiales (NeuroAPI) */}
+      {activeTab === "whatsapp" && (
+        <div id="admin-panel-whatsapp" role="tabpanel" aria-labelledby="admin-tab-whatsapp" className="flex flex-col gap-4">
+          <WhatsAppManager />
         </div>
       )}
 

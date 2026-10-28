@@ -72,6 +72,10 @@ export interface ServerEnv {
   SESSION_TTL_SECONDS: number;
   /** Versión vigente de Términos y Privacidad aceptada por el motociclista. */
   TERMS_VERSION: string;
+  /** Clave de autenticación para WhatsApp Cloud API oficial vía NeuroAPI. */
+  NEUROAPI_KEY?: string;
+  /** ID del número remitente en Meta si se manejan múltiples líneas. */
+  NEUROAPI_PHONE_NUMBER_ID?: string;
 }
 
 /** Longitud mínima exigida al secreto de firma de sesiones. */
@@ -302,6 +306,8 @@ const serverEnvSchema = z.object({
       .max(40, "TERMS_VERSION supera el máximo de 40 caracteres.")
       .default(DEFAULT_TERMS_VERSION),
   ),
+  NEUROAPI_KEY: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()),
+  NEUROAPI_PHONE_NUMBER_ID: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()),
 });
 
 /**
