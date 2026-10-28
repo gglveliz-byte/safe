@@ -66,6 +66,10 @@ import {
 import { evaluateCooldown } from "@/services/cooldown.service";
 import { buildGoogleMapsDirectData } from "@/services/gps-maps.service";
 import { sendEmergencyAlertEmail } from "@/services/mail.service";
+import {
+  sendEmergencyWhatsAppAlerts,
+  getNeuroApiKey,
+} from "@/services/whatsapp.service";
 import { hmacSha256 } from "@/lib/crypto";
 
 /**
@@ -87,6 +91,7 @@ const MailContactsSchema = z.array(
     name: z.string(),
     email: z.string(),
     relation: z.string().optional(),
+    phone: z.string().optional(),
   }),
 );
 
@@ -315,7 +320,32 @@ export async function POST(request: Request): Promise<NextResponse> {
       },
     });
 
-    // 11d. Respuesta exitosa con el folio de alerta y datos de despacho.
+    // 11d. Despacho complementario por WhatsApp oficial a los contactos con teléfono
+    let whatsAppSentCount = 0;
+    const phoneContacts = mailContacts
+      .filter((c) => Boolean(c.phone && c.phone.trim().length >= 8))
+      .map((c) => ({ name: c.name, phone: c.phone!, relation: c.relation }));
+
+    if (phoneContacts.length > 0 && getNeuroApiKey()) {
+      try {
+        const waResult = await sendEmergencyWhatsAppAlerts({
+          contacts: phoneContacts,
+          riderName: device.user.medicalProfile.fullName,
+          bloodType: device.user.medicalProfile.bloodType,
+          googleMapsUrl: mapsData.googleMapsUrl,
+          dmsFormatted: mapsData.dmsFormatted,
+          alertId: alert.id,
+        });
+        whatsAppSentCount = waResult.sentCount;
+      } catch (waErr: unknown) {
+        logEvent("warn", "Fallo no bloqueante al despachar WhatsApp de emergencia", {
+          alertId: alert.id,
+          error: waErr instanceof Error ? waErr.message : String(waErr),
+        });
+      }
+    }
+
+    // 11e. Respuesta exitosa con el folio de alerta y datos de despacho.
     return successResponse({
       alertId: alert.id,
       createdAt: alert.createdAt.toISOString(),
@@ -323,6 +353,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       googleMapsUrl: mapsData.googleMapsUrl,
       locationOrigin,
       emailsSentCount: mailResult.sentCount,
+      whatsAppSentCount,
       wasThrottled: false,
     });
   } catch (error) {

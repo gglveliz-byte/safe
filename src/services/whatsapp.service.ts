@@ -350,3 +350,79 @@ export async function createWhatsAppConnectSession(
   }
 }
 
+/** Parámetros para despacho automático de auxilio a los contactos de emergencia */
+export interface EmergencyAlertWhatsAppPayload {
+  contacts: Array<{ name: string; phone: string; relation?: string }>;
+  riderName: string;
+  bloodType: string;
+  googleMapsUrl?: string;
+  dmsFormatted?: string;
+  alertId: string;
+}
+
+/**
+ * Despacha notificaciones de auxilio vía WhatsApp oficial a los contactos de emergencia
+ * del motociclista cuando su casco NFC/QR es escaneado en carretera.
+ *
+ * @param payload Datos del siniestro, motociclista y lista de contactos de auxilio.
+ * @param templateName Nombre de plantilla opcional (por defecto NEUROAPI_EMERGENCY_TEMPLATE o alerta_emergencia_safe).
+ */
+export async function sendEmergencyWhatsAppAlerts(
+  payload: EmergencyAlertWhatsAppPayload,
+  templateName?: string,
+): Promise<{ sentCount: number; errors: string[] }> {
+  const apiKey = getNeuroApiKey();
+  if (!apiKey || payload.contacts.length === 0) {
+    return { sentCount: 0, errors: [] };
+  }
+
+  const tplName = (templateName || process.env.NEUROAPI_EMERGENCY_TEMPLATE || "alerta_emergencia_safe").trim();
+  let sentCount = 0;
+  const errors: string[] = [];
+
+  for (const contact of payload.contacts) {
+    try {
+      const cleanPhone = formatE164Phone(contact.phone);
+      if (cleanPhone.length < 8) continue;
+
+      // Variables estándar para la plantilla de auxilio de Meta:
+      // {{1}}: Nombre del contacto familiar
+      // {{2}}: Nombre del motociclista
+      // {{3}}: Grupo sanguíneo
+      // {{4}}: Enlace a Google Maps con ubicación satelital
+      const bodyParameters = [
+        contact.name,
+        payload.riderName,
+        payload.bloodType || "Desconocido",
+        payload.googleMapsUrl || "Ubicación satelital en proceso",
+      ];
+
+      const res = await sendWhatsAppNotification({
+        to: cleanPhone,
+        templateName: tplName,
+        languageCode: "es",
+        bodyParameters,
+      });
+
+      if (res.success) {
+        sentCount++;
+      } else if (res.error) {
+        errors.push(`${cleanPhone}: ${res.error}`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      errors.push(`${contact.phone}: ${msg}`);
+    }
+  }
+
+  logEvent("info", "Despacho de alertas de auxilio WhatsApp completado", {
+    alertId: payload.alertId,
+    totalContactos: payload.contacts.length,
+    enviadosExitosos: sentCount,
+    errores: errors.length > 0 ? errors : undefined,
+  });
+
+  return { sentCount, errors };
+}
+
+
