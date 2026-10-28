@@ -97,6 +97,7 @@ export function ActivateRescueNotesSection({
             <label className={LABEL_CLASS}>{t.activate.frequentLocationLabel}</label>
             <input
               type="text"
+              autoCapitalize="sentences"
               value={frequentLocation}
               onChange={(e) => onFrequentLocationChange(e.target.value)}
               disabled={disabled}
@@ -110,6 +111,7 @@ export function ActivateRescueNotesSection({
             <label className={LABEL_CLASS}>{t.activate.vehicleInfoLabel}</label>
             <input
               type="text"
+              autoCapitalize="characters"
               value={vehicleInfo}
               onChange={(e) => onVehicleInfoChange(e.target.value)}
               disabled={disabled}

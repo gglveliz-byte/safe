@@ -104,6 +104,7 @@ export function ActivateIdentitySection({
             type="text"
             required
             autoComplete="name"
+            autoCapitalize="words"
             value={fullName}
             onChange={(e) => onFullNameChange(e.target.value)}
             disabled={disabled}
@@ -141,6 +142,7 @@ export function ActivateIdentitySection({
           <label className={LABEL_CLASS}>{t.activate.ageLabel} *</label>
           <input
             type="number"
+            inputMode="numeric"
             min={0}
             max={125}
             required
@@ -158,6 +160,7 @@ export function ActivateIdentitySection({
           <input
             type="text"
             required
+            autoCapitalize="words"
             value={city}
             onChange={(e) => onCityChange(e.target.value)}
             disabled={disabled}
@@ -172,6 +175,7 @@ export function ActivateIdentitySection({
           <input
             type="text"
             required
+            autoCapitalize="characters"
             value={nationalId}
             onChange={(e) => onNationalIdChange(e.target.value)}
             disabled={disabled}
@@ -185,6 +189,7 @@ export function ActivateIdentitySection({
           <label className={LABEL_CLASS}>{t.activate.addressLabel}</label>
           <input
             type="text"
+            autoCapitalize="sentences"
             value={residentialAddress}
             onChange={(e) => onResidentialAddressChange(e.target.value)}
             disabled={disabled}

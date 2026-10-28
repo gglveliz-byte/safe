@@ -308,6 +308,9 @@ export const en: Dictionary = {
     adminUrlCopiedNotice: "✓ Link copied to clipboard",
     nfcMobileIosWarning: "Apple restricts physical NFC tag writing in Safari (iOS). To encode or wipe physical chips, open this console in Google Chrome on an Android mobile device.",
     nfcCopyLinkForAndroid: "Copy Link for Android",
+    purgeConfirmPrompt: "To unlock the purge button, type SAFE below:",
+    purgeConfirmLabel: 'Confirmation: type "SAFE"',
+    chipsWipedCount: "chips formatted",
   },
   login: {
     title: "SECURE RIDER SIGN IN",
@@ -347,6 +350,7 @@ export const en: Dictionary = {
     successNotice: "Your password has been successfully reset! Redirecting to sign in...",
     errorTokenInvalid: "This recovery link is invalid, expired, or has already been used. Please request a new link.",
     errorPasswordsMismatch: "Passwords do not match. Please ensure both fields match exactly.",
+    errorPasswordMinLength: "Password must be at least 8 characters long.",
     goToLogin: "Sign in now",
   },
   landing: {
@@ -379,6 +383,9 @@ export const en: Dictionary = {
     activateHelmetInputPlaceholder: "Enter the required code to activate your helmet...",
     activateHelmetVerifying: "Verifying on SAFE network...",
     activateHelmetConnecting: "Connecting securely to the rescue NFC registry...",
+    errorCodeIncomplete: "The entered code appears incomplete. Please check the digits on your helmet tag.",
+    errorCodeInvalidFormat: "Invalid code format. Please use alphanumeric characters only.",
+    clearInput: "Clear input",
     card1Footer: "3M Automotive-Grade Adhesive",
     card2Footer: "Medical Data Encryption",
     card3Footer: "GPS SMS Geo-Alert",

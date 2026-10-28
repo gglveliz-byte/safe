@@ -70,8 +70,8 @@ export function HelmetActivationSection() {
         type: "error",
         message:
           candidate.length < 4
-            ? "El código ingresado parece incompleto. Verifica los dígitos en la etiqueta de tu casco."
-            : "Formato de código inválido. Usa únicamente caracteres alfanuméricos.",
+            ? t.landing.errorCodeIncomplete
+            : t.landing.errorCodeInvalidFormat,
       });
       return;
     }
@@ -116,6 +116,7 @@ export function HelmetActivationSection() {
                 value={code}
                 onChange={handleInputChange}
                 autoComplete="off"
+                autoCapitalize="characters"
                 spellCheck={false}
                 placeholder={t.landing.activateHelmetInputPlaceholder}
                 className="safe-input-focus w-full px-4 py-3.5 bg-brand-white border border-brand-border-field rounded-md font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted transition-all"
@@ -123,9 +124,9 @@ export function HelmetActivationSection() {
               {code.length > 0 && (
                 <button
                   type="button"
-                  aria-label="Limpiar campo"
+                  aria-label={t.landing.clearInput}
                   onClick={clearInput}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-text-muted hover:text-brand-navy-dark p-1 rounded transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-text-muted hover:text-brand-navy-dark p-1 rounded transition-colors cursor-pointer"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />

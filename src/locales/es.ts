@@ -308,6 +308,9 @@ export const es: Dictionary = {
     adminUrlCopiedNotice: "✓ Enlace copiado al portapapeles",
     nfcMobileIosWarning: "Apple restringe la escritura física de chips NFC en Safari (iOS). Para codificar o formatear chips físicos, abre esta consola desde Google Chrome en un dispositivo Android.",
     nfcCopyLinkForAndroid: "Copiar Enlace para Android",
+    purgeConfirmPrompt: "Para desbloquear el botón de vaciado, escribe SAFE a continuación:",
+    purgeConfirmLabel: 'Confirmación: escribe "SAFE"',
+    chipsWipedCount: "chips formateados",
   },
   login: {
     title: "INGRESO SEGURO DE CONDUCTORES",
@@ -347,6 +350,7 @@ export const es: Dictionary = {
     successNotice: "¡Tu contraseña ha sido restablecida exitosamente! Redirigiendo al inicio de sesión...",
     errorTokenInvalid: "El enlace de recuperación es inválido, ha expirado o ya fue utilizado. Por favor, solicita uno nuevo.",
     errorPasswordsMismatch: "Las contraseñas no coinciden. Escríbelas exactamente iguales.",
+    errorPasswordMinLength: "La contraseña debe tener al menos 8 caracteres.",
     goToLogin: "Iniciar sesión ahora",
   },
   landing: {
@@ -379,6 +383,9 @@ export const es: Dictionary = {
     activateHelmetInputPlaceholder: "Ingresa la información necesaria para activar tu casco...",
     activateHelmetVerifying: "Verificando en red SAFE...",
     activateHelmetConnecting: "Conectando de forma segura con el registro de chips NFC de rescate...",
+    errorCodeIncomplete: "El código ingresado parece incompleto. Verifica los dígitos en la etiqueta de tu casco.",
+    errorCodeInvalidFormat: "Formato de código inválido. Usa únicamente caracteres alfanuméricos.",
+    clearInput: "Limpiar campo",
     card1Footer: "Adhesivo 3M Grado Automotriz",
     card2Footer: "Encriptación de datos médicos",
     card3Footer: "Alerta SMS de geolocalización",

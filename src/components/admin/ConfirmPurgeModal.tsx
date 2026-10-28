@@ -115,7 +115,7 @@ export function ConfirmPurgeModal({
             ⚠️ {t.admin.purgeMessage}
           </p>
           <p className="text-brand-text-desc text-[11px]">
-            Para desbloquear el botón de vaciado, escribe <strong className="text-brand-navy-dark font-mono">SAFE</strong> a continuación:
+            {t.admin.purgeConfirmPrompt}
           </p>
         </div>
 
@@ -125,7 +125,7 @@ export function ConfirmPurgeModal({
             htmlFor="purge-confirm-input"
             className="font-sans text-xs font-semibold text-brand-navy-dark"
           >
-            Confirmación: escribe &quot;SAFE&quot;
+            {t.admin.purgeConfirmLabel}
           </label>
           <input
             ref={inputRef}

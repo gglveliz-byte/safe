@@ -128,6 +128,8 @@ export function MedicalRecordForm({
             </label>
             <input
               type="text"
+              autoComplete="name"
+              autoCapitalize="words"
               value={profile.fullName}
               onChange={(e) => onProfileChange({ ...profile, fullName: e.target.value })}
               required
@@ -209,6 +211,7 @@ export function MedicalRecordForm({
             </label>
             <input
               type="text"
+              autoCapitalize="characters"
               value={profile.nationalId}
               onChange={(e) => onProfileChange({ ...profile, nationalId: e.target.value })}
               required
@@ -240,6 +243,8 @@ export function MedicalRecordForm({
             </label>
             <input
               type="tel"
+              inputMode="tel"
+              autoComplete="tel"
               value={profile.emergencyNumber || ""}
               onChange={(e) =>
                 onProfileChange({ ...profile, emergencyNumber: e.target.value })
@@ -267,6 +272,7 @@ export function MedicalRecordForm({
             </label>
             <input
               type="text"
+              autoCapitalize="words"
               value={profile.city || ""}
               onChange={(e) => onProfileChange({ ...profile, city: e.target.value })}
               placeholder={t.activate.cityPlaceholder}
@@ -280,6 +286,7 @@ export function MedicalRecordForm({
             </label>
             <input
               type="text"
+              autoCapitalize="sentences"
               value={profile.residentialAddress || ""}
               onChange={(e) => onProfileChange({ ...profile, residentialAddress: e.target.value })}
               placeholder={t.activate.addressPlaceholder}
@@ -379,6 +386,7 @@ export function MedicalRecordForm({
               </label>
               <input
                 type="text"
+                autoCapitalize="characters"
                 value={profile.vehicleInfo || ""}
                 onChange={(e) => onProfileChange({ ...profile, vehicleInfo: e.target.value })}
                 placeholder={t.activate.vehicleInfoPlaceholder}

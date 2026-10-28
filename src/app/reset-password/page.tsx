@@ -60,7 +60,7 @@ function ResetPasswordScreen() {
 
     if (password.length < 8) {
       triggerHaptic("error");
-      setErrorMessage(t.resetPassword.passwordPlaceholder);
+      setErrorMessage(t.resetPassword.errorPasswordMinLength);
       return;
     }
 

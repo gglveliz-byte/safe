@@ -442,7 +442,7 @@ export function NfcBurstWriterModal({
                   </p>
                   {wipedCount > 0 && (
                     <span className="font-mono text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded w-fit">
-                      ✓ {wipedCount} chips formateados
+                      ✓ {wipedCount} {t.admin.chipsWipedCount}
                     </span>
                   )}
                 </div>

@@ -313,6 +313,9 @@ export interface Dictionary {
     adminUrlCopiedNotice: string;
     nfcMobileIosWarning: string;
     nfcCopyLinkForAndroid: string;
+    purgeConfirmPrompt: string;
+    purgeConfirmLabel: string;
+    chipsWipedCount: string;
   };
   login: {
     title: string;
@@ -352,6 +355,7 @@ export interface Dictionary {
     successNotice: string;
     errorTokenInvalid: string;
     errorPasswordsMismatch: string;
+    errorPasswordMinLength: string;
     goToLogin: string;
   };
   landing: {
@@ -384,6 +388,9 @@ export interface Dictionary {
     activateHelmetInputPlaceholder: string;
     activateHelmetVerifying: string;
     activateHelmetConnecting: string;
+    errorCodeIncomplete: string;
+    errorCodeInvalidFormat: string;
+    clearInput: string;
     card1Footer: string;
     card2Footer: string;
     card3Footer: string;

@@ -110,6 +110,8 @@ export default function ForgotPasswordPage() {
               </label>
               <input
                 type="email"
+                inputMode="email"
+                autoCapitalize="none"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t.forgotPassword.emailPlaceholder}

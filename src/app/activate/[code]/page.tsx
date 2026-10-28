@@ -188,7 +188,12 @@ export default function ActivatePage({ params }: PageProps) {
             <div className="flex flex-col gap-1.5">
               <label className={LABEL_CLASS}>{t.activate.emailLabel} *</label>
               <input
-                type="email" autoComplete="email" required className={INPUT_CLASS}
+                type="email"
+                inputMode="email"
+                autoCapitalize="none"
+                autoComplete="email"
+                required
+                className={INPUT_CLASS}
                 value={form.email}
                 onChange={(event) => form.setEmail(event.target.value)}
                 placeholder={t.activate.emailPlaceholder}
