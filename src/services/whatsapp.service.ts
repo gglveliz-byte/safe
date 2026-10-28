@@ -89,9 +89,15 @@ export interface SendWhatsAppResult {
 /**
  * Normaliza un número telefónico a formato canónico E.164 (solo dígitos, sin '+', sin espacios).
  * Ej: "+593 98 765 4321" -> "593987654321"
+ * Si ingresan formato móvil local de Ecuador de 10 dígitos (ej: "0987654321"),
+ * se normaliza automáticamente al estándar internacional 593 -> "593987654321".
  */
 export function formatE164Phone(rawPhone: string): string {
-  return rawPhone.replace(/\D/g, "");
+  const digits = rawPhone.replace(/\D/g, "");
+  if (digits.length === 10 && digits.startsWith("09")) {
+    return `593${digits.slice(1)}`;
+  }
+  return digits;
 }
 
 /**
@@ -227,20 +233,27 @@ export async function sendWhatsAppNotification(
     });
   }
 
-  const payload: Record<string, unknown> = {
-    to: cleanTo,
-    type: "template",
-    template: {
-      name: params.templateName.trim(),
-      language: {
-        code: params.languageCode || "es",
-      },
-      components,
+  const templateObj: Record<string, unknown> = {
+    name: params.templateName.trim(),
+    language: {
+      code: params.languageCode || "es",
     },
   };
 
-  if (params.fromPhoneNumberId) {
-    payload.from_phone_number_id = params.fromPhoneNumberId.trim();
+  // Solo incluir components si existen parámetros para evitar rechazo en plantillas sin variables
+  if (components.length > 0) {
+    templateObj.components = components;
+  }
+
+  const payload: Record<string, unknown> = {
+    to: cleanTo,
+    type: "template",
+    template: templateObj,
+  };
+
+  const fromId = params.fromPhoneNumberId || getEnv().NEUROAPI_PHONE_NUMBER_ID?.trim();
+  if (fromId) {
+    payload.from_phone_number_id = fromId;
   }
 
   try {
