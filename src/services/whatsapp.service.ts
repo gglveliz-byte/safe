@@ -290,3 +290,50 @@ export async function sendWhatsAppNotification(
     };
   }
 }
+
+/**
+ * Genera una sesión oficial de conexión de WhatsApp con Meta Embedded Signup.
+ * Permite al administrador vincular su número telefónico en modo Coexistencia
+ * (para seguir usando WhatsApp Business en el móvil y a la vez la Cloud API).
+ *
+ * @param returnUrl URL de retorno tras completar el flujo oficial en Meta.
+ */
+export async function createWhatsAppConnectSession(
+  returnUrl: string,
+): Promise<{ success: boolean; url?: string; error?: string }> {
+  const apiKey = getNeuroApiKey();
+  if (!apiKey) {
+    return { success: false, error: "No hay una API Key de NeuroAPI configurada en el sistema." };
+  }
+
+  try {
+    const response = await fetch(`${NEUROAPI_BASE_URL}/neuroapi/connect/sessions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        service_type: "whatsapp_cloud_api",
+        return_url: returnUrl,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      return {
+        success: false,
+        error: data.error || data.message || "Error al iniciar sesión de conexión con Meta.",
+      };
+    }
+
+    return {
+      success: true,
+      url: data.data?.url,
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: errorMsg };
+  }
+}
+

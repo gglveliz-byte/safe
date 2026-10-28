@@ -106,5 +106,18 @@ export const whatsAppClient = {
     const json = await res.json();
     return json.data;
   },
+
+  /** Genera una sesión de Meta Embedded Signup v4 para conectar el número (Coexistencia) */
+  async getConnectSession(returnUrl?: string): Promise<{ url: string }> {
+    const res = await fetch("/api/admin/whatsapp/connect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ returnUrl }),
+    });
+    if (!res.ok) await handleHttpError(res);
+    const json = await res.json();
+    return json.data;
+  },
 };
+
 
