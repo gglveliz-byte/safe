@@ -1,13 +1,14 @@
 /**
  * ==============================================================================
  * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
- * MÓDULO: Administración — Consulta y Eliminación de Usuarios y Chips
+ * MÓDULO: Administración — Consulta, Activación y Eliminación de Usuarios y Chips
  * ARCHIVO: src/services/admin-riders.service.ts
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
  * Servicio administrativo para consultar motociclistas registrados con sus
- * fichas médicas y chips vinculados, además de gestionar la eliminación segura
- * e idempotente de usuarios y chips físicos.
+ * fichas médicas y chips vinculados, gestionar la activación/desactivación
+ * de cuentas sin destruir datos, y administrar la eliminación segura e
+ * idempotente de usuarios y chips físicos.
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 500 líneas físicas.
@@ -35,6 +36,7 @@ export interface AdminRiderRecord {
   email: string;
   fullName: string | null;
   photoUrl: string | null;
+  isActive: boolean;
   liveRideActive: boolean;
   registeredAt: string;
   device: AdminRiderDevice | null;
@@ -59,6 +61,7 @@ export async function listRegisteredRiders(): Promise<AdminRiderRecord[]> {
     select: {
       id: true,
       email: true,
+      isActive: true,
       liveRideActive: true,
       createdAt: true,
       medicalProfile: {
@@ -85,6 +88,7 @@ export async function listRegisteredRiders(): Promise<AdminRiderRecord[]> {
     email: user.email,
     fullName: user.medicalProfile?.fullName ?? null,
     photoUrl: user.medicalProfile?.photoUrl ?? null,
+    isActive: user.isActive,
     liveRideActive: user.liveRideActive,
     registeredAt: user.createdAt.toISOString(),
     device: user.device
@@ -100,6 +104,70 @@ export async function listRegisteredRiders(): Promise<AdminRiderRecord[]> {
         }
       : null,
   }));
+}
+
+/**
+ * Activa o desactiva la cuenta de un motociclista de forma segura.
+ * - Desactivación: user.isActive = false. Si tiene un chip en ACTIVE, pasa a DISABLED
+ *   para que el tag NFC / QR quede inerte de inmediato sin borrar el expediente.
+ * - Activación: user.isActive = true. Si su chip estaba DISABLED, pasa de nuevo a ACTIVE.
+ */
+export async function setUserActiveStatus(
+  userId: string,
+  isActive: boolean,
+): Promise<{
+  success: boolean;
+  notFound: boolean;
+  isActive: boolean;
+  message: string;
+}> {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      isActive: true,
+      device: { select: { id: true, code: true, status: true } },
+    },
+  });
+
+  if (!user) {
+    return {
+      success: false,
+      notFound: true,
+      isActive: false,
+      message: "El usuario no existe en el sistema.",
+    };
+  }
+
+  await db.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: userId },
+      data: { isActive },
+    });
+
+    if (user.device) {
+      if (!isActive && user.device.status === "ACTIVE") {
+        await tx.device.update({
+          where: { id: user.device.id },
+          data: { status: "DISABLED" },
+        });
+      } else if (isActive && user.device.status === "DISABLED") {
+        await tx.device.update({
+          where: { id: user.device.id },
+          data: { status: "ACTIVE" },
+        });
+      }
+    }
+  });
+
+  const estado = isActive ? "activada" : "desactivada";
+  return {
+    success: true,
+    notFound: false,
+    isActive,
+    message: `Cuenta "${user.email}" ${estado} correctamente.`,
+  };
 }
 
 /**
@@ -128,12 +196,25 @@ export async function deleteRegisteredUser(
   }
 
   await db.$transaction(async (tx) => {
+    // Si tenía un chip vinculado, se desvincula y vuelve a estado UNCLAIMED (virgen y reutilizable)
     if (user.device) {
-      await tx.device.delete({
+      await tx.emergencyAlert.deleteMany({
+        where: { deviceId: user.device.id },
+      });
+
+      await tx.device.update({
         where: { id: user.device.id },
+        data: {
+          userId: null,
+          status: "UNCLAIMED",
+          activatedAt: null,
+          lastAlertLat: null,
+          lastAlertLng: null,
+        },
       });
     }
 
+    // Se elimina el usuario y por CASCADE su perfil médico
     await tx.user.delete({
       where: { id: userId },
     });
@@ -143,7 +224,7 @@ export async function deleteRegisteredUser(
     success: true,
     notFound: false,
     deletedCount: 1,
-    message: `Usuario "${user.email}" eliminado correctamente.`,
+    message: `Usuario "${user.email}" eliminado correctamente. El kit "${user.device?.code || "—"}" quedó liberado (UNCLAIMED) y disponible para activación.`,
   };
 }
 
@@ -257,4 +338,3 @@ export async function purgeAllRidersAndDevices(): Promise<{
     };
   });
 }
-
