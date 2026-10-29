@@ -36,13 +36,21 @@ function LoginScreen() {
   const { t } = useLocale();
   const { triggerHaptic } = useHaptic();
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => searchParams.get("email") || "");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const redirectParam = searchParams.get("redirect");
   const safeRedirect = isSafeInternalPath(redirectParam) ? redirectParam : null;
+  const isRegisteredNotice = searchParams.get("registered") === "1";
+
+  useEffect(() => {
+    const urlEmail = searchParams.get("email");
+    if (urlEmail && !email) {
+      setEmail(urlEmail);
+    }
+  }, [searchParams, email]);
 
   useEffect(() => {
     let isMounted = true;
@@ -79,8 +87,8 @@ function LoginScreen() {
       triggerHaptic("success");
 
       const destination =
-        res.redirect ||
         safeRedirect ||
+        res.redirect ||
         (res.user?.role === "ADMIN" ? "/admin" : "/dashboard");
       router.push(destination);
     } catch (err: unknown) {
@@ -114,6 +122,16 @@ function LoginScreen() {
             {t.login.subtitle}
           </p>
         </div>
+
+        {/* Notificación de cuenta recién registrada */}
+        {isRegisteredNotice && (
+          <div className="p-3 bg-brand-nav-active border border-brand-border-subtle rounded-lg flex items-center gap-2.5">
+            <span className="text-base text-brand-navy-dark">✓</span>
+            <span className="font-sans text-xs text-brand-navy-dark font-medium leading-relaxed">
+              {t.activate.successAccountSubtitle}
+            </span>
+          </div>
+        )}
 
         {/* Formulario de Acceso */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
@@ -190,15 +208,8 @@ function LoginScreen() {
           </div>
         </form>
 
-        {/* Enlaces de Ayuda y Activación */}
-        <div className="pt-2 border-t border-brand-separator flex flex-col items-center gap-2 text-xs font-sans text-center">
-          <Link
-            href="/#activar-casco"
-            className="inline-flex items-center min-h-[44px] text-brand-navy-dark hover:text-brand-accent font-semibold underline decoration-brand-border-strong underline-offset-4 transition-colors"
-          >
-            {t.login.needHelpActivation}
-          </Link>
-
+        {/* Enlace de Retorno a Inicio */}
+        <div className="pt-2 border-t border-brand-separator flex flex-col items-center text-xs font-sans text-center">
           <Link
             href="/"
             className="inline-flex items-center min-h-[44px] text-brand-text-muted hover:text-brand-navy-dark transition-colors no-underline"

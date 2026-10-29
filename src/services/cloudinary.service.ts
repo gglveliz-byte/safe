@@ -146,6 +146,85 @@ export async function uploadRiderPhotoToCloudinary(
 /**
  * Elimina una fotografía alojada en Cloudinary a partir de su public_id.
  */
+
+/**
+ * Sube y optimiza un documento de identidad (anverso o reverso) en Cloudinary.
+ * A diferencia de la foto facial (crop: fill, gravity: face), los documentos
+ * conservan su encuadre íntegro (crop: limit, sin recorte facial) para que
+ * los números, textos y códigos de barras sean 100% legibles por los paramédicos.
+ */
+export async function uploadRiderDocumentToCloudinary(
+  base64Data: string,
+  code: string,
+  docType: "id_front" | "id_back" = "id_front",
+): Promise<CloudinaryUploadResult> {
+  configureCloudinary();
+  const env = getEnv();
+
+  if (!base64Data || typeof base64Data !== "string") {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "No se proporcionó ningún contenido de imagen para cargar.",
+      400,
+    );
+  }
+
+  let uploadPayload = base64Data.trim();
+  if (!uploadPayload.startsWith("data:")) {
+    uploadPayload = `data:image/jpeg;base64,${uploadPayload}`;
+  }
+
+  const base64Content = uploadPayload.split(",")[1] ?? "";
+  const estimatedBytes = Math.floor((base64Content.length * 3) / 4);
+  if (estimatedBytes > MAX_DECODED_BYTES) {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "La imagen supera el límite máximo permitido de 5 megabytes (5 MB).",
+      400,
+    );
+  }
+
+  const cleanCode = code.toUpperCase().replace(/[^A-Z0-9-]/g, "");
+  const publicId = `${env.CLOUDINARY_UPLOAD_FOLDER}/rider_${cleanCode.toLowerCase()}_${docType}`;
+
+  try {
+    const result = await cloudinary.uploader.upload(uploadPayload, {
+      public_id: publicId,
+      overwrite: true,
+      invalidate: true,
+      resource_type: "image",
+      allowed_formats: ["jpg", "jpeg", "png", "webp"],
+      transformation: [
+        {
+          width: 1600,
+          height: 1200,
+          crop: "limit",
+          quality: "auto:good",
+          fetch_format: "auto",
+        },
+      ],
+    });
+
+    return {
+      photoUrl: result.secure_url,
+      photoPublicId: result.public_id,
+      width: result.width,
+      height: result.height,
+      format: result.format,
+      bytes: result.bytes,
+    };
+  } catch (error: unknown) {
+    console.error(`[SAFE Cloudinary] Error durante la carga de documento (${docType}):`, error);
+    const errMessage =
+      error instanceof Error ? error.message : "Error del servidor de imágenes";
+    throw new AppError(
+      "SERVER_ERROR",
+      `No fue posible procesar el documento en el servidor seguro: ${errMessage}`,
+      500,
+    );
+  }
+}
+
 export async function deleteCloudinaryAsset(publicId: string): Promise<void> {
   if (!publicId || typeof publicId !== "string") {
     return;

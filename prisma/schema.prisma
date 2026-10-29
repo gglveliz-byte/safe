@@ -137,6 +137,11 @@ model MedicalProfile {
   // ofuscada en la vista pública (safe-security-and-compliance §5, PII).
   fullName          String
   nationalId        String
+  // Credencial de identificación oficial (anverso y reverso) en Cloudinary
+  idCardFrontUrl      String?
+  idCardFrontPublicId String?
+  idCardBackUrl       String?
+  idCardBackPublicId  String?
   // Fotografía servida por el CDN seguro de Cloudinary (600x600, crop rostro);
   // photoPublicId permite reemplazo y borrado limpio del activo.
   photoUrl          String

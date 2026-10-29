@@ -87,19 +87,17 @@ export function resolvePublicBaseUrl(customBaseUrl?: string): string {
 
 /**
  * Construye la URL del gateway del casco (/r/[code]?v=nfc|qr) desde el cliente.
- * Si se pasa `pin`, se adjunta en el querystring para auto-asignación del kit virgen.
+ * El PIN nunca se adjunta en la URL por seguridad; el piloto lo ingresa manualmente en el dashboard.
  * Permite especificar `customBaseUrl` para previsualizar o imprimir para dominios VPS.
  */
 export function buildHelmetGatewayClientUrl(
   code: string,
   source: "nfc" | "qr",
-  pin?: string,
   customBaseUrl?: string,
 ): string {
   const cleanCode = encodeURIComponent(code.trim().toUpperCase());
-  const pinParam = pin ? `&pin=${encodeURIComponent(pin.trim())}` : "";
   const base = resolvePublicBaseUrl(customBaseUrl);
-  return `${base}/r/${cleanCode}?v=${source}${pinParam}`;
+  return `${base}/r/${cleanCode}?v=${source}`;
 }
 
 /**
@@ -108,10 +106,9 @@ export function buildHelmetGatewayClientUrl(
 export async function generateLocalQrDataUrl(
   code: string,
   size = 200,
-  pin?: string,
   customBaseUrl?: string,
 ): Promise<string> {
-  const url = buildHelmetGatewayClientUrl(code, "qr", pin, customBaseUrl);
+  const url = buildHelmetGatewayClientUrl(code, "qr", customBaseUrl);
   return await QRCode.toDataURL(url, {
     margin: 1,
     width: size,

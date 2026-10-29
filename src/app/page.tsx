@@ -8,12 +8,11 @@
  * Portada institucional y técnica de la plataforma SAFE bajo la estética
  * 'Technical Broadsheet 2026'. Presenta el boletín médico vital en el casco,
  * la visualización con radares sónar activos sobre NFC/QR, el modal interactivo
- * de ficha médica de emergencia (demo), el formulario real de activación de tag,
- * el flujo funcional en carretera en 3 pasos y la cita de la Hora Dorada.
+ * de ficha médica de emergencia (demo), el flujo funcional en carretera en 3 pasos y la cita de la Hora Dorada.
  *
  * ENTRADAS: diccionario bilingüe vía useLocale.
  * SALIDAS: navegación real y apertura de modales accesibles.
- * DEPENDENCIAS: HelmetHeroCard, HelmetActivationSection, HowItWorksSection,
+ * DEPENDENCIAS: HelmetHeroCard, HowItWorksSection,
  *               GoldenHourSection, DemoMedicalModal.
  *
  * LEYES DE INGENIERÍA:
@@ -31,7 +30,6 @@ import Link from "next/link";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
 import { HelmetHeroCard } from "@/components/landing/HelmetHeroCard";
-import { HelmetActivationSection } from "@/components/landing/HelmetActivationSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { GoldenHourSection } from "@/components/landing/GoldenHourSection";
 import { DemoMedicalModal } from "@/components/landing/DemoMedicalModal";
@@ -97,11 +95,11 @@ export default function HomePage() {
               </button>
 
               <Link
-                href="/#activar-casco"
+                href="/login"
                 onClick={() => triggerHaptic("light")}
                 className="inline-flex items-center justify-center px-6 py-3.5 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] text-[13px] md:text-[14px] font-semibold rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-nav-blue no-underline"
               >
-                {t.nav.activateHelmet}
+                {t.nav.login}
               </Link>
             </div>
 
@@ -125,8 +123,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ══════════ SECCIÓN: FORMULARIO PARA ACTIVAR EL CASCO ══════════ */}
-      <HelmetActivationSection />
 
       {/* ══════════ SECCIÓN: ¿CÓMO FUNCIONA SAFE EN CARRETERA? ══════════ */}
       <HowItWorksSection />

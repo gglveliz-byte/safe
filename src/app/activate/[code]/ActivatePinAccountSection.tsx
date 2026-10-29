@@ -28,7 +28,6 @@ import { useLocale } from "@/hooks/useLocale";
 export interface ActivatePinAccountSectionProps {
   pin: string;
   onPinChange: (val: string) => void;
-  isPinAutoFilled: boolean;
   email: string;
   onEmailChange: (val: string) => void;
   password: string;
@@ -45,7 +44,6 @@ const LABEL_CLASS = "font-sans text-xs font-semibold text-brand-navy-dark";
 export function ActivatePinAccountSection({
   pin,
   onPinChange,
-  isPinAutoFilled,
   email,
   onEmailChange,
   password,
@@ -70,14 +68,7 @@ export function ActivatePinAccountSection({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* PIN de 6 dígitos */}
         <div className="flex flex-col gap-1.5 sm:col-span-2 lg:col-span-1">
-          <div className="flex items-center justify-between gap-1">
-            <label className={LABEL_CLASS}>{t.activate.pinLabel} *</label>
-            {isPinAutoFilled && (
-              <span className="font-sans text-[10px] font-bold text-emerald-800 bg-brand-nav-active px-2 py-0.5 rounded-full border border-brand-border-subtle">
-                {t.activate.pinAutoAssignedBadge}
-              </span>
-            )}
-          </div>
+          <label className={LABEL_CLASS}>{t.activate.pinLabel} *</label>
           <input
             type="text"
             inputMode="numeric"

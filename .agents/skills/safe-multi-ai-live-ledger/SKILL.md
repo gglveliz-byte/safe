@@ -76,3 +76,22 @@ Dado que **múltiples agentes de IA trabajarán concurrentemente en este proyect
 - **Prohibido entregar código "demo" o de muestra.**
 - Cada integración debe ser verificada ejecutando pruebas automatizadas o validaciones de compilación estricta (`npm run build` o `npx tsc --noEmit`).
 - La integración solo se declara completa si compila sin errores y cumple con las reglas de negocio.
+
+---
+
+## 5. Protocolo de Verificación Holística Pre-Entrega (Checklist Anti-Puntos Ciegos)
+
+Para evitar entregar tareas con visión de túnel donde la lógica funciona pero los textos o esquemas periféricos quedan desincronizados, todo agente debe cumplir este checklist estricto antes de reportar la finalización al usuario:
+
+1. **Barrido Forense Global (`git grep`):**  
+   Buscar en todo el proyecto los términos clave de la regla modificada para garantizar que ningún texto de ayuda, comentario, esquema o archivo secundario conserve instrucciones del comportamiento anterior.
+2. **Sincronización Lingüística:**  
+   Comprobar que los diccionarios (`es.ts` y `en.ts`) reflejen fielmente el nuevo flujo.
+3. **Compilación Estricta de Tipos:**  
+   Ejecutar `npm run typecheck` (`tsc --noEmit`) asegurando 0 errores.
+4. **Respeto a los Límites de Líneas:**  
+   Comprobar que ningún archivo modificado o creado supere las 500 líneas físicas.
+5. **Prueba en Vivo y Limpieza de BD:**  
+   Verificar el flujo en navegador o script de integración, limpiando de inmediato cualquier usuario o registro de prueba creado en la base de datos real.
+6. **Asentamiento en el Ledger:**  
+   Actualizar `docs/LIVE_ARCHITECTURE_LEDGER.md` con el código de hito (`CHK-XXX`) y la descripción técnica de los cambios.

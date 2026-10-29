@@ -25,12 +25,18 @@ export interface ActivateSuccessSectionProps {
   deviceCode: string;
   redirect: string;
   onNavigate: (url: string) => void;
+  title?: string;
+  message?: string;
+  buttonText?: string;
 }
 
 export function ActivateSuccessSection({
   deviceCode,
   redirect,
   onNavigate,
+  title,
+  message,
+  buttonText,
 }: ActivateSuccessSectionProps) {
   const { t } = useLocale();
 
@@ -44,10 +50,10 @@ export function ActivateSuccessSection({
           🛡️
         </div>
         <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-navy-dark leading-tight">
-          {t.activate.successTitle}
+          {title || t.activate.successAccountTitle}
         </h2>
         <p className="font-sans text-xs sm:text-sm text-brand-text-desc leading-relaxed">
-          {t.activate.successMessage}
+          {message || t.activate.successAccountSubtitle}
         </p>
         <div className="flex flex-col items-center gap-1.5 p-3.5 bg-brand-bg-alt border border-brand-border-subtle rounded-xl w-full">
           <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted">
@@ -62,7 +68,7 @@ export function ActivateSuccessSection({
           className="w-full min-h-[48px] inline-flex items-center justify-center px-6 py-3.5 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary text-sm font-semibold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer mt-2"
           onClick={() => onNavigate(redirect)}
         >
-          {t.activate.goToDashboard}
+          {buttonText || t.activate.goToLogin}
         </button>
       </div>
     </div>

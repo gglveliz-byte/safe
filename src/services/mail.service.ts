@@ -32,6 +32,8 @@ import { getEnv } from "@/lib/env";
 import { logEvent } from "@/lib/logger";
 import { buildEmergencyEmailContent, type EmergencyEmailPayload } from "@/services/mail/templates";
 import { buildPasswordResetEmailContent } from "@/services/mail/password-reset-template";
+import { buildWelcomeEmailContent, type WelcomeEmailPayload } from "@/services/mail/welcome-template";
+export type { WelcomeEmailPayload };
 
 /** Contacto de emergencia tal como lo entrega el perfil médico de PostgreSQL. */
 export interface EmergencyMailRecipient {
@@ -328,3 +330,47 @@ export async function sendPasswordResetEmail(
   }
 }
 
+/**
+ * Despacha el correo institucional de bienvenida al nuevo motociclista registrado.
+ *
+ * @param params Datos del piloto (nombre, correo, folio opcional, url de login e idioma).
+ * @returns true si el correo fue aceptado por el transporte SMTP de Gmail.
+ */
+export async function sendWelcomeEmail(params: WelcomeEmailPayload): Promise<boolean> {
+  const normalizedEmail = params.email.trim().toLowerCase();
+  if (!EMAIL_PATTERN.test(normalizedEmail)) {
+    logEvent("warn", "Intento de envío de bienvenida con correo inválido", {
+      correoOfuscado: normalizedEmail.slice(0, 3) + "***",
+    });
+    return false;
+  }
+
+  const settings = resolveMailSettings();
+  const transporter = obtainTransporter(settings);
+  const content = buildWelcomeEmailContent({
+    ...params,
+    email: normalizedEmail,
+  });
+
+  try {
+    const info = await transporter.sendMail({
+      from: buildFromAddress(settings),
+      to: normalizedEmail,
+      subject: content.subject,
+      text: content.text,
+      html: content.html,
+    });
+
+    logEvent("info", "Correo de bienvenida enviado exitosamente", {
+      messageId: info.messageId,
+      correoOfuscado: normalizedEmail.slice(0, 3) + "***",
+    });
+    return true;
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    logEvent("error", "Fallo al enviar correo de bienvenida", {
+      error: errorMsg.slice(0, MAX_ERROR_LENGTH),
+    });
+    return false;
+  }
+}

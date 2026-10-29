@@ -99,6 +99,10 @@ export async function PUT(request: Request): Promise<NextResponse> {
     if (input.nationalId !== undefined) updateData.nationalId = input.nationalId;
     if (input.photoUrl !== undefined) updateData.photoUrl = input.photoUrl;
     if (input.photoPublicId !== undefined) updateData.photoPublicId = input.photoPublicId;
+    if (input.idCardFrontUrl !== undefined) updateData.idCardFrontUrl = input.idCardFrontUrl || null;
+    if (input.idCardFrontPublicId !== undefined) updateData.idCardFrontPublicId = input.idCardFrontPublicId || null;
+    if (input.idCardBackUrl !== undefined) updateData.idCardBackUrl = input.idCardBackUrl || null;
+    if (input.idCardBackPublicId !== undefined) updateData.idCardBackPublicId = input.idCardBackPublicId || null;
     if (input.birthDate !== undefined) updateData.birthDate = input.birthDate;
     if (input.bloodType !== undefined) updateData.bloodType = input.bloodType;
     if (input.allergies !== undefined) updateData.allergies = input.allergies || null;

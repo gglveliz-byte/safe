@@ -102,7 +102,7 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
         const entries = await Promise.all(
           devices.map(async (device) => {
             const dataUrl = await QRCode.toDataURL(
-              buildHelmetGatewayClientUrl(device.code, "qr", device.activationPin, targetBaseUrl),
+              buildHelmetGatewayClientUrl(device.code, "qr", targetBaseUrl),
               {
                 width: 320,
                 margin: 1,

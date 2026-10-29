@@ -26,6 +26,7 @@
 import type {
   EmergencyContact, MedicalProfileData, SessionUser, SessionResponse, DashboardResponse,
   EmergencyAlertResult, AdminDeviceItem, AdminBatchSummary, AdminBatchDetail, AdminRiderItem, CreatedBatchResult,
+  RegisterRiderPayload, RegisterRiderResponse, ClaimDevicePayload, ClaimDeviceResponse, ActivateDeviceLegacyPayload,
 } from "./api-types";
 import {
   lanzarErrorHttp,
@@ -41,6 +42,7 @@ export { HttpApiError, ensureContactUuid };
 export type {
   EmergencyContact, MedicalProfileData, SessionUser, SessionResponse, DashboardResponse,
   EmergencyAlertResult, AdminDeviceItem, AdminBatchSummary, AdminBatchDetail, AdminRiderItem, CreatedBatchResult,
+  RegisterRiderPayload, RegisterRiderResponse, ClaimDevicePayload, ClaimDeviceResponse, ActivateDeviceLegacyPayload,
 };
 
 export const apiClient = {
@@ -166,27 +168,7 @@ export const apiClient = {
    * (POST /api/devices/activate). Se conserva exportada y corregida: ya no
    * fabrica contraseña, fotografía, grupo sanguíneo ni consentimiento.
    */
-  async activateDevice(payload: {
-    code: string;
-    activationPin: string;
-    email: string;
-    password?: string;
-    fullName?: string;
-    nationalId?: string;
-    photoUrl?: string;
-    photoPublicId?: string;
-    birthDate?: string;
-    bloodType?: string;
-    allergies?: string;
-    chronicConditions?: string;
-    medications?: string;
-    insuranceInfo?: string;
-    emergencyNumber?: string;
-    emergencyContacts?: EmergencyContact[];
-    medicalData?: MedicalProfileData;
-    termsAccepted?: boolean;
-    locale?: "es" | "en";
-  }): Promise<{ success: boolean; redirect: string }> {
+  async activateDevice(payload: ActivateDeviceLegacyPayload): Promise<{ success: boolean; redirect: string }> {
     const body = buildActivatePayload(payload);
     const res = await fetch("/api/devices/activate", {
       method: "POST",
@@ -198,6 +180,30 @@ export const apiClient = {
     // [M9] Sin éxitos fabricados: si el backend no entrega resultado, error.
     if (!data?.data) throw new Error("No se pudo completar la activación.");
     return data.data;
+  },
+
+  /** Registra una cuenta nueva de motociclista (Fase 1 de Onboarding rápido sin PIN) */
+  async registerRider(payload: RegisterRiderPayload): Promise<RegisterRiderResponse> {
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return json.data;
+  },
+
+  /** Vincula y activa un kit físico mediante su folio y PIN desde el dashboard */
+  async claimDevice(payload: ClaimDevicePayload): Promise<ClaimDeviceResponse> {
+    const res = await fetch("/api/devices/claim", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return json.data;
   },
 
   /** Inicia sesión con verificación Bcrypt y recepción de cookie HttpOnly */

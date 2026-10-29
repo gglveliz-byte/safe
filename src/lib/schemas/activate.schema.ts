@@ -246,3 +246,20 @@ export const ActivateDeviceSchema = z
  * `termsAccepted` queda fijado en el literal `true`.
  */
 export type ActivateDeviceInput = z.infer<typeof ActivateDeviceSchema>;
+
+/**
+ * Esquema para vincular y activar un kit físico SAFE (NFC/QR) a una cuenta existente
+ * mediante su folio público y su PIN secreto de 6 dígitos desde el Dashboard.
+ */
+export const ClaimDeviceSchema = z
+  .object({
+    /** Folio del kit físico (ej. SAFE-0001). */
+    code: DeviceCodeSchema,
+
+    /** PIN confidencial de 6 dígitos que acompaña el kit. */
+    pin: PinSchema,
+  })
+  .strict();
+
+export type ClaimDeviceInput = z.infer<typeof ClaimDeviceSchema>;
+

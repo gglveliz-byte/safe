@@ -64,6 +64,18 @@ export const ProfileUpdateSchema = z
     /** Identificador público de Cloudinary para reemplazar sin dejar huérfanos. */
     photoPublicId: z.string().trim().min(1).max(255).optional(),
 
+    /** URL de la imagen del anverso de la credencial (Cédula/DNI) en Cloudinary. */
+    idCardFrontUrl: z.string().trim().url().max(2048).nullable().optional(),
+
+    /** Identificador público de Cloudinary del anverso de la credencial. */
+    idCardFrontPublicId: z.string().trim().min(1).max(255).nullable().optional(),
+
+    /** URL de la imagen del reverso de la credencial (Cédula/DNI) en Cloudinary. */
+    idCardBackUrl: z.string().trim().url().max(2048).nullable().optional(),
+
+    /** Identificador público de Cloudinary del reverso de la credencial. */
+    idCardBackPublicId: z.string().trim().min(1).max(255).nullable().optional(),
+
     /** Fecha de nacimiento en formato ISO 8601; se transforma en `Date`. */
     birthDate: IsoDateSchema.optional(),
 

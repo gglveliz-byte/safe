@@ -24,38 +24,19 @@ export type Locale = "es" | "en";
 
 export interface Dictionary {
   common: {
-    appName: string;
-    tagline: string;
-    emergencyBadge: string;
-    call911: string;
-    callContact: string;
-    shareWhatsApp: string;
-    copyLink: string;
-    linkCopied: string;
-    termsLink: string;
-    privacyLink: string;
-    languageToggle: string;
-    backToHome: string;
-    riderLogin: string;
-    adminPanel: string;
-    saveChanges: string;
-    saving: string;
-    cancel: string;
-    errorGeneric: string;
-    statusActive: string;
-    statusUnclaimed: string;
-    requiredField: string;
-    allRightsReserved: string;
-    systemVersion: string;
+    appName: string; tagline: string; emergencyBadge: string;
+    call911: string; callContact: string; shareWhatsApp: string;
+    copyLink: string; linkCopied: string; termsLink: string;
+    privacyLink: string; languageToggle: string; backToHome: string;
+    riderLogin: string; adminPanel: string; saveChanges: string;
+    saving: string; cancel: string; errorGeneric: string;
+    statusActive: string; statusUnclaimed: string; requiredField: string;
+    allRightsReserved: string; systemVersion: string;
   };
   nav: {
-    brandSubtitle: string;
-    home: string;
-    login: string;
-    dashboard: string;
-    admin: string;
-    activateHelmet: string;
-    emergencyDemo: string;
+    brandSubtitle: string; home: string; support: string;
+    login: string; dashboard: string; admin: string;
+    howItWorks: string; activateHelmet: string; emergencyDemo: string;
   };
   emergency: {
     title: string;
@@ -96,7 +77,6 @@ export interface Dictionary {
     pinLabel: string;
     pinPlaceholder: string;
     pinHelp: string;
-    pinAutoAssignedBadge: string;
     emailLabel: string;
     emailPlaceholder: string;
     passwordLabel: string;
@@ -178,6 +158,13 @@ export interface Dictionary {
     successMessage: string;
     goToDashboard: string;
     errorPinInvalid: string;
+    registerTitle: string;
+    registerSubtitle: string;
+    registerSubmitButton: string;
+    registerSubmittingButton: string;
+    successAccountTitle: string;
+    successAccountSubtitle: string;
+    goToLogin: string;
   };
   dashboard: {
     title: string;
@@ -188,6 +175,15 @@ export interface Dictionary {
     noChipTitle: string;
     noChipHelp: string;
     noChipAction: string;
+    claimTitle: string;
+    claimSubtitle: string;
+    claimCodeLabel: string;
+    claimPinLabel: string;
+    claimPinPlaceholder: string;
+    claimPinHelp: string;
+    claimButton: string;
+    claimingButton: string;
+    claimSuccess: string;
     liveRideTitle: string;
     liveRideActive: string;
     liveRideInactive: string;
@@ -344,45 +340,24 @@ export interface Dictionary {
     chipsWipedCount: string;
   };
   login: {
-    title: string;
-    subtitle: string;
-    emailLabel: string;
-    emailPlaceholder: string;
-    passwordLabel: string;
-    passwordPlaceholder: string;
-    submitButton: string;
-    submittingButton: string;
-    errorInvalidCredentials: string;
-    backToHome: string;
-    needHelpActivation: string;
-    forgotPasswordLink: string;
+    title: string; subtitle: string; emailLabel: string;
+    emailPlaceholder: string; passwordLabel: string;
+    passwordPlaceholder: string; submitButton: string;
+    submittingButton: string; errorInvalidCredentials: string;
+    backToHome: string; forgotPasswordLink: string;
   };
   forgotPassword: {
-    title: string;
-    subtitle: string;
-    badge: string;
-    emailLabel: string;
-    emailPlaceholder: string;
-    submitButton: string;
-    submittingButton: string;
-    successNotice: string;
-    backToLogin: string;
+    title: string; subtitle: string; badge: string;
+    emailLabel: string; emailPlaceholder: string; submitButton: string;
+    submittingButton: string; successNotice: string; backToLogin: string;
   };
   resetPassword: {
-    title: string;
-    subtitle: string;
-    badge: string;
-    passwordLabel: string;
-    passwordPlaceholder: string;
-    confirmPasswordLabel: string;
-    confirmPasswordPlaceholder: string;
-    submitButton: string;
-    submittingButton: string;
-    successNotice: string;
-    errorTokenInvalid: string;
-    errorPasswordsMismatch: string;
-    errorPasswordMinLength: string;
-    goToLogin: string;
+    title: string; subtitle: string; badge: string;
+    passwordLabel: string; passwordPlaceholder: string;
+    confirmPasswordLabel: string; confirmPasswordPlaceholder: string;
+    submitButton: string; submittingButton: string; successNotice: string;
+    errorTokenInvalid: string; errorPasswordsMismatch: string;
+    errorPasswordMinLength: string; goToLogin: string;
   };
   landing: {
     heroHeadline: string;
@@ -460,6 +435,20 @@ export interface Dictionary {
     privacySection3Body: string;
     privacySection4Title: string;
     privacySection4Body: string;
+    };
+  idCard: {
+    sectionTitle: string;
+    sectionSubtitle: string;
+    frontLabel: string;
+    backLabel: string;
+    uploadFront: string;
+    uploadBack: string;
+    changePhoto: string;
+    removePhoto: string;
+    helpText: string;
+    uploading: string;
+    uploadSuccess: string;
+    uploadError: string;
   };
 }
 

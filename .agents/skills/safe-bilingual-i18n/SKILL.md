@@ -150,3 +150,19 @@ Cuando un casco es escaneado en emergencia, el correo HTML despachado por Gmail 
 - **Asunto ES:** `🚨 ALERTA MÉDICA SAFE: Casco de [Nombre] escaneado en carretera`
 - **Asunto EN:** `🚨 SAFE EMERGENCY ALERT: [Name]'s helmet scanned on route`
 - **Cuerpo con Botón Directo a Google Maps:** Instrucciones legibles en Español e Inglés para abrir la ubicación satelital en 1 toque.
+
+---
+
+## 5. Sincronización Lingüística Obligatoria ante Cambios de Negocio
+
+**Queda terminantemente prohibido modificar la lógica o flujo de una funcionalidad sin actualizar simultáneamente los textos de ayuda en los diccionarios.**
+
+Cuando un requerimiento del usuario modifique la interacción de un campo (por ejemplo: cambiar de asignación automática a ingreso manual, o cambiar un paso del onboarding):
+
+1. **Actualización Simétrica en ES y EN:**
+   - Modificar las claves en `src/locales/es.ts` y `src/locales/en.ts`.
+   - Si la clave queda obsoleta (ej. badges de auto-asignación), eliminarla de `src/locales/index.ts`, `es.ts` y `en.ts`.
+2. **Revisión de Textos de Ayuda (`*Help` / `*Placeholder` / `*Subtitle`):**
+   - Asegurarse de que las instrucciones que lee el usuario describan exactamente lo que el sistema hace actualmente, erradicando cualquier texto contradictorio con la nueva directriz.
+3. **Validación Cruzada con `git grep`:**
+   - Realizar una búsqueda en `src/locales/` de los términos relacionados con el cambio para comprobar que ninguna traducción conserva redacción desactualizada.

@@ -37,8 +37,8 @@
 
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
 import { useWakeLock } from "@/hooks/useWakeLock";
@@ -55,7 +55,7 @@ import { IncidentHairline } from "@/components/ui/IncidentHairline";
 import { LiveRideCard } from "@/components/dashboard/LiveRideCard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { MedicalRecordForm } from "@/components/dashboard/MedicalRecordForm";
-import { NoChipNotice } from "@/components/dashboard/NoChipNotice";
+import { ClaimDeviceCard } from "@/components/dashboard/ClaimDeviceCard";
 
 /**
  * Calcula la distancia Haversine en metros entre dos coordenadas decimales.
@@ -75,8 +75,10 @@ function calculateDistanceMeters(lat1: number, lon1: number, lat2: number, lon2:
   return R * c;
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const claimCode = searchParams?.get("claim") || "";
   const { t } = useLocale();
   const { triggerHaptic } = useHaptic();
 
@@ -165,7 +167,6 @@ export default function DashboardPage() {
           fullName: data.profile.fullName || "",
           nationalId: data.profile.nationalId || "",
           birthDate: data.profile.birthDate || null,
-          // P-1: se conserva exactamente lo declarado; nada de "O+" por defecto.
           bloodType: data.profile.bloodType || "",
           allergies: data.profile.allergies || "",
           chronicConditions: data.profile.chronicConditions || "",
@@ -175,6 +176,18 @@ export default function DashboardPage() {
           insurance: data.profile.insuranceInfo || "",
           emergencyNumber: data.profile.emergencyNumber || "",
           photoUrl: data.profile.photoUrl || "",
+          photoPublicId: data.profile.photoPublicId || null,
+          idCardFrontUrl: data.profile.idCardFrontUrl || null,
+          idCardFrontPublicId: data.profile.idCardFrontPublicId || null,
+          idCardBackUrl: data.profile.idCardBackUrl || null,
+          idCardBackPublicId: data.profile.idCardBackPublicId || null,
+          country: data.profile.country || "EC",
+          city: data.profile.city || "",
+          residentialAddress: data.profile.residentialAddress || "",
+          isOrganDonor: Boolean(data.profile.isOrganDonor),
+          rescueNotes: data.profile.rescueNotes || "",
+          frequentLocation: data.profile.frequentLocation || "",
+          vehicleInfo: data.profile.vehicleInfo || "",
           contacts: formattedContacts,
         });
       }
@@ -403,8 +416,13 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* P-5: sin chip vinculado, el panel lo comunica y enlaza la activación */}
-      {!device && <NoChipNotice />}
+      {/* Fase 2 Onboarding: vinculación de kit físico mediante PIN secreto */}
+      {!device && (
+        <ClaimDeviceCard
+          prefilledCode={claimCode}
+          onClaimSuccess={loadDashboard}
+        />
+      )}
 
       {/* BLOQUE ESTRELLA: MODO RUTA EN CARRETERA (WAKELOCK + TELEMETRÍA CADA 20s) */}
       <LiveRideCard
@@ -427,5 +445,13 @@ export default function DashboardPage() {
         errorMessage={errorMessage}
       />
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
   );
 }

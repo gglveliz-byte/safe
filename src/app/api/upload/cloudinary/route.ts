@@ -44,7 +44,7 @@ import {
 import { getRequestContext } from "@/lib/request";
 import { CloudinaryUploadSchema } from "@/lib/schemas/upload.schema";
 import { DeviceCodeSchema } from "@/lib/schemas/common.schema";
-import { uploadRiderPhotoToCloudinary } from "@/services/cloudinary.service";
+import { uploadRiderPhotoToCloudinary, uploadRiderDocumentToCloudinary } from "@/services/cloudinary.service";
 import {
   RATE_LIMITS,
   enforceNotBlocked,
@@ -142,6 +142,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     let imageData = "";
     let deviceCode = "";
+    let assetType: "avatar" | "id_front" | "id_back" = "avatar";
 
     // 3. Procesar según el Content-Type (JSON o multipart/form-data)
     if (contentType.includes("application/json")) {
@@ -151,10 +152,19 @@ export async function POST(request: Request): Promise<NextResponse> {
       imageData = input.image;
       // Vía canónica: el picker envía el folio. Vía excepcional: temporal.
       deviceCode = input.deviceCode ?? generateTemporaryDeviceCode();
+      if (input.assetType === "id_front" || input.assetType === "id_back") {
+        assetType = input.assetType;
+      } else if (input.docType === "id_front" || input.docType === "id_back") {
+        assetType = input.docType;
+      }
     } else if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
       const file = formData.get("file");
       const formCode = formData.get("deviceCode");
+      const formAsset = formData.get("assetType") || formData.get("docType");
+      if (formAsset === "id_front" || formAsset === "id_back") {
+        assetType = formAsset;
+      }
 
       if (!file || !(file instanceof Blob)) {
         throw new AppError(
@@ -189,9 +199,13 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    // 4. Subir y procesar la fotografía en Cloudinary (public_id determinista
-    //    rider_<folio> cuando el deviceCode es real; recorte facial 600x600).
-    const result = await uploadRiderPhotoToCloudinary(imageData, deviceCode);
+    // 4. Subir y procesar según el tipo de activo:
+    //    - avatar: recorte facial 600x600 para reconocimiento en emergencia.
+    //    - id_front / id_back: documento sin recorte facial (crop limit 1600x1200) para legibilidad total.
+    const result =
+      assetType === "id_front" || assetType === "id_back"
+        ? await uploadRiderDocumentToCloudinary(imageData, deviceCode, assetType)
+        : await uploadRiderPhotoToCloudinary(imageData, deviceCode);
 
     return successResponse(
       {

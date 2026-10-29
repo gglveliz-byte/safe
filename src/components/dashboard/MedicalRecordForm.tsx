@@ -55,6 +55,7 @@ import { IncidentButton } from "@/components/ui/IncidentButton";
 import { CloudinaryPhotoPicker } from "@/components/medical/CloudinaryPhotoPicker";
 import { ContactsRepeater } from "@/components/medical/ContactsRepeater";
 import { CountrySelect } from "@/components/ui/CountrySelect";
+import { IdCardPhotoPicker } from "@/components/medical/IdCardPhotoPicker";
 
 /** Props públicos del formulario de edición de la ficha médica. */
 export interface MedicalRecordFormProps {
@@ -216,6 +217,31 @@ export function MedicalRecordForm({
               onChange={(e) => onProfileChange({ ...profile, nationalId: e.target.value })}
               required
               className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
+            />
+          </div>
+
+          {/* Subida oficial de credencial de identidad (anverso y reverso) */}
+          <div className="sm:col-span-3 border-t border-brand-separator/60 pt-3">
+            <IdCardPhotoPicker
+              frontUrl={profile.idCardFrontUrl}
+              frontPublicId={profile.idCardFrontPublicId}
+              backUrl={profile.idCardBackUrl}
+              backPublicId={profile.idCardBackPublicId}
+              disabled={isSaving}
+              onFrontChange={(url, publicId) =>
+                onProfileChange({
+                  ...profile,
+                  idCardFrontUrl: url,
+                  idCardFrontPublicId: publicId,
+                })
+              }
+              onBackChange={(url, publicId) =>
+                onProfileChange({
+                  ...profile,
+                  idCardBackUrl: url,
+                  idCardBackPublicId: publicId,
+                })
+              }
             />
           </div>
 
