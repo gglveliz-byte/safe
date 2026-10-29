@@ -373,6 +373,28 @@ export default function AdminPage() {
             isLoading={isLoadingRiders}
             errorMessage={ridersError}
             onRefresh={() => void loadRiders()}
+            onUserStatusChanged={(userId, isActive) => {
+              setRiders((prev) =>
+                prev.map((r) =>
+                  r.id === userId
+                    ? {
+                        ...r,
+                        isActive,
+                        device: r.device
+                          ? {
+                              ...r.device,
+                              status: isActive ? "ACTIVE" : "DISABLED",
+                            }
+                          : null,
+                      }
+                    : r,
+                ),
+              );
+              setNotice(t.admin.accountStatusChangedNotice);
+              setTimeout(() => setNotice(""), 4000);
+              void loadRiders();
+              void loadBatches();
+            }}
             onUserDeleted={() => {
               setDeleteNotice(t.admin.userDeletedNotice);
               setTimeout(() => setDeleteNotice(""), 4000);

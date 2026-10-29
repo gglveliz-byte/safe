@@ -1,16 +1,16 @@
 /**
  * ==============================================================================
  * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
- * MÓDULO: Administración — Usuarios Registrados y Chips Vinculados (SAFE 2026)
+ * MÓDULO: Administración — Tabla de Cuentas y Chips Vinculados (SAFE 2026)
  * ARCHIVO: src/components/admin/RidersTable.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
  * Tabla operativa de cuentas RIDER reales con su chip SAFE vinculado:
  * 1. Búsqueda instantánea local por nombre, correo o folio.
- * 2. Paginación elegante de 20 motociclistas por página para evitar listas infinitas.
- * 3. Actualización contra GET /api/admin/riders.
- * 4. Eliminación de usuario (con chip) vía DELETE /api/admin/riders/:userId.
- * 5. Eliminación de chip individual (libera al usuario) vía DELETE /api/admin/devices/:code.
+ * 2. Filtro rápido por estado de cuenta (Todas, Activas, Desactivadas).
+ * 3. Activación y Desactivación de cuentas sin borrar datos (soft-status).
+ * 4. Paginación elegante de 20 motociclistas por página.
+ * 5. Eliminación de usuario o de chip individual (con confirmación de seguridad).
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 500 líneas físicas.
@@ -27,6 +27,8 @@ import { useHaptic } from "@/hooks/useHaptic";
 import { apiClient } from "@/lib/api-client";
 import type { AdminRiderItem } from "@/lib/api-client";
 import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
+import { ConfirmAccountStatusModal } from "@/components/admin/ConfirmAccountStatusModal";
+import { RiderTableRow } from "@/components/admin/RiderTableRow";
 
 export interface RidersTableProps {
   /** Usuarios RIDER reales con su chip vinculado. */
@@ -37,6 +39,8 @@ export interface RidersTableProps {
   errorMessage: string;
   /** Vuelve a consultar la lista de usuarios. */
   onRefresh: () => void;
+  /** Callback cuando se actualiza el estado de una cuenta. */
+  onUserStatusChanged?: (userId: string, isActive: boolean) => void;
   /** Callback cuando se elimina un usuario (opcional: para UI sync). */
   onUserDeleted?: (userId: string) => void;
   /** Callback cuando se elimina un chip (opcional: para UI sync). */
@@ -45,23 +49,12 @@ export interface RidersTableProps {
 
 const PAGE_SIZE = 20;
 
-/** Convierte una fecha ISO a texto local legible; vacío si no existe. */
-function formatDate(value: string | null, locale: "es" | "en"): string {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-US", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
-}
-
 export function RidersTable({
   riders,
   isLoading,
   errorMessage,
   onRefresh,
+  onUserStatusChanged,
   onUserDeleted,
   onDeviceDeleted,
 }: RidersTableProps) {
@@ -69,8 +62,17 @@ export function RidersTable({
   const { triggerHaptic } = useHaptic();
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "disabled">("all");
 
-  // Estado del modal de confirmación
+  // Estado del modal de activación / desactivación
+  const [statusTarget, setStatusTarget] = useState<{
+    rider: AdminRiderItem;
+    targetActive: boolean;
+  } | null>(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [statusError, setStatusError] = useState("");
+
+  // Estado del modal de confirmación de eliminación
   const [deleteTarget, setDeleteTarget] = useState<
     | { type: "user"; rider: AdminRiderItem }
     | { type: "device"; code: string }
@@ -79,21 +81,21 @@ export function RidersTable({
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
 
-  // Filtrado instantáneo por nombre, correo o folio
+  // Filtrado instantáneo por estado y texto
   const filteredRiders = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return riders;
     return riders.filter((rider) => {
+      if (statusFilter === "active" && !rider.isActive) return false;
+      if (statusFilter === "disabled" && rider.isActive) return false;
+      if (!normalizedQuery) return true;
       const searchable = [
         rider.fullName || "",
         rider.email,
         rider.device?.code || "",
-      ]
-        .join(" ")
-        .toLowerCase();
+      ].join(" ").toLowerCase();
       return searchable.includes(normalizedQuery);
     });
-  }, [query, riders]);
+  }, [query, riders, statusFilter]);
 
   // Paginación de 20 elementos por vista
   const totalPages = Math.max(1, Math.ceil(filteredRiders.length / PAGE_SIZE));
@@ -108,6 +110,41 @@ export function RidersTable({
     if (status === "ACTIVE") return t.common.statusActive;
     if (status === "DISABLED") return t.admin.statusDisabled;
     return t.common.statusUnclaimed;
+  };
+
+  const handleToggleStatus = (rider: AdminRiderItem) => {
+    triggerHaptic("light");
+    setStatusTarget({
+      rider,
+      targetActive: !rider.isActive,
+    });
+    setStatusError("");
+  };
+
+  const handleConfirmStatus = async (): Promise<boolean> => {
+    if (!statusTarget) return false;
+    setIsUpdatingStatus(true);
+    setStatusError("");
+    try {
+      const res = await apiClient.toggleAdminRiderStatus(
+        statusTarget.rider.id,
+        statusTarget.targetActive,
+      );
+      if (!res.success) {
+        throw new Error(res.message || t.common.errorGeneric);
+      }
+      triggerHaptic("success");
+      onUserStatusChanged?.(statusTarget.rider.id, statusTarget.targetActive);
+      onRefresh();
+      return true;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : t.common.errorGeneric;
+      setStatusError(msg);
+      triggerHaptic("error");
+      return false;
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
 
   const handleDeleteUser = (rider: AdminRiderItem) => {
@@ -177,18 +214,58 @@ export function RidersTable({
         </button>
       </div>
 
-      <div className="w-full">
-        <input
-          type="search"
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setPage(1);
-          }}
-          placeholder={t.admin.ridersSearchPlaceholder}
-          aria-label={t.admin.ridersSearchPlaceholder}
-          className="safe-input-focus h-10 w-full px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
-        />
+      {/* Barra de Filtros y Búsqueda */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+        <div className="relative flex-1">
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPage(1);
+            }}
+            placeholder={t.admin.ridersSearchPlaceholder}
+            aria-label={t.admin.ridersSearchPlaceholder}
+            className="safe-input-focus h-10 w-full px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
+          />
+        </div>
+
+        {/* Filtro rápido de estados */}
+        <div className="inline-flex bg-brand-bg-alt border border-brand-border-field rounded-lg p-0.5 self-start sm:self-auto shrink-0 text-xs">
+          <button
+            type="button"
+            onClick={() => { setStatusFilter("all"); setPage(1); }}
+            className={`px-3 py-1.5 rounded-md font-sans font-semibold transition-all cursor-pointer ${
+              statusFilter === "all"
+                ? "bg-brand-white text-brand-navy-dark shadow-xs"
+                : "text-brand-text-desc hover:text-brand-navy-dark"
+            }`}
+          >
+            {t.admin.filterAllAccounts}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setStatusFilter("active"); setPage(1); }}
+            className={`px-3 py-1.5 rounded-md font-sans font-semibold transition-all cursor-pointer ${
+              statusFilter === "active"
+                ? "bg-brand-white text-emerald-800 shadow-xs"
+                : "text-brand-text-desc hover:text-emerald-800"
+            }`}
+          >
+            {t.admin.filterActiveAccounts}
+          </button>
+          <button
+            type="button"
+            onClick={() => { setStatusFilter("disabled"); setPage(1); }}
+            className={`px-3 py-1.5 rounded-md font-sans font-semibold transition-all cursor-pointer ${
+              statusFilter === "disabled"
+                ? "bg-brand-white text-amber-800 shadow-xs"
+                : "text-brand-text-desc hover:text-amber-800"
+            }`}
+          >
+            {t.admin.filterDisabledAccounts}
+          </button>
+        </div>
       </div>
 
       {errorMessage && (
@@ -224,7 +301,7 @@ export function RidersTable({
         </div>
       ) : (
         <div className="border border-brand-border-subtle rounded-xl bg-brand-white overflow-hidden shadow-xs">
-          <div className="hidden md:grid md:grid-cols-[1.5fr_1.1fr_1fr_1fr_1.1fr] gap-3 px-4 py-2.5 bg-brand-bg-alt border-b border-brand-border-subtle text-[11px] font-bold uppercase tracking-wider text-brand-text-muted">
+          <div className="hidden md:grid md:grid-cols-[1.4fr_1fr_1.1fr_1fr_1.3fr] gap-3 px-4 py-2.5 bg-brand-bg-alt border-b border-brand-border-subtle text-[11px] font-bold uppercase tracking-wider text-brand-text-muted">
             <span>{t.admin.columnRider}</span>
             <span>{t.admin.columnChip}</span>
             <span>{t.admin.columnStatus}</span>
@@ -234,115 +311,14 @@ export function RidersTable({
 
           <ul className="divide-y divide-brand-separator">
             {paginatedRiders.map((rider) => (
-              <li
+              <RiderTableRow
                 key={rider.id}
-                className="grid grid-cols-1 md:grid-cols-[1.5fr_1.1fr_1fr_1fr_1.1fr] gap-2 md:gap-3 px-4 py-3 items-center hover:bg-brand-bg-alt/40 transition-colors"
-              >
-                <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="font-serif text-sm font-bold text-brand-navy-dark truncate">
-                    {rider.fullName || t.admin.riderUnnamed}
-                  </span>
-                  <span className="font-sans text-xs text-brand-text-desc truncate">
-                    {rider.email}
-                  </span>
-                  {rider.liveRideActive && (
-                    <span className="inline-flex items-center gap-1.5 font-sans text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full w-fit mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      {t.admin.riderLiveRide}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1 min-w-0">
-                  <span className="md:hidden font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted">
-                    {t.admin.columnChip}
-                  </span>
-                  {rider.device ? (
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-mono text-xs font-bold text-brand-navy-dark tracking-wide">
-                        {rider.device.code}
-                      </span>
-                      <span
-                        className={`self-start font-sans text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
-                          rider.device.isNfcEncoded
-                            ? "bg-brand-nav-active border-brand-nav-blue/30 text-brand-navy-dark"
-                            : "bg-brand-bg-alt border-brand-border-subtle text-brand-text-muted"
-                        }`}
-                      >
-                        {rider.device.isNfcEncoded
-                          ? t.admin.riderNfcEncoded
-                          : t.admin.riderNfcPending}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="font-sans text-xs text-brand-text-muted">
-                      {t.admin.riderNoChip}
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <span className="md:hidden font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted">
-                    {t.admin.columnStatus}
-                  </span>
-                  {rider.device ? (
-                    <span
-                      className={`self-start font-sans text-[11px] font-semibold px-2 py-0.5 rounded-md border ${
-                        rider.device.status === "ACTIVE"
-                          ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                          : rider.device.status === "DISABLED"
-                            ? "bg-slate-100 border-slate-200 text-slate-600"
-                            : "bg-amber-50 border-amber-200 text-amber-800"
-                      }`}
-                    >
-                      {chipStatusLabel(rider.device.status)}
-                    </span>
-                  ) : (
-                    <span className="font-sans text-xs text-brand-text-muted">—</span>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-0.5 text-xs text-brand-text-desc">
-                  <span className="md:hidden font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted">
-                    {t.admin.columnDates}
-                  </span>
-                  <span>
-                    {t.admin.riderRegisteredAt}:{" "}
-                    <strong className="text-brand-navy-dark font-medium">
-                      {formatDate(rider.registeredAt, locale)}
-                    </strong>
-                  </span>
-                  <span>
-                    {t.admin.riderActivatedAt}:{" "}
-                    <strong className="text-brand-navy-dark font-medium">
-                      {rider.device?.activatedAt
-                        ? formatDate(rider.device.activatedAt, locale)
-                        : t.admin.riderNotActivated}
-                    </strong>
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap md:flex-col gap-1.5 md:items-end justify-start pt-1 md:pt-0">
-                  {rider.device && (
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteDevice(rider.device!.code)}
-                      className="min-h-[32px] inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md border border-brand-border-field hover:border-brand-accent/50 hover:bg-rose-50 text-brand-text-desc hover:text-brand-accent transition-all cursor-pointer"
-                    >
-                      <span>🗑️</span>
-                      {t.admin.deleteChipButton}
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteUser(rider)}
-                    className="min-h-[32px] inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-rose-50 border border-brand-accent/30 hover:bg-brand-accent hover:text-white text-brand-accent transition-all cursor-pointer"
-                  >
-                    <span>🗑️</span>
-                    {t.admin.deleteUserButton}
-                  </button>
-                </div>
-              </li>
+                rider={rider}
+                locale={locale}
+                onToggleStatus={handleToggleStatus}
+                onDeleteDevice={handleDeleteDevice}
+                onDeleteUser={handleDeleteUser}
+              />
             ))}
           </ul>
 
@@ -385,6 +361,21 @@ export function RidersTable({
             </div>
           )}
         </div>
+      )}
+
+      {/* Modal de confirmación de activación / desactivación */}
+      {statusTarget && (
+        <ConfirmAccountStatusModal
+          rider={statusTarget.rider}
+          targetActive={statusTarget.targetActive}
+          onConfirm={handleConfirmStatus}
+          onClose={() => {
+            setStatusTarget(null);
+            setStatusError("");
+          }}
+          isLoading={isUpdatingStatus}
+          errorMessage={statusError}
+        />
       )}
 
       {/* Modal de confirmación de eliminación */}

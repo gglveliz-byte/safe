@@ -24,17 +24,8 @@
  */
 
 import type {
-  EmergencyContact,
-  MedicalProfileData,
-  SessionUser,
-  SessionResponse,
-  DashboardResponse,
-  EmergencyAlertResult,
-  AdminDeviceItem,
-  AdminBatchSummary,
-  AdminBatchDetail,
-  AdminRiderItem,
-  CreatedBatchResult,
+  EmergencyContact, MedicalProfileData, SessionUser, SessionResponse, DashboardResponse,
+  EmergencyAlertResult, AdminDeviceItem, AdminBatchSummary, AdminBatchDetail, AdminRiderItem, CreatedBatchResult,
 } from "./api-types";
 import {
   lanzarErrorHttp,
@@ -48,17 +39,8 @@ import {
 export { HttpApiError, ensureContactUuid };
 
 export type {
-  EmergencyContact,
-  MedicalProfileData,
-  SessionUser,
-  SessionResponse,
-  DashboardResponse,
-  EmergencyAlertResult,
-  AdminDeviceItem,
-  AdminBatchSummary,
-  AdminBatchDetail,
-  AdminRiderItem,
-  CreatedBatchResult,
+  EmergencyContact, MedicalProfileData, SessionUser, SessionResponse, DashboardResponse,
+  EmergencyAlertResult, AdminDeviceItem, AdminBatchSummary, AdminBatchDetail, AdminRiderItem, CreatedBatchResult,
 };
 
 export const apiClient = {
@@ -355,6 +337,22 @@ export const apiClient = {
     if (!res.ok) await lanzarErrorHttp(res);
     const json = await res.json();
     return json.data || { riders: [] };
+  },
+
+  /** Activa o desactiva la cuenta de un motociclista en el sistema */
+  async toggleAdminRiderStatus(
+    userId: string,
+    isActive: boolean,
+  ): Promise<{ success: boolean; isActive: boolean; message: string }> {
+    const res = await fetch(`/api/admin/riders/${encodeURIComponent(userId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive }),
+      cache: "no-store",
+    });
+    if (!res.ok) await lanzarErrorHttp(res);
+    const json = await res.json();
+    return json.data || { success: false, isActive, message: "" };
   },
 
   /** Elimina un usuario registrado y su chip vinculado (transacción atómica) */

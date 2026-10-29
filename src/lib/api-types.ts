@@ -146,6 +146,7 @@ export interface AdminRiderItem {
   email: string;
   fullName: string | null;
   photoUrl: string | null;
+  isActive: boolean;
   liveRideActive: boolean;
   registeredAt: string;
   device: AdminRiderDevice | null;

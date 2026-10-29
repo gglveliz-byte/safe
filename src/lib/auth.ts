@@ -48,6 +48,7 @@ export interface AuthenticatedUser {
   id: string;
   email: string;
   role: SessionRole;
+  isActive: boolean;
   liveRideActive: boolean;
   lastKnownLat: number | null;
   lastKnownLng: number | null;
@@ -150,6 +151,7 @@ export async function getSessionUser(
       id: true,
       email: true,
       role: true,
+      isActive: true,
       liveRideActive: true,
       lastKnownLat: true,
       lastKnownLng: true,
@@ -194,6 +196,7 @@ export async function requireRider(
       id: true,
       email: true,
       role: true,
+      isActive: true,
       liveRideActive: true,
       lastKnownLat: true,
       lastKnownLng: true,
@@ -208,6 +211,15 @@ export async function requireRider(
       "UNAUTHORIZED",
       "La cuenta asociada a la sesión no existe en el sistema.",
       401,
+    );
+  }
+
+  // Verificar si la cuenta ha sido desactivada por la administración
+  if (user.isActive === false) {
+    throw new AppError(
+      "FORBIDDEN",
+      "Su cuenta de motociclista se encuentra desactivada temporalmente.",
+      403,
     );
   }
 

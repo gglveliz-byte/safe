@@ -181,17 +181,25 @@ export async function GET(
     // ─────────────────────────────────────────────────────────────────
     const device = await db.device.findUnique({
       where: { code: validatedCode },
-      select: { code: true, status: true, userId: true },
+      select: {
+        code: true,
+        status: true,
+        userId: true,
+        user: { select: { isActive: true } },
+      },
     });
 
     // ─────────────────────────────────────────────────────────────────
     // 4. CASCO INEXISTENTE O DESACTIVADO → 404 HTML BILINGÜE (hallazgo H-03)
-    //    Un casco DISABLED (pérdida, robo o reemplazo) debe mostrarse
-    //    como inerte para evitar que un tercero lo reactive. El contrato
-    //    §9/§11 exige una página HTML humana en español e inglés con el
-    //    diseño Incident, no un JSON técnico incomprensible en la vía.
+    //    Un casco DISABLED (pérdida, robo o reemplazo) o perteneciente a
+    //    una cuenta desactivada debe mostrarse como inerte para evitar que
+    //    un tercero lo reactive o acceda a información clínica.
     // ─────────────────────────────────────────────────────────────────
-    if (!device || device.status === "DISABLED") {
+    if (
+      !device ||
+      device.status === "DISABLED" ||
+      device.user?.isActive === false
+    ) {
       return chipInactiveHtmlResponse();
     }
 

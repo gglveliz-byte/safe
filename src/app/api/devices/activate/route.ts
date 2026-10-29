@@ -171,6 +171,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           email: input.email,
           passwordHash,
           role: "RIDER",
+          isActive: true,
           medicalProfile: {
             create: {
               fullName: input.fullName,
@@ -261,10 +262,17 @@ export async function POST(request: Request): Promise<NextResponse> {
     //     Set-Cookie manual para que el navegador la almacene antes de la
     //     redirección al dashboard.
     const cookie = buildSessionCookie(token);
-    const secureFlag = cookie.options.secure ? "Secure; " : "";
-    const setCookieHeader =
-      `${cookie.name}=${cookie.value}; Max-Age=${cookie.options.maxAge}; ` +
-      `Path=${cookie.options.path}; HttpOnly; SameSite=${cookie.options.sameSite}; ${secureFlag}`;
+    const cookieParts = [
+      `${cookie.name}=${cookie.value}`,
+      `Max-Age=${cookie.options.maxAge}`,
+      `Path=${cookie.options.path}`,
+      "HttpOnly",
+      `SameSite=${cookie.options.sameSite}`,
+    ];
+    if (cookie.options.secure) {
+      cookieParts.push("Secure");
+    }
+    const setCookieHeader = cookieParts.join("; ");
 
     return successResponse(
       {

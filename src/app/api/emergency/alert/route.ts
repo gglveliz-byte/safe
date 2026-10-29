@@ -132,6 +132,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         user: {
           select: {
             id: true,
+            isActive: true,
             lastKnownLat: true,
             lastKnownLng: true,
             medicalProfile: {
@@ -151,7 +152,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     });
 
     // 5. Casco inexistente o no activo → 404 (no se revela si existe pero está inactivo).
-    if (!device || device.status !== "ACTIVE") {
+    if (!device || device.status !== "ACTIVE" || device.user?.isActive === false) {
       throw new AppError("NOT_FOUND", "El casco no está activo.", 404);
     }
 

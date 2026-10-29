@@ -61,6 +61,8 @@ model User {
   // Hash bcrypt de coste 12 (BACKEND_CONTRACTS.md §5); jamás la contraseña plana.
   passwordHash   String
   role           Role      @default(RIDER)
+  // Estado de la cuenta: true = activa, false = desactivada por administración
+  isActive       Boolean   @default(true)
   // Estado del Modo Ruta: true mientras el piloto sale a rodar y late su GPS.
   liveRideActive Boolean   @default(false)
   // Última posición conocida del rider (/api/gps/heartbeat): fallback de la

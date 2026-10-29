@@ -160,6 +160,18 @@ function buildFlatBody(payload: ActivateKitPayload): Record<string, unknown> {
   if (payload.chronicConditions !== undefined) body.chronicConditions = payload.chronicConditions;
   if (payload.medications !== undefined) body.medications = payload.medications;
   if (payload.insuranceInfo !== undefined) body.insuranceInfo = payload.insuranceInfo;
+  if (payload.beneficiaryType !== undefined) body.beneficiaryType = payload.beneficiaryType;
+  if (payload.country !== undefined) body.country = payload.country;
+  if (payload.city !== undefined) body.city = payload.city;
+  if (payload.residentialAddress !== undefined) body.residentialAddress = payload.residentialAddress;
+  if (payload.riderPhone !== undefined) body.riderPhone = payload.riderPhone;
+  if (payload.age !== undefined) body.age = payload.age;
+  if (payload.isOrganDonor !== undefined) body.isOrganDonor = payload.isOrganDonor;
+  if (payload.medicalFindings !== undefined) body.medicalFindings = payload.medicalFindings;
+  if (payload.hasGuardian !== undefined) body.hasGuardian = payload.hasGuardian;
+  if (payload.rescueNotes !== undefined) body.rescueNotes = payload.rescueNotes;
+  if (payload.frequentLocation !== undefined) body.frequentLocation = payload.frequentLocation;
+  if (payload.vehicleInfo !== undefined) body.vehicleInfo = payload.vehicleInfo;
   if (payload.locale !== undefined) body.locale = payload.locale;
 
   return body;

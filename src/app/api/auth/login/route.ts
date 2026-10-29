@@ -7,9 +7,10 @@
  * DESCRIPCIÓN:
  * Endpoint seguro para el inicio de sesión de motociclistas y administradores
  * (POST /api/auth/login). Valida las credenciales contra la base de datos
- * PostgreSQL mediante Bcrypt, aplica protección estricta contra ataques de
- * fuerza bruta (ventanas deslizantes por correo y por IP) mediante el servicio
- * RateLimitBucket, y emite una cookie de sesión HttpOnly segura firmada con jose.
+ * PostgreSQL mediante Bcrypt, verifica que la cuenta no esté desactivada,
+ * aplica protección estricta contra ataques de fuerza bruta (ventanas
+ * deslizantes por correo y por IP) mediante el servicio RateLimitBucket, y
+ * emite una cookie de sesión HttpOnly segura firmada con jose.
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 500 líneas físicas.
@@ -64,6 +65,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         email: true,
         passwordHash: true,
         role: true,
+        isActive: true,
       },
     });
 
@@ -96,10 +98,19 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    // 5. Limpiar historial de intentos fallidos al tener éxito
+    // 5. Verificar que la cuenta no se encuentre desactivada por la administración
+    if (user.isActive === false) {
+      throw new AppError(
+        "FORBIDDEN",
+        "Esta cuenta ha sido desactivada por la administración. Comuníquese con el soporte para asistencia.",
+        403,
+      );
+    }
+
+    // 6. Limpiar historial de intentos fallidos al tener éxito
     await clearRateLimit("login", input.email);
 
-    // 6. Generar JWT firmado con jose HS256
+    // 7. Generar JWT firmado con jose HS256
     const role = user.role as SessionRole;
     const token = await signToken({
       sub: user.id,
@@ -107,7 +118,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       role,
     });
 
-    // 7. Determinar redirección según privilegios
+    // 8. Determinar redirección según privilegios
     const redirect = role === "ADMIN" ? "/admin" : "/dashboard";
 
     const response = successResponse(
@@ -122,7 +133,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       200,
     );
 
-    // 8. Inyectar cookie HttpOnly en la respuesta
+    // 9. Inyectar cookie HttpOnly en la respuesta
     applySessionCookie(response, token);
 
     return response;

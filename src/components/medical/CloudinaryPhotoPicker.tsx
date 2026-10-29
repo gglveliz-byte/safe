@@ -291,11 +291,11 @@ export function CloudinaryPhotoPicker({
           {isUploading && (
             <p
               role="status"
-              className="flex items-center gap-2 mt-3 font-sans text-micro font-bold text-ink"
+              className="flex items-center gap-2 mt-3 font-sans text-xs font-bold text-brand-navy-dark"
             >
               <span
                 aria-hidden="true"
-                className="w-4 h-4 rounded-full border-2 border-ink border-t-mist animate-spin"
+                className="w-4 h-4 rounded-full border-2 border-brand-navy-dark border-t-brand-border-subtle animate-spin"
               />
               {t.common.saving}
             </p>

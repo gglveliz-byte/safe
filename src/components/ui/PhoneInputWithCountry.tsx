@@ -64,7 +64,7 @@ export function PhoneInputWithCountry({
   defaultCountryCode = "EC",
   className = "",
 }: PhoneInputWithCountryProps) {
-  const { locale } = useLocale();
+  const { t } = useLocale();
 
   // Encontrar país por defecto
   const initialCountry =
@@ -107,7 +107,7 @@ export function PhoneInputWithCountry({
     }
   };
 
-  const defaultPlaceholder = placeholder || (locale === "es" ? "Ej. 99 123 4567" : "Ex. 99 123 4567");
+  const defaultPlaceholder = placeholder || t.activate.contactPhonePlaceholder;
 
   return (
     <div className={`flex items-center gap-1.5 w-full ${className}`}>
@@ -117,7 +117,7 @@ export function PhoneInputWithCountry({
           value={selectedCountry.dialCode}
           onChange={handleCountryChange}
           disabled={disabled}
-          aria-label={locale === "es" ? "Prefijo internacional" : "Country calling code"}
+          aria-label={t.activate.callingCodeLabel}
           className="safe-input-focus w-full h-11 min-h-[44px] pl-2.5 pr-7 bg-brand-white border border-brand-border-field rounded-lg font-sans text-xs sm:text-sm font-semibold text-brand-navy-dark cursor-pointer disabled:opacity-50 appearance-none truncate"
         >
           {COUNTRIES.map((c) => (

@@ -50,7 +50,7 @@ export function CountrySelect({
     onChange(code, item);
   };
 
-  const defaultPlaceholder = placeholder || (locale === "es" ? "Selecciona tu país" : "Select your country");
+  const defaultPlaceholder = placeholder || t.activate.countryPlaceholder;
 
   return (
     <div className="relative w-full">

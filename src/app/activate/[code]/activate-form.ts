@@ -113,6 +113,16 @@ function humanizeValidationIssue(issue: ValidationIssue | undefined, t: Dictiona
     password: t.activate.passwordLabel,
     photoUrl: t.activate.photoLabel,
     bloodType: t.activate.bloodTypeLabel,
+    beneficiaryType: t.activate.beneficiaryLabel,
+    country: t.activate.countryLabel,
+    city: t.activate.cityLabel,
+    residentialAddress: t.activate.addressLabel,
+    riderPhone: t.activate.riderPhoneLabel,
+    age: t.activate.ageLabel,
+    medicalFindings: t.activate.medicalFindingsLabel,
+    rescueNotes: t.activate.rescueNotesLabel,
+    frequentLocation: t.activate.frequentLocationLabel,
+    vehicleInfo: t.activate.vehicleInfoLabel,
   };
   const label = labelByRoot[root];
   if (label) {
@@ -140,6 +150,7 @@ export function useActivateForm(code: string, locale: Locale, initialPin?: strin
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Paso 2 — Fotografía de rostro (inicial vacío: sin foto fabricada).
   const [photo, setPhoto] = useState<ActivatePhotoState>({ photoUrl: "" });
@@ -264,6 +275,14 @@ export function useActivateForm(code: string, locale: Locale, initialPin?: strin
     setErrorMessage(null);
     setHasFailed(false);
 
+    // Validación de confirmación de contraseña (safe-security-and-compliance §5)
+    if (password !== confirmPassword) {
+      const t = getDictionary(locale);
+      setErrorMessage(t.activate.errorPasswordsMismatch);
+      setHasFailed(true);
+      return false;
+    }
+
     // Validación estricta: Si eligió OTRO, debe especificar obligatoriamente
     if (bloodType === "OTRO" && !customBloodType.trim()) {
       const t = getDictionary(locale);
@@ -333,13 +352,14 @@ export function useActivateForm(code: string, locale: Locale, initialPin?: strin
     } finally {
       setIsSubmitting(false);
     }
-  }, [buildCandidate, locale]);
+  }, [buildCandidate, locale, password, confirmPassword, bloodType, customBloodType]);
 
   return {
     // Paso 1 — PIN y cuenta (valores + setters individuales).
     pin, setPin, isPinAutoFilled: Boolean(initialPin && pin === initialPin),
     email, setEmail,
     password, setPassword,
+    confirmPassword, setConfirmPassword,
     // Paso 2 — Fotografía real.
     photo, setPhoto,
     // Paso 3 — Identificación y Ubicación

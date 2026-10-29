@@ -151,7 +151,7 @@ export function ContactsRepeater<T extends ContactEditableBase>({
         {/* Selector rápido de cantidad de contactos (1, 2, 3) */}
         <div className="flex items-center gap-1 bg-brand-bg-alt border border-brand-border-subtle p-1 rounded-lg">
           <span className="font-sans text-[11px] font-bold text-brand-text-muted px-2 hidden sm:inline">
-            {locale === "es" ? "Contactos:" : "Contacts:"}
+            {t.activate.contactCountLabel}
           </span>
           {[1, 2, 3].map((num) => {
             const isSelected = contacts.length === num;
@@ -161,13 +161,13 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                 type="button"
                 disabled={disabled}
                 onClick={() => handleSetContactCount(num)}
-                className={`min-h-[36px] px-2.5 py-1 rounded-md font-sans text-xs font-bold transition-all cursor-pointer ${
+                className={`min-h-[44px] px-3 py-1 rounded-md font-sans text-xs font-bold transition-all cursor-pointer ${
                   isSelected
                     ? "bg-brand-navy-dark text-white shadow-xs"
                     : "bg-transparent text-brand-navy-dark hover:bg-brand-border-subtle"
                 }`}
               >
-                {num} {num === 1 ? (locale === "es" ? "Contacto" : "Contact") : (locale === "es" ? "Contactos" : "Contacts")}
+                {num} {num === 1 ? t.activate.singleContactLabel : t.activate.multipleContactsLabel}
               </button>
             );
           })}
@@ -194,8 +194,8 @@ export function ContactsRepeater<T extends ContactEditableBase>({
           {contacts.map((contact, index) => {
             const isFirst = index === 0;
             const requiredBadge = isFirst
-              ? (locale === "es" ? "(Obligatorio)" : "(Required)")
-              : (locale === "es" ? "(Opcional)" : "(Optional)");
+              ? `(${t.activate.contactRequired})`
+              : `(${t.activate.contactOptional})`;
 
             return (
               <div
@@ -209,7 +209,7 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                       #{index + 1}
                     </span>
                     <span className="font-sans text-xs font-bold text-brand-navy-dark truncate">
-                      {contact.name || (locale === "es" ? `Contacto ${index + 1}` : `Contact ${index + 1}`)}{" "}
+                      {contact.name || `${t.activate.contactItemTitle} ${index + 1}`}{" "}
                       <span className="font-normal text-brand-text-muted text-[11px]">{requiredBadge}</span>
                     </span>
                   </div>
@@ -240,7 +240,7 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                       }
                       disabled={disabled}
                       required={isFirst}
-                      placeholder={locale === "es" ? "Ej. María Gómez (Madre)" : "Ex. Mary Smith (Mother)"}
+                      placeholder={t.activate.contactNamePlaceholder}
                       className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
                     />
                   </div>
@@ -257,7 +257,7 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                       }
                       disabled={disabled}
                       required={isFirst}
-                      placeholder={locale === "es" ? "99 123 4567" : "99 123 4567"}
+                      placeholder={t.activate.contactPhonePlaceholder}
                     />
                   </div>
 
@@ -277,7 +277,7 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                       }
                       disabled={disabled}
                       required={isFirst}
-                      placeholder={locale === "es" ? "Ej. Madre, Esposo/a, Hermano" : "Ex. Mother, Spouse, Sibling"}
+                      placeholder={t.activate.contactRelationPlaceholder}
                       className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
                     />
                   </div>
@@ -286,9 +286,7 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                   <div className="flex flex-col gap-1.5">
                     <label className="font-sans text-xs font-semibold text-brand-navy-dark">
                       {t.activate.emailLabel}{" "}
-                      {isFirst && requireEmail
-                        ? "*"
-                        : (locale === "es" ? "(Opcional, pero recomendado)" : "(Optional, recommended)")}
+                      {requireEmail ? "*" : t.activate.optionalRecommended}
                     </label>
                     <input
                       type="email"
@@ -297,7 +295,7 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                         handleFieldChange(contact.id, { email: e.target.value })
                       }
                       disabled={disabled}
-                      required={isFirst && requireEmail}
+                      required={requireEmail}
                       placeholder={t.activate.emailPlaceholder}
                       className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
                     />
@@ -316,9 +314,7 @@ export function ContactsRepeater<T extends ContactEditableBase>({
                     className="h-4 w-4 rounded border-brand-border-field text-brand-navy-dark accent-brand-navy-dark cursor-pointer flex-shrink-0"
                   />
                   <span className="font-sans text-xs font-semibold text-brand-navy-dark">
-                    {locale === "es"
-                      ? "Marcar como contacto de aviso prioritario"
-                      : "Mark as primary emergency contact"}
+                    {t.activate.primaryContactLabel}
                   </span>
                 </label>
               </div>
