@@ -164,6 +164,8 @@ export interface Dictionary {
     registerSubmittingButton: string;
     successAccountTitle: string;
     successAccountSubtitle: string;
+    pendingAccountNotice: string;
+    registeredDriverBadge: string;
     goToLogin: string;
   };
   dashboard: {

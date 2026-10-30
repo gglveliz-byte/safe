@@ -22,18 +22,19 @@
 
 "use client";
 
-import React, { use, useEffect, useRef, Suspense } from "react";
+import React, { use, useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
+import { apiClient } from "@/lib/api-client";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { IncidentAlertBanner } from "@/components/ui/IncidentAlertBanner";
 import { PhoneInputWithCountry } from "@/components/ui/PhoneInputWithCountry";
 
 import { useActivateForm } from "./activate-form";
-import { ActivateSuccessSection } from "./ActivateSuccessSection";
+import { PendingActivationSection } from "./PendingActivationSection";
 
 interface PageProps {
   params: Promise<{ code: string }>;
@@ -55,11 +56,37 @@ function ActivatePageContent({ params }: PageProps) {
   const errorRef = useRef<HTMLDivElement | null>(null);
   const successResult = form.successResult;
 
+  // Estado para detectar si el usuario ya se registró y vuelve a la pantalla para ingresar su PIN
+  const [existingPending, setExistingPending] = useState<{
+    fullName: string;
+    email: string;
+    riderPhone?: string;
+    isPinDispatchMode?: boolean;
+  } | null>(null);
+
   useEffect(() => {
-    if (!successResult) return;
-    const timer = setTimeout(() => router.push(successResult.redirect), 3500);
-    return () => clearTimeout(timer);
-  }, [successResult, router]);
+    let isMounted = true;
+    apiClient
+      .getDashboard()
+      .then((data) => {
+        if (!isMounted) return;
+        // Si el usuario ya tiene sesión y este dispositivo está reservado sin activar (UNCLAIMED)
+        if (data.device && data.device.status === "UNCLAIMED") {
+          setExistingPending({
+            fullName: data.profile?.fullName || data.user.email,
+            email: data.user.email,
+            riderPhone: data.profile?.emergencyNumber || data.profile?.riderPhone || "",
+            isPinDispatchMode: Boolean(data.isPinDispatchMode),
+          });
+        }
+      })
+      .catch(() => {
+        // Sin sesión activa o visitante nuevo; continúa en formulario de registro
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [code]);
 
   useEffect(() => {
     if (form.errorMessage && errorRef.current) {
@@ -89,15 +116,25 @@ function ActivatePageContent({ params }: PageProps) {
     );
   }
 
-  if (successResult) {
+  // Usuario recién registrado o usuario autenticado pendiente de activar su PIN
+  const activePending = successResult
+    ? {
+        fullName: successResult.fullName,
+        email: successResult.email,
+        riderPhone: successResult.riderPhone,
+        isPinDispatchMode: true,
+      }
+    : existingPending;
+
+  if (activePending) {
     return (
-      <ActivateSuccessSection
-        deviceCode={successResult.deviceCode}
-        redirect={successResult.redirect}
-        onNavigate={(path) => router.push(path)}
-        title={t.activate.successAccountTitle}
-        message={t.activate.successAccountSubtitle}
-        buttonText={t.activate.goToLogin}
+      <PendingActivationSection
+        deviceCode={code}
+        fullName={activePending.fullName}
+        email={activePending.email}
+        riderPhone={activePending.riderPhone}
+        isPinDispatchMode={activePending.isPinDispatchMode}
+        onActivated={() => router.push("/dashboard")}
       />
     );
   }

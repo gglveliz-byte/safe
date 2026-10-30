@@ -25,9 +25,11 @@ import { apiClient } from "@/lib/api-client";
 import { type Dictionary, type Locale } from "@/locales";
 
 export interface RegisterSuccessResult {
-  redirect: string;
+  redirect?: string;
   deviceCode: string;
   email: string;
+  fullName: string;
+  riderPhone: string;
 }
 
 export function useActivateForm(code: string, locale: Locale, t: Dictionary) {
@@ -102,6 +104,8 @@ export function useActivateForm(code: string, locale: Locale, t: Dictionary) {
         redirect: redirectUrl,
         deviceCode: code,
         email: email.trim().toLowerCase(),
+        fullName: fullName.trim(),
+        riderPhone: riderPhone.trim(),
       });
       return true;
     } catch (err: unknown) {

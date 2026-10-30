@@ -164,7 +164,9 @@ export const es: Dictionary = {
     registerSubmitButton: "Crear Cuenta de Piloto",
     registerSubmittingButton: "Registrando tu cuenta...",
     successAccountTitle: "¡Cuenta Creada Exitosamente!",
-    successAccountSubtitle: "Tu cuenta de piloto está lista. Ahora inicia sesión para vincular el PIN de tu casco y completar tu ficha médica.",
+    successAccountSubtitle: "Tus datos básicos están registrados y blindados. Ingresa el PIN de 6 dígitos para activar tu kit y acceder a tu ficha médica.",
+    pendingAccountNotice: "Tus datos han sido registrados correctamente en el sistema. Ya no es necesario volver a llenarlos.",
+    registeredDriverBadge: "Datos Confirmados",
     goToLogin: "Iniciar Sesión para Activar",
   },
   dashboard: {

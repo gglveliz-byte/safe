@@ -29,6 +29,7 @@ import { db } from "@/lib/db";
 import { getEnv } from "@/lib/env";
 import { getClientIp } from "@/lib/request";
 import { hmacSha256, decryptSecret } from "@/lib/crypto";
+import { signToken, applySessionCookie } from "@/lib/auth";
 import {
   AppError,
   handleApiError,
@@ -169,15 +170,27 @@ export async function POST(request: Request): Promise<NextResponse> {
         });
     }
 
-    return successResponse(
+    // 8. Emitir sesión autenticada al instante para permitir vincular el PIN sin re-loguearse
+    const token = await signToken({
+      sub: user.id,
+      email: user.email,
+      role: "RIDER",
+    });
+
+    const response = successResponse(
       {
         success: true,
         message: "Cuenta registrada exitosamente.",
         email: user.email,
+        fullName: input.fullName,
+        riderPhone: input.riderPhone,
         deviceCode: input.deviceCode ?? null,
       },
       201,
     );
+
+    applySessionCookie(response, token);
+    return response;
   } catch (error) {
     return handleApiError(error, "auth.register");
   }

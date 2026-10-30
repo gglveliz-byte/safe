@@ -118,8 +118,20 @@ export async function POST(request: Request): Promise<NextResponse> {
       role,
     });
 
-    // 8. Determinar redirección según privilegios
-    const redirect = role === "ADMIN" ? "/admin" : "/dashboard";
+    // 8. Determinar redirección según privilegios y estado de activación del kit
+    let redirect = "/dashboard";
+    if (role === "ADMIN") {
+      redirect = "/admin";
+    } else {
+      // Si el conductor tiene un casco pendiente de activar con PIN, lo regresamos a la activación
+      const pendingDevice = await db.device.findFirst({
+        where: { userId: user.id, status: "UNCLAIMED" },
+        select: { code: true },
+      });
+      if (pendingDevice) {
+        redirect = `/activate/${pendingDevice.code}`;
+      }
+    }
 
     const response = successResponse(
       {

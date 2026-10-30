@@ -99,6 +99,7 @@ export interface DashboardResponse {
     medications?: string | null;
     insuranceInfo?: string | null;
     emergencyNumber?: string | null;
+    riderPhone?: string | null;
     country?: string | null;
     city?: string | null;
     residentialAddress?: string | null;

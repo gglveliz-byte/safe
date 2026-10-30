@@ -164,7 +164,9 @@ export const en: Dictionary = {
     registerSubmitButton: "Create Rider Account",
     registerSubmittingButton: "Creating account...",
     successAccountTitle: "Account Created Successfully!",
-    successAccountSubtitle: "Your rider account is ready. Now log in to link your helmet PIN and configure your medical profile.",
+    successAccountSubtitle: "Your basic details are secured and registered. Enter the 6-digit PIN to activate your kit and access your medical record.",
+    pendingAccountNotice: "Your details have been successfully registered in the system. There is no need to fill them again.",
+    registeredDriverBadge: "Confirmed Details",
     goToLogin: "Log In to Activate",
   },
   dashboard: {
