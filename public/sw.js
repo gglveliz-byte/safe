@@ -101,6 +101,11 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Solo procesar peticiones HTTP y HTTPS (descarta extensiones o esquemas internos)
+  if (!url.protocol.startsWith('http')) {
+    return;
+  }
+
   // No interceptar peticiones de mutación ni de subida de archivos
   if (request.method !== 'GET') {
     return;
@@ -109,6 +114,11 @@ self.addEventListener('fetch', (event) => {
   // C-17 (CRITICAL): las rutas con PII, sesión o PINs se dejan pasar íntegras
   // a la red; el Service Worker no las toca ni las almacena jamás.
   if (isSensitiveApiPath(url.pathname)) {
+    return;
+  }
+
+  // Las rutas de API ordinarias viajan directo al servidor sin caché del SW
+  if (url.pathname.startsWith('/api/') && !url.pathname.startsWith('/api/emergency/')) {
     return;
   }
 
@@ -141,8 +151,8 @@ self.addEventListener('fetch', (event) => {
           if (cachedResponse) {
             return cachedResponse;
           }
-          // Si no está en caché directa, intentar responder con la página raíz o de emergencia
-          return caches.match('/');
+          const rootFallback = await caches.match('/');
+          return rootFallback || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
         })
     );
     return;
@@ -160,7 +170,14 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => cachedResponse);
+        .catch(async () => {
+          if (cachedResponse) return cachedResponse;
+          if (request.mode === 'navigate') {
+            const root = await caches.match('/');
+            if (root) return root;
+          }
+          return new Response(null, { status: 404, statusText: 'Not Found' });
+        });
 
       return cachedResponse || fetchPromise;
     })

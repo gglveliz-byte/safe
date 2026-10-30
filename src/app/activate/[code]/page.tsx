@@ -69,20 +69,23 @@ function ActivatePageContent({ params }: PageProps) {
   useEffect(() => {
     let isMounted = true;
     apiClient
-      .getDashboard()
-      .then((data) => {
-        if (!isMounted) return;
-        if (data.device?.status === "ACTIVE") {
-          router.push("/dashboard");
-          return;
-        }
-        if (data.device && data.device.status === "UNCLAIMED") {
-          setExistingPending({
-            fullName: data.profile?.fullName || data.user.email,
-            email: data.user.email,
-            riderPhone: data.profile?.emergencyNumber || data.profile?.riderPhone || "",
-          });
-        }
+      .getSession()
+      .then((session) => {
+        if (!isMounted || !session.authenticated) return;
+        return apiClient.getDashboard().then((data) => {
+          if (!isMounted) return;
+          if (data.device?.status === "ACTIVE") {
+            router.push("/dashboard");
+            return;
+          }
+          if (data.device && data.device.status === "UNCLAIMED") {
+            setExistingPending({
+              fullName: data.profile?.fullName || data.user.email,
+              email: data.user.email,
+              riderPhone: data.profile?.emergencyNumber || data.profile?.riderPhone || "",
+            });
+          }
+        });
       })
       .catch(() => {
         // Visitante nuevo sin sesión

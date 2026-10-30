@@ -47,7 +47,7 @@
 | `src/components/admin/QrPrintSheet.tsx` | DIRECTOR FRONTEND 2 | ✅ ACTUALIZADO 2026-10-29 (Modo Entrega Asistida: pie de sticker 100% blanco y limpio sin badge ni folios irrelevantes al imprimir con PIN oculto) | 373 |
 | `src/lib/nfc-write-utils.ts` | FIX-D2C (intervención autorizada) | ✅ ACTUALIZADO 2026-10-25 (generateSimulatedNfcUid ELIMINADO; solo UID físico real de Web NFC; buildHelmetGatewayClientUrl, describeNfcError y buildUpdatedDevice intactos) | 92 |
 | `public/manifest.json` | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO | 25 |
-| `public/sw.js` | DIRECTOR FRONTEND 2 | ✅ CORREGIDO (FIX-D2 · C-17 PII fuera de Cache Storage) | 162 |
+| `public/sw.js` | DIRECTOR FRONTEND 2 | ✅ CORREGIDO (FIX-D2 · C-17 PII fuera de Cache Storage; blindaje contra TypeError Response en fetch catch) | 185 |
 | `next.config.ts` | FIX-D2 (consolidación autorizada por el usuario) | ✅ ÚNICA CONFIG ACTIVA (C-18/A-05 · next.config.mjs ELIMINADO · images + CSP) | 106 |
 | `src/hooks/useWakeLock.ts` | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO | 93 |
 | `src/hooks/useHaptic.ts` | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO | 56 |
