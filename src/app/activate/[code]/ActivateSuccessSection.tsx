@@ -55,14 +55,6 @@ export function ActivateSuccessSection({
         <p className="font-sans text-xs sm:text-sm text-brand-text-desc leading-relaxed">
           {message || t.activate.successAccountSubtitle}
         </p>
-        <div className="flex flex-col items-center gap-1.5 p-3.5 bg-brand-bg-alt border border-brand-border-subtle rounded-xl w-full">
-          <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted">
-            {t.dashboard.folioLabel}
-          </span>
-          <span className="font-mono text-base font-bold uppercase tracking-widest text-brand-navy-dark">
-            {deviceCode}
-          </span>
-        </div>
         <button
           type="button"
           className="w-full min-h-[48px] inline-flex items-center justify-center px-6 py-3.5 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary text-sm font-semibold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer mt-2"

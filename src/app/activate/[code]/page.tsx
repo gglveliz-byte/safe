@@ -108,9 +108,6 @@ function ActivatePageContent({ params }: PageProps) {
       <section className="flex flex-col gap-2 border-b border-brand-separator pb-5">
         <div className="flex items-center gap-2.5">
           <BrandLogo size="sm" />
-          <span className="font-mono text-xs font-bold uppercase tracking-widest bg-brand-navy-dark text-white px-3 py-1 rounded-md">
-            {code}
-          </span>
           <span className="font-sans text-xs font-semibold text-brand-text-muted uppercase tracking-wider">
             {t.common.appName} · {t.activate.registerTitle}
           </span>
@@ -123,21 +120,6 @@ function ActivatePageContent({ params }: PageProps) {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
         <div className="bg-brand-white border border-brand-border-subtle rounded-xl p-6 sm:p-7 shadow-sm flex flex-col gap-5 hover:border-brand-border-strong transition-all">
-          {/* Folio / Código de Activación del Kit asignado */}
-          <div className="flex items-center justify-between p-3.5 bg-brand-bg-alt border border-brand-border-subtle rounded-lg">
-            <div className="flex flex-col gap-0.5">
-              <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-brand-text-muted">
-                {t.dashboard.folioLabel}
-              </span>
-              <span className="font-mono text-base font-bold uppercase tracking-widest text-brand-navy-dark">
-                {code}
-              </span>
-            </div>
-            <span className="font-sans text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-md">
-              ✓ {t.common.statusUnclaimed}
-            </span>
-          </div>
-
           {/* Nombre Completo */}
           <div className="flex flex-col gap-1.5">
             <label className={LABEL_CLASS}>{t.activate.fullNameLabel} *</label>
