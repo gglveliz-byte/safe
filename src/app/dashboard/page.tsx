@@ -393,6 +393,47 @@ function DashboardContent() {
           ? t.admin.statusDisabled
           : "";
 
+  // Bloqueo estricto: si el conductor NO tiene un casco activo, no tiene acceso al dashboard
+  if (!device || device.status !== "ACTIVE") {
+    // Si tiene un kit asignado en espera de PIN, lo redirige al flujo de activación de ese kit
+    if (device?.code && device.status === "UNCLAIMED") {
+      router.replace(`/activate/${device.code}`);
+      return (
+        <div className="w-full max-w-lg mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[60vh] gap-3">
+          <span className="w-8 h-8 rounded-full border-2 border-brand-navy-dark border-t-transparent animate-spin" aria-hidden="true" />
+          <p className="font-sans text-xs text-brand-text-muted">Redirigiendo a activación de kit...</p>
+        </div>
+      );
+    }
+
+    // Cuenta sin dispositivo vinculado
+    return (
+      <div className="w-full max-w-xl mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[70vh] gap-6 text-center animate-fadeInUp">
+        <div
+          aria-hidden="true"
+          className="w-16 h-16 rounded-2xl bg-brand-nav-active border border-brand-border-subtle flex items-center justify-center text-3xl shadow-xs"
+        >
+          🛡️
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-brand-navy-dark">
+            {t.dashboard.noChipTitle}
+          </h1>
+          <p className="font-sans text-xs sm:text-sm text-brand-text-desc max-w-md leading-relaxed">
+            {t.dashboard.noChipHelp}
+          </p>
+        </div>
+        {claimCode && (
+          <ClaimDeviceCard
+            prefilledCode={claimCode}
+            onClaimSuccess={loadDashboard}
+            isPinDispatchMode={dashboardData?.isPinDispatchMode}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-4xl mx-auto px-4 py-8 sm:py-12 flex flex-col gap-8 animate-fadeInUp">
       {/* Encabezado del Panel (el cierre de sesión vive en la barra privada) */}
@@ -415,15 +456,6 @@ function DashboardContent() {
           </strong>
         </p>
       </div>
-
-      {/* Fase 2 Onboarding: vinculación de kit físico mediante PIN secreto */}
-      {(!device || device.status !== "ACTIVE") && (
-        <ClaimDeviceCard
-          prefilledCode={device?.code || claimCode}
-          onClaimSuccess={loadDashboard}
-          isPinDispatchMode={dashboardData?.isPinDispatchMode}
-        />
-      )}
 
       {/* BLOQUE ESTRELLA: MODO RUTA EN CARRETERA (WAKELOCK + TELEMETRÍA CADA 20s) */}
       <LiveRideCard
