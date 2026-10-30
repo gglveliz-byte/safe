@@ -253,8 +253,8 @@ export type ActivateDeviceInput = z.infer<typeof ActivateDeviceSchema>;
  */
 export const ClaimDeviceSchema = z
   .object({
-    /** Folio del kit físico (ej. SAFE-0001). */
-    code: DeviceCodeSchema,
+    /** Folio del kit físico (ej. SAFE-0001) - opcional si se resuelve por PIN. */
+    code: DeviceCodeSchema.optional(),
 
     /** PIN confidencial de 6 dígitos que acompaña el kit. */
     pin: PinSchema,

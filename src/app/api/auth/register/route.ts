@@ -28,7 +28,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { getEnv } from "@/lib/env";
 import { getClientIp } from "@/lib/request";
-import { hmacSha256 } from "@/lib/crypto";
+import { hmacSha256, decryptSecret } from "@/lib/crypto";
 import {
   AppError,
   handleApiError,
@@ -36,7 +36,11 @@ import {
   successResponse,
 } from "@/lib/api-response";
 import { RegisterRiderSchema } from "@/lib/schemas/auth.schema";
-import { sendWelcomeEmail } from "@/services/mail.service";
+import {
+  sendWelcomeEmail,
+  sendAdminPinNotificationEmail,
+} from "@/services/mail.service";
+import { getAdminPinDispatchConfig } from "@/services/settings.service";
 import {
   RATE_LIMITS,
   enforceNotBlocked,
@@ -73,9 +77,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     const passwordHash = await bcrypt.hash(input.password, 12);
     const env = getEnv();
 
-    // 5. Transacción atómica: User + MedicalProfile inicial
+    // 5. Transacción atómica: User + MedicalProfile inicial + Reserva de kit
     const user = await db.$transaction(async (tx) => {
-      return tx.user.create({
+      const newUser = await tx.user.create({
         data: {
           email: input.email,
           passwordHash,
@@ -104,6 +108,24 @@ export async function POST(request: Request): Promise<NextResponse> {
           email: true,
         },
       });
+
+      // Si el registro proviene del escaneo de un kit físico, lo reservamos (status sigue UNCLAIMED hasta validar PIN)
+      if (input.deviceCode) {
+        const cleanCode = input.deviceCode.trim().toUpperCase();
+        const candidate = await tx.device.findUnique({
+          where: { code: cleanCode },
+          select: { id: true, status: true, userId: true },
+        });
+
+        if (candidate && candidate.status === "UNCLAIMED" && !candidate.userId) {
+          await tx.device.update({
+            where: { id: candidate.id },
+            data: { userId: newUser.id },
+          });
+        }
+      }
+
+      return newUser;
     });
 
     // 6. Despacho asíncrono y resiliente del correo de bienvenida SAFE 2026
@@ -117,6 +139,35 @@ export async function POST(request: Request): Promise<NextResponse> {
     }).catch((err) => {
       console.error("[SAFE Auth] Error no bloqueante al enviar correo de bienvenida:", err);
     });
+
+    // 7. Notificación administrativa asistida (si el modo está activo y hay folio de kit)
+    if (input.deviceCode) {
+      getAdminPinDispatchConfig()
+        .then(async (config) => {
+          if (!config.enabled || !config.notificationEmail) return;
+
+          const device = await db.device.findUnique({
+            where: { code: input.deviceCode },
+            select: { activationPinEncrypted: true },
+          });
+
+          if (!device?.activationPinEncrypted) return;
+
+          const decryptedPin = decryptSecret(device.activationPinEncrypted);
+          await sendAdminPinNotificationEmail({
+            adminEmail: config.notificationEmail,
+            fullName: input.fullName,
+            riderEmail: user.email,
+            riderPhone: input.riderPhone,
+            deviceCode: input.deviceCode!,
+            pin: decryptedPin,
+            locale: input.locale === "en" ? "en" : "es",
+          });
+        })
+        .catch((err) => {
+          console.error("[SAFE Auth] Error no bloqueante al notificar PIN a admin:", err);
+        });
+    }
 
     return successResponse(
       {

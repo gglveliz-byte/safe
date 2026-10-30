@@ -35,6 +35,8 @@ import {
   HttpApiError,
   buildActivatePayload,
   buildProfileUpdatePayload,
+  apiGetAdminSettings,
+  apiSaveAdminSettings,
 } from "./api-client-helpers";
 
 export { HttpApiError, ensureContactUuid };
@@ -486,4 +488,10 @@ export const apiClient = {
     const json = await res.json();
     return json.data || { success: false, deletedRiders: 0, deletedDevices: 0, message: "" };
   },
+
+  /** Obtiene la configuración administrativa global del sistema */
+  getAdminSettings: apiGetAdminSettings,
+
+  /** Guarda la configuración administrativa global del sistema */
+  saveAdminSettings: apiSaveAdminSettings,
 };

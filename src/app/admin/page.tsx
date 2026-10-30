@@ -43,6 +43,7 @@ import { AdminSkeleton } from "@/components/admin/AdminSkeleton";
 import { CreateBatchModal } from "@/components/admin/CreateBatchModal";
 import { ConfirmPurgeModal } from "@/components/admin/ConfirmPurgeModal";
 import { WhatsAppManager } from "@/components/admin/WhatsAppManager";
+import { PinDispatchSettingsCard } from "@/components/admin/PinDispatchSettingsCard";
 
 type AdminTab = "riders" | "qr" | "whatsapp";
 
@@ -77,6 +78,7 @@ export default function AdminPage() {
   const [showPrintSheet, setShowPrintSheet] = useState(false);
   const [selectedDeviceForNfc, setSelectedDeviceForNfc] = useState<AdminDeviceItem | null>(null);
   const [nfcModalMode, setNfcModalMode] = useState<"write" | "wipe">("write");
+  const [isPinDispatchEnabled, setIsPinDispatchEnabled] = useState(false);
 
   const tRef = useRef(t);
   useEffect(() => {
@@ -412,6 +414,7 @@ export default function AdminPage() {
       {/* Área 2: Lotes e Inventario de chips (Paginado por 20 con ráfaga) */}
       {activeTab === "qr" && (
         <div id="admin-panel-qr" role="tabpanel" aria-labelledby="admin-tab-qr" className="flex flex-col gap-4">
+          <PinDispatchSettingsCard onSettingsChanged={setIsPinDispatchEnabled} />
           <BatchSelector batches={batches} selectedBatchName={selectedBatchName} onSelect={(name) => void handleSelectBatch(name)} />
 
           {selectedBatchName && (
@@ -464,6 +467,7 @@ export default function AdminPage() {
         <QrPrintSheet
           batchName={selectedBatchName}
           devices={devices}
+          hidePin={isPinDispatchEnabled}
           onClose={() => setShowPrintSheet(false)}
         />
       )}

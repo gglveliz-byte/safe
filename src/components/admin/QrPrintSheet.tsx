@@ -30,14 +30,18 @@ import type { AdminDeviceItem } from "@/lib/api-client";
 export interface QrPrintSheetProps {
   batchName: string;
   devices: AdminDeviceItem[];
+  hidePin?: boolean;
   onClose?: () => void;
 }
 
-export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps) {
+export function QrPrintSheet({ batchName, devices, hidePin = false, onClose }: QrPrintSheetProps) {
   const { t } = useLocale();
 
   // Control de montaje en cliente para creación segura del Portal
   const [isMounted, setIsMounted] = useState(false);
+
+  // Modo Ocultar PIN (Entrega Asistida) sincronizado y alternable en caliente
+  const [isHidePin, setIsHidePin] = useState(hidePin);
 
   // URL base dinámica (auto-detectada de LAN / VPS con capacidad de ajuste)
   const [targetBaseUrl, setTargetBaseUrl] = useState(() => resolvePublicBaseUrl());
@@ -50,6 +54,26 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
 
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    setIsHidePin(hidePin);
+  }, [hidePin]);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/admin/settings", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((payload) => {
+        if (!active || !payload?.data) return;
+        if (typeof payload.data.enabled === "boolean") {
+          setIsHidePin(payload.data.enabled);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Cierre accesible con tecla Escape
@@ -196,57 +220,73 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
             </div>
           </div>
 
-          {/* Selector Inteligente de Enlace Base (LAN Wi-Fi / Dominio VPS) */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-brand-separator/60">
-            <span className="font-sans text-xs text-brand-text-desc flex items-center gap-1">
-              <span>🌐</span> Enlace base del kit:
-            </span>
-            {isEditingUrl ? (
-              <div className="flex items-center gap-1.5 flex-1 max-w-sm">
-                <input
-                  type="text"
-                  value={customInputUrl}
-                  onChange={(e) => setCustomInputUrl(e.target.value)}
-                  placeholder="https://tudominio.com o http://192.168.0.35:3000"
-                  className="flex-1 px-2.5 py-1 text-xs font-mono bg-white border border-brand-border-field rounded-md text-brand-navy-dark focus:outline-none focus:ring-1 focus:ring-brand-nav-blue"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (customInputUrl.trim()) {
-                      setTargetBaseUrl(customInputUrl.trim());
-                    }
-                    setIsEditingUrl(false);
-                  }}
-                  className="px-2.5 py-1 text-xs font-semibold bg-brand-navy-dark text-white rounded-md cursor-pointer hover:bg-brand-navy-secondary transition-colors"
-                >
-                  Guardar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsEditingUrl(false)}
-                  className="px-2 py-1 text-xs text-brand-text-muted hover:text-brand-navy-dark cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <code className="font-mono text-xs font-bold text-brand-navy-dark bg-brand-bg-alt px-2 py-0.5 rounded border border-brand-border-subtle">
-                  {targetBaseUrl}
-                </code>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCustomInputUrl(targetBaseUrl);
-                    setIsEditingUrl(true);
-                  }}
-                  className="text-xs text-brand-nav-blue hover:underline cursor-pointer font-medium"
-                >
-                  Cambiar para VPS / Dominio
-                </button>
-              </div>
-            )}
+          {/* Selector Inteligente de Enlace Base y Control de Ocultación de PIN */}
+          <div className="flex flex-wrap items-center justify-between gap-2.5 pt-2 border-t border-brand-separator/60">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-sans text-xs text-brand-text-desc flex items-center gap-1">
+                <span>🌐</span> Enlace base del kit:
+              </span>
+              {isEditingUrl ? (
+                <div className="flex items-center gap-1.5 flex-1 max-w-sm">
+                  <input
+                    type="text"
+                    value={customInputUrl}
+                    onChange={(e) => setCustomInputUrl(e.target.value)}
+                    placeholder="https://tudominio.com o http://192.168.0.35:3000"
+                    className="flex-1 px-2.5 py-1 text-xs font-mono bg-white border border-brand-border-field rounded-md text-brand-navy-dark focus:outline-none focus:ring-1 focus:ring-brand-nav-blue"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (customInputUrl.trim()) {
+                        setTargetBaseUrl(customInputUrl.trim());
+                      }
+                      setIsEditingUrl(false);
+                    }}
+                    className="px-2.5 py-1 text-xs font-semibold bg-brand-navy-dark text-white rounded-md cursor-pointer hover:bg-brand-navy-secondary transition-colors"
+                  >
+                    Guardar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingUrl(false)}
+                    className="px-2 py-1 text-xs text-brand-text-muted hover:text-brand-navy-dark cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <code className="font-mono text-xs font-bold text-brand-navy-dark bg-brand-bg-alt px-2 py-0.5 rounded border border-brand-border-subtle">
+                    {targetBaseUrl}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomInputUrl(targetBaseUrl);
+                      setIsEditingUrl(true);
+                    }}
+                    className="text-xs text-brand-nav-blue hover:underline cursor-pointer font-medium"
+                  >
+                    Cambiar para VPS / Dominio
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Alternador interactivo en vivo: Ocultar PIN en Stickers */}
+            <label className="inline-flex items-center gap-2 px-3 py-1 bg-brand-bg-alt hover:bg-brand-nav-active border border-brand-border-subtle rounded-lg cursor-pointer transition-colors select-none">
+              <input
+                type="checkbox"
+                checked={isHidePin}
+                onChange={(e) => setIsHidePin(e.target.checked)}
+                className="w-4 h-4 text-brand-accent rounded border-brand-border-field focus:ring-brand-nav-blue cursor-pointer"
+              />
+              <span className="font-sans text-xs font-semibold text-brand-navy-dark flex items-center gap-1.5">
+                <span>{isHidePin ? "🔒" : "👁️"}</span>
+                <span>{t.admin.pinDispatchSheetToggle}</span>
+              </span>
+            </label>
           </div>
         </header>
 
@@ -308,12 +348,19 @@ export function QrPrintSheet({ batchName, devices, onClose }: QrPrintSheetProps)
                   <span className="font-mono text-xs font-bold text-brand-navy-dark tracking-widest">
                     {device.code}
                   </span>
-                  <span className="font-sans text-[10px] text-brand-text-desc mt-0.5">
-                    {t.admin.pinLabel}:{" "}
-                    <strong className="font-mono tracking-widest font-semibold text-brand-navy-dark">
-                      {device.activationPin}
-                    </strong>
-                  </span>
+                  {!isHidePin && device.activationPin ? (
+                    <span className="font-sans text-[10px] text-brand-text-desc mt-0.5">
+                      {t.admin.pinLabel}:{" "}
+                      <strong className="font-mono tracking-widest font-semibold text-brand-navy-dark">
+                        {device.activationPin}
+                      </strong>
+                    </span>
+                  ) : (
+                    <span className="font-sans text-[9px] text-brand-accent mt-0.5 uppercase tracking-wider font-bold inline-flex items-center gap-1 bg-brand-accent/5 px-2 py-0.5 rounded border border-brand-accent/20">
+                      <span>🔒</span>
+                      <span>{t.admin.pinHiddenLabel}</span>
+                    </span>
+                  )}
                 </div>
               </div>
             ))}

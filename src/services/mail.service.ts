@@ -33,7 +33,11 @@ import { logEvent } from "@/lib/logger";
 import { buildEmergencyEmailContent, type EmergencyEmailPayload } from "@/services/mail/templates";
 import { buildPasswordResetEmailContent } from "@/services/mail/password-reset-template";
 import { buildWelcomeEmailContent, type WelcomeEmailPayload } from "@/services/mail/welcome-template";
-export type { WelcomeEmailPayload };
+import {
+  buildAdminPinNotificationEmail,
+  type AdminPinNotificationData,
+} from "@/services/mail/admin-pin-notification-template";
+export type { WelcomeEmailPayload, AdminPinNotificationData };
 
 /** Contacto de emergencia tal como lo entrega el perfil médico de PostgreSQL. */
 export interface EmergencyMailRecipient {
@@ -374,3 +378,54 @@ export async function sendWelcomeEmail(params: WelcomeEmailPayload): Promise<boo
     return false;
   }
 }
+
+/**
+ * Despacha el correo de notificación de PIN de activación hacia la dirección del administrador.
+ * Se ejecuta en el Modo Entrega Asistida de PIN cuando un motociclista registra un nuevo kit.
+ *
+ * @param params Datos del registro: adminEmail, fullName, riderEmail, riderPhone, deviceCode, pin y locale.
+ * @returns true si el correo fue aceptado por el transporte SMTP de Gmail.
+ */
+export async function sendAdminPinNotificationEmail(
+  params: AdminPinNotificationData,
+): Promise<boolean> {
+  const normalizedAdminEmail = params.adminEmail.trim().toLowerCase();
+  if (!EMAIL_PATTERN.test(normalizedAdminEmail)) {
+    logEvent("warn", "Intento de envío de PIN admin con correo inválido", {
+      correoOfuscado: normalizedAdminEmail.slice(0, 3) + "***",
+    });
+    return false;
+  }
+
+  const settings = resolveMailSettings();
+  const transporter = obtainTransporter(settings);
+  const content = buildAdminPinNotificationEmail({
+    ...params,
+    adminEmail: normalizedAdminEmail,
+  });
+
+  try {
+    const info = await transporter.sendMail({
+      from: buildFromAddress(settings),
+      to: normalizedAdminEmail,
+      subject: content.subject,
+      text: content.text,
+      html: content.html,
+    });
+
+    logEvent("info", "Correo de notificación de PIN a admin enviado exitosamente", {
+      messageId: info.messageId,
+      deviceCode: params.deviceCode,
+      correoOfuscado: normalizedAdminEmail.slice(0, 3) + "***",
+    });
+    return true;
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    logEvent("error", "Fallo al enviar correo de notificación de PIN a admin", {
+      error: errorMsg.slice(0, MAX_ERROR_LENGTH),
+      deviceCode: params.deviceCode,
+    });
+    return false;
+  }
+}
+

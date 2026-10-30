@@ -338,6 +338,21 @@ export interface Dictionary {
     purgeConfirmPrompt: string;
     purgeConfirmLabel: string;
     chipsWipedCount: string;
+    pinDispatchTitle: string;
+    pinDispatchSubtitle: string;
+    pinDispatchEmailLabel: string;
+    pinDispatchEmailRequired: string;
+    pinDispatchEmailInvalid: string;
+    pinDispatchSaveButton: string;
+    pinDispatchSavedNotice: string;
+    pinDispatchActiveTip: string;
+    pinDispatchActiveDesc: string;
+    pinDispatchInactiveTip: string;
+    pinDispatchInactiveDesc: string;
+    pinHiddenLabel: string;
+    pinDispatchSheetToggle: string;
+    statusActive: string;
+    statusInactive: string;
   };
   login: {
     title: string; subtitle: string; emailLabel: string;

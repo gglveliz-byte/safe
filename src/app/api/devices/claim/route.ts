@@ -27,6 +27,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { requireRider } from "@/lib/auth";
 import { getClientIp } from "@/lib/request";
+import { decryptSecret } from "@/lib/crypto";
 import {
   AppError,
   errorResponse,
@@ -51,16 +52,25 @@ export async function POST(request: Request): Promise<NextResponse> {
     const { user } = await requireRider(request);
     const ip = getClientIp(request);
 
-    // 2. Validar cuerpo con Zod (folio y PIN de 6 dígitos)
+    // 2. Validar cuerpo con Zod (folio opcional y PIN de 6 dígitos)
     const input = await parseJsonBody(request, ClaimDeviceSchema);
 
     // 3. Protección anti-fuerza-bruta en PIN (5 fallos -> 15 min de bloqueo)
-    const throttleKey = `${input.code}:${ip}`;
+    const throttleKey = `${user.id}:${ip}`;
     await ensureThrottleAllowed("pin", throttleKey, pinPolicy());
 
-    // 4. Buscar el dispositivo en base de datos
-    const device = await db.device.findUnique({
-      where: { code: input.code },
+    // 4. Localizar el dispositivo (reserva del usuario, folio explícito o resolución automática por PIN)
+    let device: {
+      id: string;
+      code: string;
+      status: string;
+      userId: string | null;
+      activationPinHash: string;
+    } | null = null;
+
+    // Verificar si el usuario ya tiene un kit reservado por haber escaneado un QR al registrarse
+    const userReserved = await db.device.findFirst({
+      where: { userId: user.id },
       select: {
         id: true,
         code: true,
@@ -70,12 +80,71 @@ export async function POST(request: Request): Promise<NextResponse> {
       },
     });
 
-    if (!device || device.status === "DISABLED") {
-      throw new AppError(
-        "NOT_FOUND",
-        "El kit de seguridad no fue encontrado o se encuentra deshabilitado.",
-        404,
-      );
+    const targetCode = input.code ? input.code.trim().toUpperCase() : userReserved?.code;
+
+    if (targetCode) {
+      device = await db.device.findUnique({
+        where: { code: targetCode },
+        select: {
+          id: true,
+          code: true,
+          status: true,
+          userId: true,
+          activationPinHash: true,
+        },
+      });
+
+      if (!device || device.status === "DISABLED") {
+        throw new AppError(
+          "NOT_FOUND",
+          "El kit de seguridad no fue encontrado o se encuentra deshabilitado.",
+          404,
+        );
+      }
+
+      const isPinValid = await bcrypt.compare(input.pin, device.activationPinHash);
+      if (!isPinValid) {
+        await registerThrottleFailure("pin", throttleKey, pinPolicy());
+        return errorResponse(
+          "FORBIDDEN",
+          `El código PIN de activación no corresponde a tu casco ${device.code}.`,
+          403,
+        );
+      }
+    } else {
+      // Resolución automática: busca entre los kits no reclamados cuál coincide con el PIN
+      const unclaimed = await db.device.findMany({
+        where: { status: "UNCLAIMED", userId: null },
+        select: {
+          id: true,
+          code: true,
+          status: true,
+          userId: true,
+          activationPinHash: true,
+          activationPinEncrypted: true,
+        },
+      });
+
+      for (const candidate of unclaimed) {
+        if (!candidate.activationPinEncrypted) continue;
+        try {
+          if (decryptSecret(candidate.activationPinEncrypted) === input.pin.trim()) {
+            device = candidate;
+            break;
+          }
+        } catch {
+          // Descarte silencioso de fallas de descifrado
+        }
+      }
+
+      if (!device) {
+        await registerThrottleFailure("pin", throttleKey, pinPolicy());
+        return errorResponse(
+          "FORBIDDEN",
+          "El código PIN de activación no corresponde a ningún kit disponible o ya fue activado.",
+          403,
+        );
+      }
     }
 
     // 5. Comprobar si ya está vinculado a otro usuario diferente
@@ -84,18 +153,6 @@ export async function POST(request: Request): Promise<NextResponse> {
         "VALIDATION_ERROR",
         "Este kit de seguridad ya se encuentra vinculado a otra cuenta.",
         409,
-      );
-    }
-
-    // 6. Verificar PIN confidencial con bcrypt
-    const isPinValid = await bcrypt.compare(input.pin, device.activationPinHash);
-
-    if (!isPinValid) {
-      await registerThrottleFailure("pin", throttleKey, pinPolicy());
-      return errorResponse(
-        "FORBIDDEN",
-        "El código PIN de activación es incorrecto. Verifica los 6 dígitos del kit.",
-        403,
       );
     }
 

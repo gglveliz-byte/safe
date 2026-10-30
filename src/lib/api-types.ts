@@ -198,7 +198,7 @@ export interface RegisterRiderResponse {
 }
 
 export interface ClaimDevicePayload {
-  code: string;
+  code?: string;
   pin: string;
 }
 

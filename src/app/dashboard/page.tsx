@@ -417,9 +417,9 @@ function DashboardContent() {
       </div>
 
       {/* Fase 2 Onboarding: vinculación de kit físico mediante PIN secreto */}
-      {!device && (
+      {(!device || device.status !== "ACTIVE") && (
         <ClaimDeviceCard
-          prefilledCode={claimCode}
+          prefilledCode={device?.code || claimCode}
           onClaimSuccess={loadDashboard}
         />
       )}

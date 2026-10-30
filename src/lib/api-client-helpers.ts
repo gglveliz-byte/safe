@@ -214,3 +214,26 @@ export function buildProfileUpdatePayload(
     emergencyContacts: normalizedContacts,
   };
 }
+
+/** Obtiene la configuración administrativa global del sistema */
+export async function apiGetAdminSettings(): Promise<{ enabled: boolean; notificationEmail: string }> {
+  const res = await fetch("/api/admin/settings", { cache: "no-store" });
+  if (!res.ok) await lanzarErrorHttp(res);
+  const json = await res.json();
+  return json.data || { enabled: false, notificationEmail: "" };
+}
+
+/** Actualiza la configuración administrativa global del sistema */
+export async function apiSaveAdminSettings(data: {
+  enabled: boolean;
+  notificationEmail: string;
+}): Promise<{ success: boolean; message: string }> {
+  const res = await fetch("/api/admin/settings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) await lanzarErrorHttp(res);
+  const json = await res.json();
+  return json.data || { success: true, message: "" };
+}

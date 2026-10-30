@@ -58,12 +58,13 @@ function LoginScreen() {
       try {
         const session = await apiClient.getSession();
         if (isMounted && session.authenticated && session.user) {
-          if (safeRedirect === "/admin" && session.user.role !== "ADMIN") {
-            return;
-          }
-          const destination =
+          const isRider = session.user.role !== "ADMIN";
+          let destination =
             safeRedirect ||
             (session.user.role === "ADMIN" ? "/admin" : "/dashboard");
+          if (isRider && destination.startsWith("/admin")) {
+            destination = "/dashboard";
+          }
           router.replace(destination);
         }
       } catch {
@@ -86,10 +87,14 @@ function LoginScreen() {
       const res = await apiClient.login({ email, password });
       triggerHaptic("success");
 
-      const destination =
+      const isRider = res.user?.role !== "ADMIN";
+      let destination =
         safeRedirect ||
         res.redirect ||
         (res.user?.role === "ADMIN" ? "/admin" : "/dashboard");
+      if (isRider && destination.startsWith("/admin")) {
+        destination = "/dashboard";
+      }
       router.push(destination);
     } catch (err: unknown) {
       triggerHaptic("error");
@@ -111,14 +116,20 @@ function LoginScreen() {
           </div>
           <div className="flex items-center justify-center gap-2 mb-1">
             <span className="w-2.5 h-2.5 rounded-full bg-brand-accent animate-pulse" aria-hidden="true" />
-            <span className="font-sans text-[11px] font-bold uppercase tracking-widest text-brand-text-muted">
+            <span
+              suppressHydrationWarning
+              className="font-sans text-[11px] font-bold uppercase tracking-widest text-brand-text-muted"
+            >
               {t.common.riderLogin}
             </span>
           </div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-brand-navy-dark leading-tight">
+          <h1
+            suppressHydrationWarning
+            className="font-serif text-2xl sm:text-3xl font-bold text-brand-navy-dark leading-tight"
+          >
             {t.login.title}
           </h1>
-          <p className="font-sans text-xs sm:text-sm text-brand-text-desc">
+          <p suppressHydrationWarning className="font-sans text-xs sm:text-sm text-brand-text-desc">
             {t.login.subtitle}
           </p>
         </div>

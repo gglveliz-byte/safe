@@ -51,14 +51,8 @@ export function ClaimDeviceCard({
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    const cleanCode = code.trim().toUpperCase();
+    const cleanCode = code ? code.trim().toUpperCase() : undefined;
     const cleanPin = pin.trim();
-
-    if (!cleanCode) {
-      setErrorMessage(`${t.dashboard.claimCodeLabel}: ${t.common.requiredField}`);
-      triggerHaptic("warning");
-      return;
-    }
 
     if (!cleanPin || cleanPin.length !== 6) {
       setErrorMessage(t.activate.errorPinInvalid);
@@ -71,7 +65,7 @@ export function ClaimDeviceCard({
 
     try {
       const res = await apiClient.claimDevice({
-        code: cleanCode,
+        ...(cleanCode ? { code: cleanCode } : {}),
         pin: cleanPin,
       });
 
@@ -111,45 +105,36 @@ export function ClaimDeviceCard({
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Folio del Dispositivo */}
-          <div className="flex flex-col gap-1.5">
-            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
-              {t.dashboard.claimCodeLabel} *
-            </label>
-            <input
-              type="text"
-              required
-              disabled={isSubmitting}
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="SAFE-0001"
-              className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-mono text-base font-bold uppercase tracking-wider text-brand-navy-dark placeholder-brand-text-muted"
-            />
+        {code && (
+          <div className="flex items-center justify-center gap-2 py-0.5">
+            <span className="font-sans text-[11px] font-semibold text-brand-text-muted uppercase tracking-wider">
+              {t.dashboard.folioLabel || "Kit"}:
+            </span>
+            <span className="font-mono text-xs font-bold bg-brand-navy-dark text-white px-2.5 py-0.5 rounded shadow-xs tracking-wider">
+              {code}
+            </span>
           </div>
+        )}
 
-          {/* PIN Confidencial de 6 dígitos */}
-          <div className="flex flex-col gap-1.5">
-            <label className="font-sans text-xs font-semibold text-brand-navy-dark">
-              {t.dashboard.claimPinLabel} *
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              required
-              disabled={isSubmitting}
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-              placeholder={t.dashboard.claimPinPlaceholder}
-              className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-mono text-lg font-bold tracking-widest text-center text-brand-navy-dark placeholder-brand-text-muted"
-            />
-          </div>
+        <div className="flex flex-col items-center gap-2.5 max-w-sm mx-auto w-full py-1">
+          <label className="font-sans text-xs font-semibold text-brand-navy-dark text-center">
+            {t.dashboard.claimPinLabel} *
+          </label>
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            required
+            disabled={isSubmitting}
+            value={pin}
+            onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+            placeholder={t.dashboard.claimPinPlaceholder}
+            className="safe-input-focus w-full h-14 min-h-[56px] px-4 bg-brand-white border-2 border-brand-navy-dark rounded-xl font-mono text-2xl font-bold tracking-[0.35em] text-center text-brand-navy-dark placeholder-brand-text-muted/40 shadow-inner"
+          />
+          <p className="font-sans text-xs text-brand-text-muted text-center">
+            {t.dashboard.claimPinHelp}
+          </p>
         </div>
-
-        <p className="font-sans text-xs text-brand-text-muted">
-          {t.dashboard.claimPinHelp}
-        </p>
 
         {errorMessage && (
           <IncidentAlertBanner type="emergency" message={errorMessage} />

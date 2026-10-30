@@ -41,7 +41,9 @@ function notifyLocaleSubscribers(newLocale: Locale) {
 }
 
 export function useLocale() {
-  const [locale, setLocaleState] = useState<Locale>(currentGlobalLocale);
+  const [locale, setLocaleState] = useState<Locale>(() =>
+    isLocaleInitialized ? currentGlobalLocale : "es"
+  );
   const [mounted, setMounted] = useState<boolean>(false);
 
   // Inicialización y sincronización en cliente
