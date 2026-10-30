@@ -161,7 +161,7 @@ export const es: Dictionary = {
     errorPinInvalid: "El código de activación no coincide con el registro físico del kit.",
     registerTitle: "CREA TU CUENTA DE PILOTO",
     registerSubtitle: "Registra tus datos básicos para habilitar tu cuenta e iniciar la activación de tu kit.",
-    registerSubmitButton: "Crear Cuenta de Piloto",
+    registerSubmitButton: "Crear Cuenta y Activar Casco",
     registerSubmittingButton: "Registrando tu cuenta...",
     successAccountTitle: "¡Cuenta Creada Exitosamente!",
     successAccountSubtitle: "Tus datos básicos están registrados y blindados. Ingresa el PIN de 6 dígitos para activar tu kit y acceder a tu ficha médica.",

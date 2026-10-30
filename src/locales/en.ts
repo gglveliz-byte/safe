@@ -161,7 +161,7 @@ export const en: Dictionary = {
     errorPinInvalid: "The activation code does not match the physical kit record.",
     registerTitle: "CREATE YOUR RIDER ACCOUNT",
     registerSubtitle: "Enter your basic info to create your account and begin kit activation.",
-    registerSubmitButton: "Create Rider Account",
+    registerSubmitButton: "Create Account & Activate Helmet",
     registerSubmittingButton: "Creating account...",
     successAccountTitle: "Account Created Successfully!",
     successAccountSubtitle: "Your basic details are secured and registered. Enter the 6-digit PIN to activate your kit and access your medical record.",
