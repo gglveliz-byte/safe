@@ -28,12 +28,16 @@ export interface ClaimDeviceCardProps {
   prefilledCode?: string;
   onClaimSuccess: () => Promise<void> | void;
   isPinDispatchMode?: boolean;
+  disabled?: boolean;
+  disabledMessage?: string;
 }
 
 export function ClaimDeviceCard({
   prefilledCode = "",
   onClaimSuccess,
   isPinDispatchMode = false,
+  disabled = false,
+  disabledMessage = "",
 }: ClaimDeviceCardProps) {
   const { t } = useLocale();
   const { triggerHaptic } = useHaptic();
@@ -88,20 +92,35 @@ export function ClaimDeviceCard({
   };
 
   return (
-    <div className="w-full bg-brand-white border-2 border-brand-accent/40 rounded-xl p-6 sm:p-7 shadow-sm flex flex-col gap-5 animate-fadeInUp">
+    <div
+      className={`w-full rounded-xl p-6 sm:p-7 shadow-sm flex flex-col gap-5 transition-all ${
+        disabled
+          ? "bg-brand-bg-alt/60 border-2 border-dashed border-brand-border-strong/50 opacity-70 select-none"
+          : "bg-brand-white border-2 border-brand-accent/50 animate-fadeInUp"
+      }`}
+    >
       <div className="flex items-start gap-3 border-b border-brand-separator pb-4">
         <div
           aria-hidden="true"
           className="w-12 h-12 rounded-xl bg-brand-nav-active border border-brand-border-subtle flex items-center justify-center text-2xl shrink-0"
         >
-          ⛑️
+          {disabled ? "🔒" : "⛑️"}
         </div>
         <div className="flex flex-col gap-1">
-          <h2 className="font-serif font-bold text-xl sm:text-2xl text-brand-navy-dark leading-tight">
-            {t.dashboard.claimTitle}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-serif font-bold text-xl sm:text-2xl text-brand-navy-dark leading-tight">
+              {t.dashboard.claimTitle}
+            </h2>
+            {disabled && (
+              <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                🔒 {t.activate.step2Title}
+              </span>
+            )}
+          </div>
           <p className="font-sans text-xs sm:text-sm text-brand-text-desc leading-relaxed">
-            {t.dashboard.claimSubtitle}
+            {disabled
+              ? disabledMessage || t.activate.step2LockedHelp
+              : t.dashboard.claimSubtitle}
           </p>
         </div>
       </div>
@@ -127,16 +146,20 @@ export function ClaimDeviceCard({
             inputMode="numeric"
             maxLength={6}
             required
-            disabled={isSubmitting}
+            disabled={disabled || isSubmitting}
             value={pin}
             onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-            placeholder={t.dashboard.claimPinPlaceholder}
-            className="safe-input-focus w-full h-14 min-h-[56px] px-4 bg-brand-white border-2 border-brand-navy-dark rounded-xl font-mono text-2xl font-bold tracking-[0.35em] text-center text-brand-navy-dark placeholder-brand-text-muted/40 shadow-inner"
+            placeholder={disabled ? "••••••" : t.dashboard.claimPinPlaceholder}
+            className={`safe-input-focus w-full h-14 min-h-[56px] px-4 bg-brand-white border-2 border-brand-navy-dark rounded-xl font-mono text-2xl font-bold tracking-[0.35em] text-center text-brand-navy-dark placeholder-brand-text-muted/40 shadow-inner ${
+              disabled ? "cursor-not-allowed opacity-50 bg-brand-bg-alt" : ""
+            }`}
           />
           <p className="font-sans text-xs text-brand-text-muted text-center">
-            {isPinDispatchMode
-              ? t.dashboard.claimPinHelpAssisted
-              : t.dashboard.claimPinHelp}
+            {disabled
+              ? disabledMessage || t.activate.step2LockedHelp
+              : isPinDispatchMode
+                ? t.dashboard.claimPinHelpAssisted
+                : t.dashboard.claimPinHelp}
           </p>
         </div>
 
@@ -152,8 +175,8 @@ export function ClaimDeviceCard({
 
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="w-full min-h-[48px] inline-flex items-center justify-center px-6 py-3.5 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary text-sm font-semibold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed mt-1"
+          disabled={disabled || isSubmitting}
+          className="w-full min-h-[48px] inline-flex items-center justify-center px-6 py-3.5 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary text-sm font-semibold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed mt-1"
         >
           {isSubmitting ? (
             <span className="flex items-center gap-2">
@@ -163,6 +186,8 @@ export function ClaimDeviceCard({
               </svg>
               {t.dashboard.claimingButton}
             </span>
+          ) : disabled ? (
+            `🔒 ${t.dashboard.claimButton}`
           ) : (
             t.dashboard.claimButton
           )}

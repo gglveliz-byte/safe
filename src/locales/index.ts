@@ -162,6 +162,10 @@ export interface Dictionary {
     registerSubtitle: string;
     registerSubmitButton: string;
     registerSubmittingButton: string;
+    codeRequestedNotice: string;
+    step1Title: string;
+    step2Title: string;
+    step2LockedHelp: string;
     successAccountTitle: string;
     successAccountSubtitle: string;
     pendingAccountNotice: string;
