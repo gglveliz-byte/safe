@@ -55,7 +55,6 @@ import { IncidentHairline } from "@/components/ui/IncidentHairline";
 import { LiveRideCard } from "@/components/dashboard/LiveRideCard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { MedicalRecordForm } from "@/components/dashboard/MedicalRecordForm";
-import { ClaimDeviceCard } from "@/components/dashboard/ClaimDeviceCard";
 
 /**
  * Calcula la distancia Haversine en metros entre dos coordenadas decimales.
@@ -395,9 +394,9 @@ function DashboardContent() {
 
   // Bloqueo estricto: si el conductor NO tiene un casco activo, no tiene acceso al dashboard
   if (!device || device.status !== "ACTIVE") {
-    // Si tiene un kit asignado en espera de PIN, lo redirige al flujo de activación de ese kit
-    if (device?.code && device.status === "UNCLAIMED") {
-      router.replace(`/activate/${device.code}`);
+    const pendingCode = device?.code && device.status === "UNCLAIMED" ? device.code : claimCode;
+    if (pendingCode) {
+      router.replace(`/activate/${pendingCode}`);
       return (
         <div className="w-full max-w-lg mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[60vh] gap-3">
           <span className="w-8 h-8 rounded-full border-2 border-brand-navy-dark border-t-transparent animate-spin" aria-hidden="true" />
@@ -406,7 +405,7 @@ function DashboardContent() {
       );
     }
 
-    // Cuenta sin dispositivo vinculado
+    // Cuenta sin dispositivo vinculado: aviso informativo para escanear el casco físico
     return (
       <div className="w-full max-w-xl mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[70vh] gap-6 text-center animate-fadeInUp">
         <div
@@ -415,7 +414,7 @@ function DashboardContent() {
         >
           🛡️
         </div>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2">
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-brand-navy-dark">
             {t.dashboard.noChipTitle}
           </h1>
@@ -423,13 +422,13 @@ function DashboardContent() {
             {t.dashboard.noChipHelp}
           </p>
         </div>
-        {claimCode && (
-          <ClaimDeviceCard
-            prefilledCode={claimCode}
-            onClaimSuccess={loadDashboard}
-            isPinDispatchMode={dashboardData?.isPinDispatchMode}
-          />
-        )}
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="min-h-[44px] px-6 py-2.5 bg-brand-navy-dark text-white rounded-lg text-sm font-semibold hover:bg-brand-navy-secondary transition-all cursor-pointer"
+        >
+          {t.common.backToHome}
+        </button>
       </div>
     );
   }

@@ -26,7 +26,7 @@
 | Recurso | Custodio | Estado | Líneas |
 | :--- | :--- | :--- | :--- |
 | `src/app/login/page.tsx` | DIRECTOR FRONTEND 2 | ✅ CORREGIDO (FIX-D2 · C-9/C-20/M-1/M-25) | 232 |
-| `src/app/dashboard/page.tsx` | DIRECTOR FRONTEND 2 | ✅ CORREGIDO Y PARTICIONADO (FIX-D2 · C-19/C-10/C-11/C-12/M-20/I4 · blindaje de acceso a dashboard: expulsión automática si no está ACTIVE) | 491 |
+| `src/app/dashboard/page.tsx` | DIRECTOR FRONTEND 2 | ✅ CORREGIDO Y PARTICIONADO (FIX-D2 · erradicado ClaimDeviceCard del dashboard: si no está activo se redirige a /activate/[code]; el dashboard solo muestra Modo Ruta y Ficha Médica) | 489 |
 | `src/components/dashboard/DashboardSkeleton.tsx` | FIX-D2 (intervención autorizada por el usuario) | ✅ CREADO (C-10) | 68 |
 | `src/components/dashboard/MedicalRecordForm.tsx` | FIX-D2 (intervención autorizada por el usuario) | ✅ CREADO (C-19/M-19/C-16) | 254 |
 | `src/app/admin/page.tsx` | DIRECTOR FRONTEND 2 | ✅ REORGANIZADO 2026-10-25 (consola en 2 áreas: Usuarios/Chips + Generador QR · simulador eliminado · sin navbar/footer público · métricas globales reales · `tRef` estable: conmutar ES/EN ya no re-inicializa ni parpadea el skeleton) | 368 |
