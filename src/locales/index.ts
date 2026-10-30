@@ -166,6 +166,10 @@ export interface Dictionary {
     step1Title: string;
     step2Title: string;
     step2LockedHelp: string;
+    activateAccountButton: string;
+    activatingAccountButton: string;
+    pinSectionTitle: string;
+    pinHelpNotice: string;
     successAccountTitle: string;
     successAccountSubtitle: string;
     pendingAccountNotice: string;
