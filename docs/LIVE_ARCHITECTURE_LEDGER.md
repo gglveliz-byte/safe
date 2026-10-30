@@ -44,7 +44,7 @@
 | `src/components/admin/BatchDeviceList.tsx` | DIRECTOR FRONTEND 2 | ✅ REORGANIZADO 2026-10-25 (inventario del lote + impresión QR + grabador NFC real; botón de simulador ELIMINADO) | 153 |
 | `src/components/admin/NfcBurstWriterModal.tsx` | DIRECTOR FRONTEND 2 | ✅ RECONSTRUIDO (FIX-D2C · B-1 dominio real, C-1 UID físico real con scan/onreading, C-2 tira secuencial, C-3 sin status fabricado, M-3/M-4/M-5/M-22) | 354 |
 | `src/components/admin/NfcSimulatorModal.tsx` | DIRECTOR FRONTEND 2 | 🗑️ ELIMINADO 2026-10-25 (prohibido en producción: solo grabador NFC físico) | — |
-| `src/components/admin/QrPrintSheet.tsx` | DIRECTOR FRONTEND 2 | ✅ CORREGIDO (FIX-D2C · B-2 QR 100% local con lib `qrcode` — api.qrserver.com y safe.app erradicados, M-24 textos al diccionario) | 179 |
+| `src/components/admin/QrPrintSheet.tsx` | DIRECTOR FRONTEND 2 | ✅ ACTUALIZADO 2026-10-29 (Modo Entrega Asistida: pie de sticker 100% blanco y limpio sin badge ni folios irrelevantes al imprimir con PIN oculto) | 373 |
 | `src/lib/nfc-write-utils.ts` | FIX-D2C (intervención autorizada) | ✅ ACTUALIZADO 2026-10-25 (generateSimulatedNfcUid ELIMINADO; solo UID físico real de Web NFC; buildHelmetGatewayClientUrl, describeNfcError y buildUpdatedDevice intactos) | 92 |
 | `public/manifest.json` | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO | 25 |
 | `public/sw.js` | DIRECTOR FRONTEND 2 | ✅ CORREGIDO (FIX-D2 · C-17 PII fuera de Cache Storage) | 162 |
