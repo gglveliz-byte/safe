@@ -182,6 +182,7 @@ export const en: Dictionary = {
     claimPinLabel: "Secret Activation PIN (6 digits)",
     claimPinPlaceholder: "123456",
     claimPinHelp: "Enter the 6-digit PIN included with your kit to securely activate it.",
+    claimPinHelpAssisted: "Enter the 6-digit PIN that will be sent to you by your advisor or administrator to securely activate it.",
     claimButton: "Activate and Link Helmet",
     claimingButton: "Verifying PIN and linking...",
     claimSuccess: "Helmet linked successfully! Your kit is now active.",

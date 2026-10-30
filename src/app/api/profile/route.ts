@@ -33,6 +33,7 @@ import {
 } from "@/lib/api-response";
 import { requireRider } from "@/lib/auth";
 import { ProfileUpdateSchema } from "@/lib/schemas/profile.schema";
+import { getAdminPinDispatchConfig } from "@/services/settings.service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,20 +45,23 @@ export async function GET(request: Request): Promise<NextResponse> {
   try {
     const { user } = await requireRider(request);
 
-    const fullRecord = await db.user.findUnique({
-      where: { id: user.id },
-      include: {
-        medicalProfile: true,
-        device: {
-          select: {
-            code: true,
-            status: true,
-            isNfcEncoded: true,
-            createdAt: true,
+    const [fullRecord, pinDispatchConfig] = await Promise.all([
+      db.user.findUnique({
+        where: { id: user.id },
+        include: {
+          medicalProfile: true,
+          device: {
+            select: {
+              code: true,
+              status: true,
+              isNfcEncoded: true,
+              createdAt: true,
+            },
           },
         },
-      },
-    });
+      }),
+      getAdminPinDispatchConfig(),
+    ]);
 
     if (!fullRecord) {
       throw new AppError("NOT_FOUND", "Usuario no encontrado.", 404);
@@ -76,6 +80,7 @@ export async function GET(request: Request): Promise<NextResponse> {
         },
         profile: fullRecord.medicalProfile,
         device: fullRecord.device,
+        isPinDispatchMode: pinDispatchConfig.enabled,
       },
       200,
     );

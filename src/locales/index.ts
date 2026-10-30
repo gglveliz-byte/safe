@@ -181,6 +181,7 @@ export interface Dictionary {
     claimPinLabel: string;
     claimPinPlaceholder: string;
     claimPinHelp: string;
+    claimPinHelpAssisted: string;
     claimButton: string;
     claimingButton: string;
     claimSuccess: string;

@@ -182,6 +182,7 @@ export const es: Dictionary = {
     claimPinLabel: "Código Secreto de Activación (PIN de 6 dígitos)",
     claimPinPlaceholder: "123456",
     claimPinHelp: "Ingresa el PIN de 6 dígitos que vino con tu kit para activarlo de forma segura.",
+    claimPinHelpAssisted: "Ingresa el PIN de 6 dígitos que te enviará tu asesor o administrador para activarlo de forma segura.",
     claimButton: "Activar y Vincular mi Casco",
     claimingButton: "Verificando PIN y vinculando...",
     claimSuccess: "¡Casco vinculado exitosamente! Tu kit ahora está activo.",

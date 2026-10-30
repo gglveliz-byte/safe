@@ -421,6 +421,7 @@ function DashboardContent() {
         <ClaimDeviceCard
           prefilledCode={device?.code || claimCode}
           onClaimSuccess={loadDashboard}
+          isPinDispatchMode={dashboardData?.isPinDispatchMode}
         />
       )}
 

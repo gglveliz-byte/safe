@@ -116,6 +116,7 @@ export interface DashboardResponse {
     isNfcEncoded: boolean;
     createdAt: string;
   } | null;
+  isPinDispatchMode?: boolean;
 }
 
 export interface EmergencyAlertResult {

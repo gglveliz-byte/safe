@@ -27,11 +27,13 @@ import { IncidentAlertBanner } from "@/components/ui/IncidentAlertBanner";
 export interface ClaimDeviceCardProps {
   prefilledCode?: string;
   onClaimSuccess: () => Promise<void> | void;
+  isPinDispatchMode?: boolean;
 }
 
 export function ClaimDeviceCard({
   prefilledCode = "",
   onClaimSuccess,
+  isPinDispatchMode = false,
 }: ClaimDeviceCardProps) {
   const { t } = useLocale();
   const { triggerHaptic } = useHaptic();
@@ -132,7 +134,9 @@ export function ClaimDeviceCard({
             className="safe-input-focus w-full h-14 min-h-[56px] px-4 bg-brand-white border-2 border-brand-navy-dark rounded-xl font-mono text-2xl font-bold tracking-[0.35em] text-center text-brand-navy-dark placeholder-brand-text-muted/40 shadow-inner"
           />
           <p className="font-sans text-xs text-brand-text-muted text-center">
-            {t.dashboard.claimPinHelp}
+            {isPinDispatchMode
+              ? t.dashboard.claimPinHelpAssisted
+              : t.dashboard.claimPinHelp}
           </p>
         </div>
 

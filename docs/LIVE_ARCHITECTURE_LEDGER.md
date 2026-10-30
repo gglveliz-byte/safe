@@ -26,7 +26,7 @@
 | Recurso | Custodio | Estado | Líneas |
 | :--- | :--- | :--- | :--- |
 | `src/app/login/page.tsx` | DIRECTOR FRONTEND 2 | ✅ CORREGIDO (FIX-D2 · C-9/C-20/M-1/M-25) | 232 |
-| `src/app/dashboard/page.tsx` | DIRECTOR FRONTEND 2 | ✅ CORREGIDO Y PARTICIONADO (FIX-D2 · C-19/C-10/C-11/C-12/M-20/I4) | 344 |
+| `src/app/dashboard/page.tsx` | DIRECTOR FRONTEND 2 | ✅ CORREGIDO Y PARTICIONADO (FIX-D2 · C-19/C-10/C-11/C-12/M-20/I4 · sincronizado con Modo Entrega Asistida de PIN) | 459 |
 | `src/components/dashboard/DashboardSkeleton.tsx` | FIX-D2 (intervención autorizada por el usuario) | ✅ CREADO (C-10) | 68 |
 | `src/components/dashboard/MedicalRecordForm.tsx` | FIX-D2 (intervención autorizada por el usuario) | ✅ CREADO (C-19/M-19/C-16) | 254 |
 | `src/app/admin/page.tsx` | DIRECTOR FRONTEND 2 | ✅ REORGANIZADO 2026-10-25 (consola en 2 áreas: Usuarios/Chips + Generador QR · simulador eliminado · sin navbar/footer público · métricas globales reales · `tRef` estable: conmutar ES/EN ya no re-inicializa ni parpadea el skeleton) | 368 |
@@ -52,9 +52,9 @@
 | `src/hooks/useWakeLock.ts` | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO | 93 |
 | `src/hooks/useHaptic.ts` | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO | 56 |
 | `src/hooks/useLocale.ts` | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO | 82 |
-| `src/locales/index.ts` | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO | 250 |
-| `src/locales/es.ts` | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO | 237 |
-| `src/locales/en.ts` | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO | 237 |
+| `src/locales/index.ts` | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO (claimPinHelpAssisted añadido) | 478 |
+| `src/locales/es.ts` | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO (claimPinHelpAssisted bilingüe) | 491 |
+| `src/locales/en.ts` | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO (claimPinHelpAssisted bilingüe) | 491 |
 | `src/lib/api-types.ts` (certificación previa FIX-D2A) | DIRECTOR FRONTEND 2 | ✅ CERTIFICADO (ver actualización 2026-10-25 arriba) | 130 |
 | `src/lib/api-client.ts` | DIRECTOR FRONTEND 2 | ✅ ACTUALIZADO 2026-10-25 (getAdminRiders tipado; FIX-D2A conservado: B3 null→undefined, C5-C8 mocks erradicados, M7-M10; recordNfcWrite devuelve el device real) | 427 |
 | `src/lib/api-types.ts` | DIRECTOR FRONTEND 2 | ✅ ACTUALIZADO 2026-10-25 (AdminRiderItem + AdminRiderDevice; AdminBatchSummary.unclaimedDevices) | 139 |
