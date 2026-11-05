@@ -128,6 +128,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
     if (input.frequentLocation !== undefined) updateData.frequentLocation = input.frequentLocation || null;
     if (input.vehicleInfo !== undefined) updateData.vehicleInfo = input.vehicleInfo || null;
     if (input.emergencyContacts !== undefined) updateData.emergencyContacts = input.emergencyContacts;
+    if (input.locale !== undefined) updateData.locale = input.locale;
 
     const updatedProfile = await db.medicalProfile.update({
       where: { userId: user.id },

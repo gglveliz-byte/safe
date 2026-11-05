@@ -189,6 +189,7 @@ function DashboardContent() {
           rescueNotes: data.profile.rescueNotes || "",
           frequentLocation: data.profile.frequentLocation || "",
           vehicleInfo: data.profile.vehicleInfo || "",
+          locale: data.profile.locale === "en" ? "en" : "es",
           contacts: formattedContacts,
         });
       }

@@ -195,6 +195,10 @@ export const en: Dictionary = {
     riderMapLocateBtn: "Detect my current location",
     riderMapOpenMaps: "Google Maps",
     riderMapLoading: "Loading GPS map...",
+    alertLanguageLabel: "Alert & Notification Language",
+    alertLanguageHelp: "Sets the language your contacts will receive emails and WhatsApp messages in when your chip is scanned.",
+    alertLanguageEs: "🇪🇸 Español (Alerts in Spanish)",
+    alertLanguageEn: "🇬🇧 English (Alerts in English)",
   },
   admin: {
     title: "ALTUS-CHIP ADMINISTRATION CENTER",

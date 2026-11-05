@@ -336,6 +336,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           googleMapsUrl: mapsData.googleMapsUrl,
           dmsFormatted: mapsData.dmsFormatted,
           alertId: alert.id,
+          locale: profileLocale === "en" ? "en" : "es",
         });
         whatsAppSentCount = waResult.sentCount;
       } catch (waErr: unknown) {

@@ -68,15 +68,10 @@ export interface ListPhoneNumbersResult {
 
 /** Parámetros para envío de notificación basada en plantilla */
 export interface SendTemplateParams {
-  /** Teléfono de destino (se normaliza automáticamente a E.164 sin +) */
   to: string;
-  /** Nombre exacto de la plantilla aprobada en Meta */
   templateName: string;
-  /** Código de idioma, ej: 'es', 'es_ES', 'en' */
   languageCode?: string;
-  /** Variables de texto del cuerpo (body), en orden {{1}}, {{2}}, etc. */
   bodyParameters?: string[];
-  /** ID del número remitente en Meta si se manejan múltiples líneas */
   fromPhoneNumberId?: string;
 }
 
@@ -206,17 +201,10 @@ export async function listWhatsAppTemplates(
   }
 
   try {
-    const queryParams = new URLSearchParams({
-      phone_number_id: targetId,
-      limit: "50",
-    });
-
+    const queryParams = new URLSearchParams({ phone_number_id: targetId, limit: "50" });
     const response = await fetch(`${NEUROAPI_BASE_URL}/neuroapi/messaging/templates?${queryParams.toString()}`, {
       method: "GET",
-      headers: {
-        "x-api-key": apiKey,
-        "Accept": "application/json",
-      },
+      headers: { "x-api-key": apiKey, Accept: "application/json" },
       cache: "no-store",
     });
 
@@ -339,10 +327,7 @@ export async function sendWhatsAppNotification(
   try {
     const response = await fetch(`${NEUROAPI_BASE_URL}/neuroapi/messaging/send`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-      },
+      headers: { "Content-Type": "application/json", "x-api-key": apiKey },
       body: JSON.stringify(payload),
     });
 
@@ -438,9 +423,10 @@ export interface EmergencyAlertWhatsAppPayload {
   googleMapsUrl?: string;
   dmsFormatted?: string;
   alertId: string;
+  locale?: "es" | "en";
 }
 
-/** Despacha notificaciones de auxilio vía WhatsApp oficial a contactos de emergencia */
+/** Despacha notificaciones de auxilio vía WhatsApp oficial a contactos de emergencia en su idioma preferido */
 export async function sendEmergencyWhatsAppAlerts(
   payload: EmergencyAlertWhatsAppPayload,
   templateName?: string,
@@ -448,7 +434,13 @@ export async function sendEmergencyWhatsAppAlerts(
   const apiKey = getNeuroApiKey();
   if (!apiKey || payload.contacts.length === 0) return { sentCount: 0, errors: [] };
 
-  const tplName = (templateName || process.env.NEUROAPI_EMERGENCY_TEMPLATE || "alerta_emergencia_altuschip").trim();
+  const isEn = payload.locale === "en";
+  const defaultTpl = isEn
+    ? (process.env.NEUROAPI_EMERGENCY_TEMPLATE_EN || "alerta_emergencia_altuschip_en")
+    : (process.env.NEUROAPI_EMERGENCY_TEMPLATE || "alerta_emergencia_altuschip");
+  const tplName = (templateName || defaultTpl).trim();
+  const langCode = isEn ? "en" : "es";
+
   let sentCount = 0;
   const errors: string[] = [];
 
@@ -457,21 +449,23 @@ export async function sendEmergencyWhatsAppAlerts(
       const cleanPhone = formatE164Phone(contact.phone);
       if (cleanPhone.length < 8) continue;
 
-      // Formato elegante unificado en {{1}}: familiar + piloto juntos
-      const unifiedRecipient = contact.relation
-        ? `${contact.name} (${contact.relation} de ${payload.riderName})`
-        : `${contact.name} (familiar de ${payload.riderName})`;
+      // Formato elegante unificado en {{1}}: familiar + piloto juntos en el idioma del piloto
+      const unifiedRecipient = isEn
+        ? (contact.relation
+            ? `${contact.name} (${contact.relation} of ${payload.riderName})`
+            : `${contact.name} (family contact of ${payload.riderName})`)
+        : (contact.relation
+            ? `${contact.name} (${contact.relation} de ${payload.riderName})`
+            : `${contact.name} (familiar de ${payload.riderName})`);
 
-      const bodyParameters = [
-        unifiedRecipient,
-        payload.bloodType || "Desconocido",
-        payload.googleMapsUrl || "Ubicación satelital en proceso",
-      ];
+      const bloodVal = payload.bloodType || (isEn ? "Unknown" : "Desconocido");
+      const mapsVal = payload.googleMapsUrl || (isEn ? "Satellite location in progress" : "Ubicación satelital en proceso");
+      const bodyParameters = [unifiedRecipient, bloodVal, mapsVal];
 
       const res = await sendWhatsAppNotification({
         to: cleanPhone,
         templateName: tplName,
-        languageCode: "es",
+        languageCode: langCode,
         bodyParameters,
       });
 
@@ -488,6 +482,7 @@ export async function sendEmergencyWhatsAppAlerts(
 
   logEvent("info", "Despacho de alertas de auxilio WhatsApp completado", {
     alertId: payload.alertId,
+    idioma: langCode,
     totalContactos: payload.contacts.length,
     enviadosExitosos: sentCount,
     errores: errors.length > 0 ? errors : undefined,

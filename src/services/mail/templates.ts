@@ -289,19 +289,27 @@ function renderHtmlBlock(
 }
 
 /**
- * Documento HTML completo: lienzo de concreto, tarjeta papel con baliza Signal
- * Orange en la cúspide, bloque ES arriba, separador capilar bilingüe y bloque
- * EN debajo, con pie técnico que repite el folio de la alerta.
+ * Documento HTML completo en el idioma seleccionado por el motociclista ("es" | "en"):
+ * lienzo de concreto, tarjeta papel con baliza Signal Orange en la cúspide,
+ * bloque único con titular editorial, tabla técnica y pie con folio auditable.
  */
 function renderHtmlDocument(
   payload: EmergencyEmailPayload,
   locale: "es" | "en",
   recipientName?: string,
 ): string {
+  const isEn = locale === "en";
+  const docTitle = isEn
+    ? "ALTUS-CHIP · Medical Emergency Alert"
+    : "ALTUS-CHIP · Alerta médica de emergencia";
+  const footerLegal = isEn
+    ? `ALTUS-CHIP · Protected emergency medical record · Alert ID: ${escapeHtml(payload.alertId)}`
+    : `ALTUS-CHIP · Registro médico de emergencia protegido · Folio: ${escapeHtml(payload.alertId)}`;
+
   return (
     `<!DOCTYPE html><html lang="${locale}"><head><meta charset="utf-8" />` +
     `<meta name="viewport" content="width=device-width, initial-scale=1" />` +
-    `<title>ALTUS-CHIP · Alerta médica / Medical alert</title></head>` +
+    `<title>${docTitle}</title></head>` +
     `<body style="margin:0;padding:0;background-color:${COLOR_CONCRETE};">` +
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${COLOR_CONCRETE};"><tr><td align="center" style="padding:24px 12px;">` +
     `<table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:640px;background-color:${COLOR_PAPER};border:1px solid ${COLOR_INK};border-radius:12px;box-shadow:${CARD_SHADOW};">` +
@@ -310,10 +318,8 @@ function renderHtmlDocument(
     `<span style="font-family:${FONT_TIMES};font-size:24px;font-weight:700;letter-spacing:4px;color:${COLOR_INK};">ALTUS-CHIP</span>` +
     `<span style="display:block;margin-top:6px;font-family:${FONT_ARIAL};font-size:13px;letter-spacing:1px;text-transform:uppercase;color:${COLOR_INK};">${escapeHtml(BLOCK_COPY[locale].kicker)}</span>` +
     `</td></tr>` +
-    `<tr><td style="padding:24px;">${renderHtmlBlock("es", payload, recipientName)}</td></tr>` +
-    `<tr><td style="padding:0 24px;"><div style="border-top:1px solid ${COLOR_INK};padding-top:10px;font-family:${FONT_ARIAL};font-size:13px;letter-spacing:1px;text-transform:uppercase;color:${COLOR_INK};">Aviso completo también en inglés · Full notice in Spanish above</div></td></tr>` +
-    `<tr><td style="padding:24px;border-top:1px solid ${COLOR_HAIRLINE};">${renderHtmlBlock("en", payload, recipientName)}</td></tr>` +
-    `<tr><td style="padding:14px 24px;background-color:${COLOR_CONCRETE};border-top:1px solid ${COLOR_INK};font-family:${FONT_ARIAL};font-size:13px;color:${COLOR_INK};">ALTUS-CHIP · Registro médico de emergencia protegido · Protected emergency medical record · Folio / Alert ID: ${escapeHtml(payload.alertId)}</td></tr>` +
+    `<tr><td style="padding:24px;">${renderHtmlBlock(locale, payload, recipientName)}</td></tr>` +
+    `<tr><td style="padding:14px 24px;background-color:${COLOR_CONCRETE};border-top:1px solid ${COLOR_INK};font-family:${FONT_ARIAL};font-size:13px;color:${COLOR_INK};">${footerLegal}</td></tr>` +
     `</table></td></tr></table></body></html>`
   );
 }
@@ -348,30 +354,35 @@ function renderTextBlock(
   ].join("\n");
 }
 
-/** Ensambla la versión en texto plano bilingüe separada por líneas capilares. */
-function renderTextDocument(payload: EmergencyEmailPayload, recipientName?: string): string {
-  const divider = "-".repeat(28);
+/** Ensambla la versión en texto plano en el idioma preferido del conductor. */
+function renderTextDocument(
+  payload: EmergencyEmailPayload,
+  locale: "es" | "en",
+  recipientName?: string,
+): string {
+  const isEn = locale === "en";
+  const headerTitle = isEn
+    ? "ALTUS-CHIP - EMERGENCY MEDICAL ALERT"
+    : "ALTUS-CHIP - ALERTA MEDICA DE EMERGENCIA";
+  const footerLabel = isEn ? "Alert ID" : "Folio";
   return [
-    "ALTUS-CHIP - ALERTA MEDICA / EMERGENCY MEDICAL ALERT",
-    "=====================================================",
-    renderTextBlock("es", payload, recipientName),
-    divider,
-    renderTextBlock("en", payload, recipientName),
-    divider,
-    `ALTUS-CHIP · Folio / Alert ID: ${payload.alertId}`,
+    headerTitle,
+    "=".repeat(headerTitle.length),
+    renderTextBlock(locale, payload, recipientName),
+    "-".repeat(28),
+    `ALTUS-CHIP · ${footerLabel}: ${payload.alertId}`,
   ].join("\n\n");
 }
 
 /**
  * Punto de entrada congelado por `docs/BACKEND_CONTRACTS.md` §8: compone el
- * EmailContent del aviso para un destinatario concreto. El asunto sigue el
- * `locale` recibido (§11) y cada bloque del documento saluda en su propio
- * idioma; el resto del correo es siempre bilingüe ES+EN en un mismo mensaje.
+ * EmailContent del aviso para un destinatario concreto.
+ * Despacha exclusivamente en el idioma seleccionado por el motociclista ("es" | "en").
  *
  * @param payload Ficha dinámica de la alerta originada en la base de datos.
- * @param locale Idioma del asunto y del aviso prioritario ("es" | "en").
+ * @param locale Idioma seleccionado por el motociclista ("es" | "en").
  * @param recipientName Nombre opcional del contacto para el saludo.
- * @returns Asunto, HTML bilingüe escapado y texto plano listos para Nodemailer.
+ * @returns Asunto, HTML escapado y texto plano listos para Nodemailer.
  */
 export function buildEmergencyEmailContent(
   payload: EmergencyEmailPayload,
@@ -381,6 +392,6 @@ export function buildEmergencyEmailContent(
   return {
     subject: buildSubject(payload.riderName, locale),
     html: renderHtmlDocument(payload, locale, recipientName),
-    text: renderTextDocument(payload, recipientName),
+    text: renderTextDocument(payload, locale, recipientName),
   };
 }

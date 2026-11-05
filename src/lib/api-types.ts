@@ -56,6 +56,7 @@ export interface MedicalProfileData {
   rescueNotes?: string | null;
   frequentLocation?: string | null;
   vehicleInfo?: string | null;
+  locale?: "es" | "en" | null;
   contacts: EmergencyContact[];
   emergencyContacts?: EmergencyContact[];
 }
@@ -107,6 +108,7 @@ export interface DashboardResponse {
     rescueNotes?: string | null;
     frequentLocation?: string | null;
     vehicleInfo?: string | null;
+  locale?: "es" | "en" | null;
     emergencyContacts: EmergencyContact[];
     consentAcceptedAt?: string;
     consentVersion?: string;

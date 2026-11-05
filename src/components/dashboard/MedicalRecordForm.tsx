@@ -229,18 +229,10 @@ export function MedicalRecordForm({
               backPublicId={profile.idCardBackPublicId}
               disabled={isSaving}
               onFrontChange={(url, publicId) =>
-                onProfileChange({
-                  ...profile,
-                  idCardFrontUrl: url,
-                  idCardFrontPublicId: publicId,
-                })
+                onProfileChange({ ...profile, idCardFrontUrl: url, idCardFrontPublicId: publicId })
               }
               onBackChange={(url, publicId) =>
-                onProfileChange({
-                  ...profile,
-                  idCardBackUrl: url,
-                  idCardBackPublicId: publicId,
-                })
+                onProfileChange({ ...profile, idCardBackUrl: url, idCardBackPublicId: publicId })
               }
             />
           </div>
@@ -253,11 +245,7 @@ export function MedicalRecordForm({
               type="text"
               value={profile.insuranceInfo || profile.insurance || ""}
               onChange={(e) =>
-                onProfileChange({
-                  ...profile,
-                  insuranceInfo: e.target.value,
-                  insurance: e.target.value,
-                })
+                onProfileChange({ ...profile, insuranceInfo: e.target.value, insurance: e.target.value })
               }
               className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
             />
@@ -342,11 +330,7 @@ export function MedicalRecordForm({
               rows={3}
               value={profile.chronicConditions || profile.conditions || ""}
               onChange={(e) =>
-                onProfileChange({
-                  ...profile,
-                  chronicConditions: e.target.value,
-                  conditions: e.target.value,
-                })
+                onProfileChange({ ...profile, chronicConditions: e.target.value, conditions: e.target.value })
               }
               className="safe-input-focus p-3 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted resize-none"
             />
@@ -418,6 +402,45 @@ export function MedicalRecordForm({
                 placeholder={t.activate.vehicleInfoPlaceholder}
                 className="safe-input-focus h-11 min-h-[44px] px-3.5 bg-brand-white border border-brand-border-field rounded-lg font-sans text-sm text-brand-navy-dark placeholder-brand-text-muted"
               />
+            </div>
+
+            {/* Selector Oficial de Idioma de Alertas de Emergencia */}
+            <div className="flex flex-col gap-1.5 sm:col-span-2 bg-brand-bg-alt p-3.5 rounded-xl border border-brand-border-subtle">
+              <label className="font-sans text-xs font-bold text-brand-navy-dark flex items-center gap-2">
+                <svg className="w-4 h-4 text-brand-nav-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                </svg>
+                {t.dashboard.alertLanguageLabel}
+              </label>
+              <p className="font-sans text-xs text-brand-text-muted">
+                {t.dashboard.alertLanguageHelp}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={() => onProfileChange({ ...profile, locale: "es" })}
+                  className={`min-h-[44px] px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left flex items-center justify-between cursor-pointer ${
+                    (profile.locale || "es") === "es"
+                      ? "bg-brand-white border-brand-navy-dark text-brand-navy-dark shadow-2xs ring-1 ring-brand-navy-dark"
+                      : "bg-brand-white/60 border-brand-border-field text-brand-text-muted hover:border-brand-border-strong"
+                  }`}
+                >
+                  <span>{t.dashboard.alertLanguageEs}</span>
+                  {(profile.locale || "es") === "es" && <span className="text-brand-navy-dark font-bold">✓</span>}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onProfileChange({ ...profile, locale: "en" })}
+                  className={`min-h-[44px] px-3 py-2 text-xs font-semibold rounded-lg border transition-all text-left flex items-center justify-between cursor-pointer ${
+                    profile.locale === "en"
+                      ? "bg-brand-white border-brand-navy-dark text-brand-navy-dark shadow-2xs ring-1 ring-brand-navy-dark"
+                      : "bg-brand-white/60 border-brand-border-field text-brand-text-muted hover:border-brand-border-strong"
+                  }`}
+                >
+                  <span>{t.dashboard.alertLanguageEn}</span>
+                  {profile.locale === "en" && <span className="text-brand-navy-dark font-bold">✓</span>}
+                </button>
+              </div>
             </div>
           </div>
         </div>

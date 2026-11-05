@@ -135,6 +135,9 @@ export const ProfileUpdateSchema = z
 
     /** Contactos familiares autorizados para recibir alertas (1 a 20). */
     emergencyContacts: EmergencyContactsSchema.optional(),
+
+    /** Idioma preferido del conductor para correos y avisos de emergencia ("es" | "en") */
+    locale: z.enum(["es", "en"]).optional(),
   })
   .strict()
   .refine((data) => Object.values(data).some((value) => value !== undefined), {
