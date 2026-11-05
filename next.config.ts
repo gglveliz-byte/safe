@@ -46,9 +46,9 @@ import type { NextConfig } from "next";
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https://res.cloudinary.com https://*.googleapis.com https://*.googleusercontent.com",
-  "connect-src 'self' ws: wss: https://*.neon.tech https://api.cloudinary.com",
+  "style-src 'self' 'unsafe-inline' https://unpkg.com",
+  "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org https://*.googleapis.com https://*.googleusercontent.com",
+  "connect-src 'self' ws: wss: https://*.neon.tech https://api.cloudinary.com https://*.basemaps.cartocdn.com",
   "font-src 'self'",
   "frame-ancestors 'none'",
   "base-uri 'self'",
@@ -66,7 +66,7 @@ const nextConfig: NextConfig = {
     "nodemailer",
     "qrcode",
   ],
-  // Optimización de imágenes remotas (Cloudinary y Google User Content para fotografía del casco)
+  // Optimización de imágenes remotas (Cloudinary, Google User Content y Unsplash para vitrina comercial)
   images: {
     remotePatterns: [
       {
@@ -76,6 +76,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
       },
     ],
   },
