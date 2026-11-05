@@ -66,15 +66,15 @@ export function BrandLogo({
 
   const logoImage = (
     <div
-      className={`relative rounded-full overflow-hidden bg-brand-navy-dark flex-shrink-0 select-none ${sizeClass} ${ringClass} ${className}`}
+      className={`relative rounded-full overflow-hidden bg-brand-white flex-shrink-0 select-none ${sizeClass} ${ringClass} ${className}`}
     >
       <Image
-        src="/branding/safe-logo-dark.jpg"
-        alt="SAFE — Medical Protection Network"
+        src="/branding/altuschip-logo.png"
+        alt={`${t.common.appName} — Emergencia Médica`}
         fill
         sizes="(max-width: 768px) 48px, 96px"
         priority
-        className="object-cover scale-[1.38] -translate-y-[8%] transition-transform duration-300 group-hover:scale-[1.46]"
+        className="object-cover scale-[1.05] transition-transform duration-300 group-hover:scale-110"
       />
     </div>
   );

@@ -440,28 +440,28 @@ export interface Dictionary {
     demoClose: string;
   };
   legal: {
-    termsTitle: string;
-    termsSubtitle: string;
-    privacyTitle: string;
-    privacySubtitle: string;
-    lastUpdated: string;
-    termsSection1Title: string;
-    termsSection1Body: string;
-    termsSection2Title: string;
-    termsSection2Body: string;
-    termsSection3Title: string;
-    termsSection3Body: string;
-    termsSection4Title: string;
-    termsSection4Body: string;
-    privacySection1Title: string;
-    privacySection1Body: string;
-    privacySection2Title: string;
-    privacySection2Body: string;
-    privacySection3Title: string;
-    privacySection3Body: string;
-    privacySection4Title: string;
-    privacySection4Body: string;
-    };
+    termsTitle: string; termsSubtitle: string; privacyTitle: string; privacySubtitle: string; lastUpdated: string;
+    termsSection1Title: string; termsSection1Body: string; termsSection2Title: string; termsSection2Body: string;
+    termsSection3Title: string; termsSection3Body: string; termsSection4Title: string; termsSection4Body: string;
+    privacySection1Title: string; privacySection1Body: string; privacySection2Title: string; privacySection2Body: string;
+    privacySection3Title: string; privacySection3Body: string; privacySection4Title: string; privacySection4Body: string;
+  };
+  pointsOfSale: {
+    title: string; subtitle: string; viewOnGoogleMaps: string; schedule: string; phone: string; callDirect: string;
+    store1Name: string; store1Address: string; store1Hours: string; store1Phone: string;
+    store2Name: string; store2Address: string; store2Hours: string; store2Phone: string;
+    store3Name: string; store3Address: string; store3Hours: string; store3Phone: string;
+  };
+  map3d: {
+    title: string; subtitle: string; toggle3d: string; toggle2d: string;
+    filterAll: string; filterMatriz: string; filterPartners: string;
+    viewDetails: string; openInMaps: string; pinTooltip: string;
+  };
+  social: {
+    title: string; subtitle: string; whatsappLabel: string; whatsappNumber: string; chatOnWhatsApp: string;
+    addressLabel: string; addressValue: string; emailLabel: string; emailValue: string;
+    instagramLabel: string; tiktokLabel: string; facebookLabel: string; followPrompt: string;
+  };
   idCard: {
     sectionTitle: string;
     sectionSubtitle: string;

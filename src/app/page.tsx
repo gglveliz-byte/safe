@@ -31,7 +31,10 @@ import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
 import { HelmetHeroCard } from "@/components/landing/HelmetHeroCard";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
+import { PointsOfSaleSection } from "@/components/landing/PointsOfSaleSection";
+import { Interactive3DMapSection } from "@/components/landing/Interactive3DMapSection";
 import { GoldenHourSection } from "@/components/landing/GoldenHourSection";
+import { SocialAndContactSection } from "@/components/landing/SocialAndContactSection";
 import { DemoMedicalModal } from "@/components/landing/DemoMedicalModal";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 

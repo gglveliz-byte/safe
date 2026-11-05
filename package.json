@@ -19,9 +19,11 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@types/leaflet": "^1.9.22",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.11.0",
     "jose": "^5.9.6",
+    "leaflet": "^1.9.4",
     "lodash": "^4.18.1",
     "lucide-react": "^0.468.0",
     "next": "^15.1.0",
