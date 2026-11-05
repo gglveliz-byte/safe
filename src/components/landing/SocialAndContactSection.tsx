@@ -56,8 +56,8 @@ export function SocialAndContactSection() {
     {
       id: "tiktok",
       name: "TikTok",
-      handle: "@altuschip",
-      url: "https://tiktok.com/@altuschip",
+      handle: "@altus.chip.emergen",
+      url: "https://www.tiktok.com/@altus.chip.emergen",
       color: "hover:border-[#00F2FE] hover:shadow-[#00F2FE]/20",
       badgeColor: "bg-cyan-500/10 text-cyan-400 border-cyan-500/30",
       icon: (
@@ -69,8 +69,8 @@ export function SocialAndContactSection() {
     {
       id: "facebook",
       name: "Facebook",
-      handle: "altuschip",
-      url: "https://facebook.com/altuschip",
+      handle: "AltusChip Oficial",
+      url: "https://www.facebook.com/profile.php?id=61596282710430",
       color: "hover:border-[#1877F2] hover:shadow-[#1877F2]/20",
       badgeColor: "bg-[#1877F2]/10 text-[#1877F2] border-[#1877F2]/30",
       icon: (

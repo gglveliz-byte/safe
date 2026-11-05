@@ -46,7 +46,7 @@ export function LiveRideCard({
   return (
     <IncidentCard
       padding="md"
-      variant={isLiveRideActive ? "emergency" : "default"}
+      variant={isLiveRideActive ? "default" : "emergency"}
       className="flex flex-col gap-4"
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -55,12 +55,24 @@ export function LiveRideCard({
             🏍️
           </span>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-serif font-bold text-xl text-brand-navy-dark leading-tight">
                 {t.dashboard.liveRideTitle}
               </h3>
+              <span
+                className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                  isLiveRideActive
+                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                    : "bg-brand-accent text-white shadow-xs"
+                }`}
+              >
+                {t.dashboard.liveRideMandatoryBadge}
+              </span>
               {isLiveRideActive && (
-                <span className="w-2.5 h-2.5 rounded-full bg-brand-accent animate-ping" />
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                  <span>En vivo</span>
+                </span>
               )}
             </div>
             <p className="font-sans text-xs text-brand-text-desc mt-1 max-w-lg">
@@ -71,16 +83,33 @@ export function LiveRideCard({
 
         <IncidentButton
           type="button"
-          variant={isLiveRideActive ? "emergency" : "neutral"}
+          variant={isLiveRideActive ? "neutral" : "emergency"}
           size="lg"
           onClick={onToggle}
-          className="w-full sm:w-auto min-w-[200px]"
+          className="w-full sm:w-auto min-w-[220px]"
         >
           {isLiveRideActive
-            ? `⚡ ${t.dashboard.liveRideActive}`
-            : `○ ${t.dashboard.liveRideInactive}`}
+            ? `● ${t.dashboard.liveRideActive}`
+            : `⚡ ${t.dashboard.liveRideInactive}`}
         </IncidentButton>
       </div>
+
+      {/* Requisito Obligatorio: Aviso cuando la ubicación en tiempo real no está activa */}
+      {!isLiveRideActive && (
+        <div className="p-3.5 bg-red-50/80 border border-brand-accent/40 rounded-xl flex items-start gap-2.5 text-xs font-sans text-brand-accent">
+          <span className="text-base flex-shrink-0" aria-hidden="true">
+            ⚠️
+          </span>
+          <div className="flex flex-col gap-0.5">
+            <span className="font-bold uppercase tracking-wider">
+              {t.dashboard.liveRideMandatoryBadge}
+            </span>
+            <span className="leading-relaxed text-brand-navy-dark font-medium">
+              {t.dashboard.liveRideMandatoryWarning}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Indicadores de Estado de Pantalla Activa y Satélites */}
       {isLiveRideActive && (

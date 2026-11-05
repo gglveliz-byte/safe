@@ -217,7 +217,7 @@ export function buildWelcomeEmailContent(payload: WelcomeEmailPayload): EmailCon
         <!-- Asistencia y Soporte -->
         <div style="padding-top: 20px; border-top: 1px solid ${COLOR_BORDER}; font-size: 12px; line-height: 1.5; color: ${COLOR_TEXT_MUTED}; text-align: center;">
           <span>${escapeHtml(c.needHelp)}</span><br>
-          <span>${escapeHtml(c.supportTeam)} <a href="mailto:soporte@safe.com" style="color: ${COLOR_ACCENT}; text-decoration: underline; font-weight: 600;">soporte@safe.com</a></span>
+          <span>${escapeHtml(c.supportTeam)} <a href="mailto:info@altuschip.com" style="color: ${COLOR_ACCENT}; text-decoration: underline; font-weight: 600;">info@altuschip.com</a></span>
         </div>
       </td>
     </tr>
@@ -257,7 +257,7 @@ ${payload.loginUrl}
 
 ------------------------------------------------------------
 ${c.needHelp}
-${c.supportTeam} soporte@safe.com
+${c.supportTeam} info@altuschip.com
 
 ${c.footerText}
 ${c.footerAuto}

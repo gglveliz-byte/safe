@@ -134,7 +134,8 @@ function DashboardContent() {
       const data = await apiClient.getDashboard();
 
       setDashboardData(data);
-      setIsLiveRideActive(Boolean(data.user.liveRideActive));
+      // Requisito de ley obligatorio: activa la ubicación en tiempo real al ingresar al panel
+      setIsLiveRideActive(true);
 
       // I4: `!= null` acepta la coordenada legítima 0 (ecuador/Greenwich).
       if (data.user.lastKnownLat != null && data.user.lastKnownLng != null) {

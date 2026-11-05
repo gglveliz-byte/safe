@@ -204,6 +204,7 @@ export interface Dictionary {
     wakeLockOn: string;
     satelliteLabel: string;
     lastReportLabel: string;
+    liveRideMandatoryBadge: string; liveRideMandatoryWarning: string;
     editMedicalTitle: string;
     editMedicalSubtitle: string;
     updateSuccess: string;
