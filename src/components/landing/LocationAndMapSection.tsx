@@ -80,12 +80,11 @@ export function LocationAndMapSection() {
 
       L.control.zoom({ position: "topright" }).addTo(map);
 
-      const streetTileUrl = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
-      const satelliteTileUrl = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+      const streetTileUrl = "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
+      const satelliteTileUrl = "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}";
 
       const tileLayer = L.tileLayer(mapLayer === "satellite" ? satelliteTileUrl : streetTileUrl, {
-        maxZoom: 19,
-        subdomains: "abcd",
+        maxZoom: 20,
       }).addTo(map);
 
       currentTileLayerRef.current = tileLayer;
@@ -145,12 +144,11 @@ export function LocationAndMapSection() {
     }
 
     const nextUrl = nextLayer === "satellite"
-      ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-      : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+      ? "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+      : "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
 
     const newTile = L.tileLayer(nextUrl, {
-      maxZoom: 19,
-      subdomains: "abcd",
+      maxZoom: 20,
     });
 
     newTile.addTo(map as unknown as import("leaflet").Map);
@@ -295,7 +293,7 @@ export function LocationAndMapSection() {
               {/* Rótulo de Ubicación en el Mapa */}
               <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-sm border border-white/10 px-3 py-1 rounded-full text-[11px] text-gray-200 z-20 pointer-events-none font-mono flex items-center gap-1.5 shadow">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Parque Industrial (Uncovia), Cuenca</span>
+                <span>Google Maps Oficial · Parque Industrial (Uncovia), Cuenca</span>
               </div>
             </div>
           </div>
