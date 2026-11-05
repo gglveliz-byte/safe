@@ -90,7 +90,14 @@ export function WhatsAppManager() {
       const returnUrl = typeof window !== "undefined" ? window.location.href : "";
       const session = await whatsAppClient.getConnectSession(returnUrl);
       if (session.url) {
-        window.open(session.url, "_blank", "noopener,noreferrer,width=600,height=750");
+        const popup = window.open(session.url, "_blank", "noopener,noreferrer,width=600,height=750");
+        const checkClosed = setInterval(() => {
+          if (!popup || popup.closed) {
+            clearInterval(checkClosed);
+            void loadStatus();
+            void handleConsultarPlantillas();
+          }
+        }, 2500);
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "No se pudo iniciar la conexión con Meta.";
@@ -101,8 +108,10 @@ export function WhatsAppManager() {
   };
 
   useEffect(() => {
-    void loadStatus();
-  }, [loadStatus]);
+    void loadStatus().then(() => {
+      void handleConsultarPlantillas();
+    });
+  }, [loadStatus, handleConsultarPlantillas]);
 
   const getBodyComponent = (template: WhatsAppTemplateDTO): WhatsAppTemplateComponentDTO | undefined => {
     return template.components.find((c) => c.type === "BODY");

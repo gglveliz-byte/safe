@@ -180,17 +180,28 @@ export async function listWhatsAppTemplates(
     };
   }
 
-  const targetId = (phoneNumberId || getEnv().NEUROAPI_PHONE_NUMBER_ID)?.trim();
+  let targetId = (phoneNumberId || getEnv().NEUROAPI_PHONE_NUMBER_ID)?.trim();
 
-  // Aislamiento estricto: Si no se especifica el ID del número, requerir selección
-  // para evitar que NeuroAPI devuelva por defecto plantillas ajenas de otros WABA.
+  // Auto-descubrimiento inteligente: si no se especificó ID, buscar en las líneas conectadas de NeuroAPI
+  if (!targetId) {
+    const numbersRes = await listConnectedPhoneNumbers(apiKey);
+    if (numbersRes.success && numbersRes.numbers.length > 0) {
+      // Priorizar la línea oficial ecuatoriana de la empresa (959057138) o la primera línea conectada
+      const matched = numbersRes.numbers.find(n => n.phoneNumber.includes("959057138")) || numbersRes.numbers[0];
+      if (matched && matched.phoneNumberId) {
+        targetId = matched.phoneNumberId;
+      }
+    }
+  }
+
+  // Aislamiento estricto: Si tras la consulta aún no hay línea conectada
   if (!targetId) {
     return {
       success: true,
       stats: { total: 0, approved: 0, pending: 0 },
       templates: [],
       requiresSelection: true,
-      error: "Selecciona una línea de WhatsApp conectada para consultar sus plantillas oficiales.",
+      error: "Conecta tu número oficial mediante el botón de Coexistencia para cargar automáticamente sus plantillas.",
     };
   }
 
