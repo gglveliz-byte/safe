@@ -187,6 +187,13 @@ export const en: Dictionary = {
     bloodTypeRequired: "Declaring your blood type protects your life: choose your blood type or select OTHER to specify.",
     liveRideSafetyTip: "Your Satellite Rescue Backup",
     liveRideSafetyTipDesc: "Activate Live Ride Mode every time you ride and keep your phone mounted or with you. If you crash and the rescuer scanning your helmet has no GPS, SAFE will automatically route your last road location to loved ones.",
+    riderMapLive: "Live Motorcycle Location",
+    riderMapLastKnown: "Last Known Motorcycle Position",
+    riderMapWaitingSignal: "Waiting for GPS satellite signal from your motorcycle...",
+    riderMapLocateBtn: "Detect my current location",
+    riderMapOpenMaps: "Google Maps",
+    riderMapOpenWaze: "Waze",
+    riderMapLoading: "Loading GPS map...",
   },
   admin: {
     title: "SAFE ADMINISTRATION CENTER",

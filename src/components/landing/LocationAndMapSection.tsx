@@ -1,42 +1,42 @@
 /**
  * ==============================================================================
  * PROYECTO: ALTUS-CHIP — Protocolo Broadsheet 2026
- * MÓDULO: Landing Page — Sede Matriz Oficial y Mapa Unificado (Sección Compacta)
+ * MÓDULO: Landing Page — Sede Matriz Oficial y Mapa Google Unificado
  * ARCHIVO: src/components/landing/LocationAndMapSection.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
  * Unifica en una sola sección compacta y dividida a dos columnas:
- * 1. Columna Izquierda: Tarjeta de la Sede Matriz Oficial con fotografía de
- *    motocicleta, dirección exacta, horarios y botones a Google Maps y WhatsApp.
- * 2. Columna Derecha: Mapa interactivo compacto con conmutación Satelital /
- *    Callejero y pin circular oficial con pulso radar sobre Parque Industrial.
+ * 1. Columna Izquierda: Tarjeta Boutique de la Sede Matriz Oficial con fotografía
+ *    de motocicleta, dirección física verificada, horarios y botones de contacto.
+ * 2. Columna Derecha: Mapa oficial interactivo Google Maps de alta precisión,
+ *    conmutación instantánea entre Callejero y Satelital HD, navegación a Waze
+ *    y enlace directo a la app nativa de Google Maps.
  *
  * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas (módulo ~250 líneas).
+ * - Límite estricto < 500 líneas físicas.
  * - Cero textos hardcodeados (100% diccionario vía useLocale).
+ * - Cero dependencias de API Keys de pago ni marcas de agua de terceros.
  * - Diseño compacto que entra en una sola pantalla desktop; apilado en móvil.
  * ==============================================================================
  */
 
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
 
-const CUENCA_HQ_COORDS: [number, number] = [-2.8756, -78.9865];
 const MOTORCYCLE_IMAGE = "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80";
+const LATITUDE = -2.8756;
+const LONGITUDE = -78.9865;
 
 export function LocationAndMapSection() {
   const { t } = useLocale();
   const { triggerHaptic } = useHaptic();
 
-  const mapContainerRef = useRef<HTMLDivElement | null>(null);
-  const mapInstanceRef = useRef<unknown>(null);
-  const currentTileLayerRef = useRef<unknown>(null);
-
-  const [mapLayer, setMapLayer] = useState<"satellite" | "street">("satellite");
+  const [mapMode, setMapMode] = useState<"street" | "satellite">("street");
+  const [isLoading, setIsLoading] = useState(true);
 
   const store = {
     name: t.pointsOfSale.store1Name,
@@ -44,116 +44,18 @@ export function LocationAndMapSection() {
     hours: t.pointsOfSale.store1Hours,
     phone: t.pointsOfSale.store1Phone,
     mapsUrl: "https://www.google.com/maps/search/?api=1&query=Parque+Industrial+Cuenca+Ecuador",
+    wazeUrl: `https://waze.com/ul?ll=${LATITUDE},${LONGITUDE}&navigate=yes`,
     whatsappUrl: "https://wa.me/593959057138?text=Hola%20AltusChip,%20deseo%20visitar%20su%20sede%20en%20el%20Parque%20Industrial%20para%20adquirir%20mi%20kit",
   };
 
-  // Inicialización de Leaflet
-  useEffect(() => {
-    let isCancelled = false;
+  // URL del embed oficial de Google Maps (t=m para callejero, t=k para satelital)
+  const embedUrl = `https://maps.google.com/maps?q=${LATITUDE},${LONGITUDE}&t=${mapMode === "satellite" ? "k" : "m"}&z=16&ie=UTF8&iwloc=&output=embed`;
 
-    async function initMap() {
-      if (typeof window === "undefined" || !mapContainerRef.current) return;
-
-      const L = await import("leaflet");
-      if (isCancelled) return;
-
-      if (!document.getElementById("leaflet-css-bundle")) {
-        const link = document.createElement("link");
-        link.id = "leaflet-css-bundle";
-        link.rel = "stylesheet";
-        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-        document.head.appendChild(link);
-      }
-
-      if (mapInstanceRef.current) {
-        (mapInstanceRef.current as { remove: () => void }).remove();
-        mapInstanceRef.current = null;
-      }
-
-      const map = L.map(mapContainerRef.current, {
-        center: CUENCA_HQ_COORDS,
-        zoom: 15,
-        zoomControl: false,
-        attributionControl: false,
-        scrollWheelZoom: false,
-      });
-
-      L.control.zoom({ position: "topright" }).addTo(map);
-
-      const streetTileUrl = "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
-      const satelliteTileUrl = "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}";
-
-      const tileLayer = L.tileLayer(mapLayer === "satellite" ? satelliteTileUrl : streetTileUrl, {
-        maxZoom: 20,
-      }).addTo(map);
-
-      currentTileLayerRef.current = tileLayer;
-
-      // Pin circular oficial con logotipo de AltusChip y radar sónar
-      const pinHtml = `
-        <div class="relative group cursor-pointer" style="transform: translate(-50%, -50%);">
-          <div class="w-14 h-14 rounded-full absolute -inset-2 bg-red-500/35 animate-ping pointer-events-none"></div>
-          <div class="w-11 h-11 rounded-full bg-white border-2 border-red-600 shadow-2xl overflow-hidden flex items-center justify-center p-0.5 hover:scale-115 transition-transform duration-200">
-            <img src="/branding/altuschip-logo.png" alt="AltusChip" class="w-full h-full object-cover rounded-full" />
-          </div>
-          <div class="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/90 text-white font-sans text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-red-500/40 pointer-events-none flex items-center gap-1">
-            <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-            ALTUS-CHIP MATRIZ
-          </div>
-        </div>
-      `;
-
-      const customIcon = L.divIcon({
-        className: "altus-custom-marker",
-        html: pinHtml,
-        iconSize: [44, 44],
-        iconAnchor: [22, 22],
-      });
-
-      L.marker(CUENCA_HQ_COORDS, { icon: customIcon }).addTo(map);
-
-      mapInstanceRef.current = map;
-
-      setTimeout(() => {
-        map.invalidateSize();
-      }, 150);
-    }
-
-    void initMap();
-
-    return () => {
-      isCancelled = true;
-      if (mapInstanceRef.current) {
-        (mapInstanceRef.current as { remove: () => void }).remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, []);
-
-  // Cambio de capa (Satelital HD vs Callejero)
-  const handleSwitchLayer = async (nextLayer: "satellite" | "street") => {
+  const handleToggleMode = (mode: "street" | "satellite") => {
+    if (mode === mapMode) return;
     triggerHaptic("light");
-    setMapLayer(nextLayer);
-
-    if (!mapInstanceRef.current) return;
-    const L = await import("leaflet");
-    const map = mapInstanceRef.current as { addLayer: (l: unknown) => void; removeLayer: (l: unknown) => void; invalidateSize: () => void };
-
-    if (currentTileLayerRef.current) {
-      map.removeLayer(currentTileLayerRef.current);
-    }
-
-    const nextUrl = nextLayer === "satellite"
-      ? "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
-      : "https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
-
-    const newTile = L.tileLayer(nextUrl, {
-      maxZoom: 20,
-    });
-
-    newTile.addTo(map as unknown as import("leaflet").Map);
-    currentTileLayerRef.current = newTile;
-    map.invalidateSize();
+    setIsLoading(true);
+    setMapMode(mode);
   };
 
   return (
@@ -170,43 +72,40 @@ export function LocationAndMapSection() {
               <span className="w-2 h-2 rounded-full bg-brand-accent animate-pulse" />
               <span>{t.pointsOfSale.badgeOfficial}</span>
             </div>
-            <h2 className="font-serif font-black text-2xl sm:text-3xl lg:text-[34px] text-white tracking-tight uppercase leading-tight">
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white">
               {t.pointsOfSale.title}
             </h2>
-            <p className="font-sans text-xs sm:text-sm text-gray-400 mt-1 max-w-xl">
+            <p className="font-sans text-sm sm:text-base text-gray-400 mt-1 max-w-2xl">
               {t.pointsOfSale.subtitle}
             </p>
           </div>
 
-          {/* Selector de Capas: Satelital HD y Callejero (Centrar Matriz eliminado) */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              type="button"
-              onClick={() => handleSwitchLayer("satellite")}
-              className={`min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
-                mapLayer === "satellite"
-                  ? "bg-brand-accent text-white shadow-brand-accent/25 ring-2 ring-brand-accent/40"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
+          {/* Acceso Rápido a Navegadores GPS Externos */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <a
+              href={store.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => triggerHaptic("light")}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#152336] hover:bg-[#1C2F48] border border-gray-700/60 text-xs font-semibold text-gray-200 transition-colors shadow-sm"
             >
-              <span>{t.map3d.toggleSatellite}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSwitchLayer("street")}
-              className={`min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
-                mapLayer === "street"
-                  ? "bg-brand-accent text-white shadow-brand-accent/25 ring-2 ring-brand-accent/40"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-              }`}
+              <span>📍 Google Maps</span>
+              <span className="text-[10px] text-gray-400">↗</span>
+            </a>
+            <a
+              href={store.wazeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => triggerHaptic("light")}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#152336] hover:bg-[#1C2F48] border border-gray-700/60 text-xs font-semibold text-gray-200 transition-colors shadow-sm"
             >
-              <span>{t.map3d.toggleStreet}</span>
-            </button>
+              <span>🧭 Waze</span>
+              <span className="text-[10px] text-gray-400">↗</span>
+            </a>
           </div>
         </div>
 
-        {/* Rejilla a 2 Columnas Bien Dividida (Sucursal a la Izquierda + Mapa a la Derecha) */}
+        {/* Cuadrícula Unificada: Columna Izquierda (Tarjeta Sede) + Columna Derecha (Mapa Google) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
           {/* Columna Izquierda: Tarjeta Boutique de Sede con Foto de la Moto (lg:col-span-5) */}
           <div className="lg:col-span-5 flex flex-col">
@@ -246,7 +145,10 @@ export function LocationAndMapSection() {
                     </li>
                     <li className="flex items-start gap-2.5">
                       <span className="text-brand-accent text-sm flex-shrink-0">📞</span>
-                      <a href={`tel:${store.phone.replace(/\s+/g, "")}`} className="hover:text-white transition-colors font-medium">
+                      <a
+                        href={`tel:${store.phone.replace(/\s+/g, "")}`}
+                        className="hover:text-white transition-colors font-medium"
+                      >
                         {store.phone}
                       </a>
                     </li>
@@ -282,18 +184,65 @@ export function LocationAndMapSection() {
             </article>
           </div>
 
-          {/* Columna Derecha: Mapa Compacto (lg:col-span-7) */}
+          {/* Columna Derecha: Mapa Google Compacto y Conmutador de Capas (lg:col-span-7) */}
           <div className="lg:col-span-7 flex flex-col">
-            <div className="relative w-full h-[360px] sm:h-[400px] lg:h-[420px] rounded-2xl overflow-hidden border border-gray-800 bg-[#0F1826] shadow-xl">
-              <div
-                ref={mapContainerRef}
-                className="w-full h-full select-none z-10"
-              />
+            <div className="relative w-full h-[380px] sm:h-[420px] lg:h-[450px] rounded-2xl overflow-hidden border border-gray-800 bg-[#0F1826] shadow-xl flex flex-col">
+              {/* Barra Superior de Control del Mapa */}
+              <div className="w-full bg-[#131E2C]/90 backdrop-blur-md border-b border-gray-800/80 px-3 sm:px-4 py-2.5 flex items-center justify-between gap-2 z-20 flex-shrink-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+                  <span className="font-mono text-xs font-semibold text-gray-200 truncate">
+                    Google Maps Oficial · Parque Industrial (Uncovia), Cuenca
+                  </span>
+                </div>
 
-              {/* Rótulo de Ubicación en el Mapa */}
-              <div className="absolute top-3 left-3 bg-black/80 backdrop-blur-sm border border-white/10 px-3 py-1 rounded-full text-[11px] text-gray-200 z-20 pointer-events-none font-mono flex items-center gap-1.5 shadow">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Google Maps Oficial · Parque Industrial (Uncovia), Cuenca</span>
+                {/* Conmutador de Capas */}
+                <div className="flex items-center gap-1 bg-black/60 p-0.5 rounded-lg border border-white/10 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleMode("street")}
+                    className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
+                      mapMode === "street"
+                        ? "bg-brand-accent text-white shadow-sm font-semibold"
+                        : "text-gray-300 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    {t.map3d.toggleStreet}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleMode("satellite")}
+                    className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
+                      mapMode === "satellite"
+                        ? "bg-brand-accent text-white shadow-sm font-semibold"
+                        : "text-gray-300 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    {t.map3d.toggleSatellite}
+                  </button>
+                </div>
+              </div>
+
+              {/* Contenedor del Iframe con Skeleton mientras Carga */}
+              <div className="relative w-full flex-1 bg-[#09111C] overflow-hidden">
+                {isLoading && (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#0F1826] text-gray-400 gap-3">
+                    <div className="w-8 h-8 rounded-full border-2 border-brand-accent border-t-transparent animate-spin" />
+                    <span className="text-xs font-mono">Cargando mapa oficial de Cuenca…</span>
+                  </div>
+                )}
+
+                <iframe
+                  title="AltusChip Sede Matriz Google Maps"
+                  src={embedUrl}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  onLoad={() => setIsLoading(false)}
+                  className="w-full h-full block"
+                />
               </div>
             </div>
           </div>
@@ -302,4 +251,3 @@ export function LocationAndMapSection() {
     </section>
   );
 }
-

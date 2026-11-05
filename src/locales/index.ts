@@ -220,6 +220,8 @@ export interface Dictionary {
     bloodTypeRequired: string;
     liveRideSafetyTip: string;
     liveRideSafetyTipDesc: string;
+    riderMapLive: string; riderMapLastKnown: string; riderMapWaitingSignal: string;
+    riderMapLocateBtn: string; riderMapOpenMaps: string; riderMapOpenWaze: string; riderMapLoading: string;
   };
   admin: {
     title: string;

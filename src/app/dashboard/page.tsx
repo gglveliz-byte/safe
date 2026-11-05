@@ -55,6 +55,7 @@ import { IncidentHairline } from "@/components/ui/IncidentHairline";
 import { LiveRideCard } from "@/components/dashboard/LiveRideCard";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { MedicalRecordForm } from "@/components/dashboard/MedicalRecordForm";
+import { NoChipNotice } from "@/components/dashboard/NoChipNotice";
 
 /**
  * Calcula la distancia Haversine en metros entre dos coordenadas decimales.
@@ -316,6 +317,27 @@ function DashboardContent() {
     }
   };
 
+  // Detección manual o inmediata de la posición satelital del piloto
+  const handleLocateCurrentPosition = useCallback(() => {
+    if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
+      return;
+    }
+    triggerHaptic("light");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLastCoords({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+        triggerHaptic("success");
+      },
+      () => {
+        triggerHaptic("warning");
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 10000 },
+    );
+  }, [triggerHaptic]);
+
   // Guardar modificaciones médicas en PostgreSQL
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -407,28 +429,8 @@ function DashboardContent() {
 
     // Cuenta sin dispositivo vinculado: aviso informativo para escanear el casco físico
     return (
-      <div className="w-full max-w-xl mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[70vh] gap-6 text-center animate-fadeInUp">
-        <div
-          aria-hidden="true"
-          className="w-16 h-16 rounded-2xl bg-brand-nav-active border border-brand-border-subtle flex items-center justify-center text-3xl shadow-xs"
-        >
-          🛡️
-        </div>
-        <div className="flex flex-col gap-2">
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-brand-navy-dark">
-            {t.dashboard.noChipTitle}
-          </h1>
-          <p className="font-sans text-xs sm:text-sm text-brand-text-desc max-w-md leading-relaxed">
-            {t.dashboard.noChipHelp}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => router.push("/")}
-          className="min-h-[44px] px-6 py-2.5 bg-brand-navy-dark text-white rounded-lg text-sm font-semibold hover:bg-brand-navy-secondary transition-all cursor-pointer"
-        >
-          {t.common.backToHome}
-        </button>
+      <div className="w-full max-w-xl mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[70vh] gap-6 animate-fadeInUp">
+        <NoChipNotice />
       </div>
     );
   }
@@ -463,6 +465,7 @@ function DashboardContent() {
         lastCoords={lastCoords}
         lastHeartbeatTime={lastHeartbeatTime}
         onToggle={toggleLiveRide}
+        onLocate={handleLocateCurrentPosition}
       />
 
       <IncidentHairline variant="subtle" />

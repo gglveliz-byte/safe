@@ -22,6 +22,7 @@ import React from "react";
 import { useLocale } from "@/hooks/useLocale";
 import { IncidentCard } from "@/components/ui/IncidentCard";
 import { IncidentButton } from "@/components/ui/IncidentButton";
+import { RiderMiniMap } from "@/components/dashboard/RiderMiniMap";
 
 export interface LiveRideCardProps {
   isLiveRideActive: boolean;
@@ -29,6 +30,7 @@ export interface LiveRideCardProps {
   lastCoords: { lat: number; lng: number } | null;
   lastHeartbeatTime: string | null;
   onToggle: () => void;
+  onLocate?: () => void;
 }
 
 export function LiveRideCard({
@@ -37,6 +39,7 @@ export function LiveRideCard({
   lastCoords,
   lastHeartbeatTime,
   onToggle,
+  onLocate,
 }: LiveRideCardProps) {
   const { t } = useLocale();
 
@@ -104,6 +107,13 @@ export function LiveRideCard({
           )}
         </div>
       )}
+
+      {/* Mini Mapa Satelital y Callejero con la Ubicación de la Motocicleta */}
+      <RiderMiniMap
+        coords={lastCoords}
+        isLiveRideActive={isLiveRideActive}
+        onLocate={onLocate}
+      />
 
       {/* Consejo de Seguridad y Resiliencia GPS para el Piloto */}
       <div className="p-3.5 bg-brand-nav-active border border-brand-border-subtle rounded-xl flex items-start gap-2.5 text-xs font-sans">

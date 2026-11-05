@@ -187,6 +187,13 @@ export const es: Dictionary = {
     bloodTypeRequired: "Declarar tu grupo sanguíneo protege tu vida: elige tu tipo de sangre o selecciona OTRO para especificar.",
     liveRideSafetyTip: "Tu Red de Respaldo Satelital",
     liveRideSafetyTipDesc: "Activa el Modo Ruta cada vez que ruedes y lleva tu teléfono contigo. Así, si sufres un siniestro y el testigo que escanea tu casco no tiene GPS, el sistema enviará automáticamente tu última posición a tus seres queridos.",
+    riderMapLive: "Ubicación en Vivo de tu Moto",
+    riderMapLastKnown: "Última Posición Registrada de tu Moto",
+    riderMapWaitingSignal: "Esperando señal satelital GPS de tu motocicleta...",
+    riderMapLocateBtn: "Detectar mi ubicación actual",
+    riderMapOpenMaps: "Google Maps",
+    riderMapOpenWaze: "Waze",
+    riderMapLoading: "Cargando mapa GPS...",
   },
   admin: {
     title: "CENTRO DE ADMINISTRACIÓN SAFE",
