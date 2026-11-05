@@ -74,31 +74,7 @@ export function IncidentNavbar() {
         </Link>
 
         {/* Menú de Navegación de Escritorio */}
-        <nav aria-label={t.common.appName} className="hidden md:flex items-center gap-2 lg:gap-3">
-          <Link
-            href="/#puntos-venta"
-            onClick={() => triggerHaptic("light")}
-            className="px-3 py-2 rounded-md text-[13px] font-medium text-brand-text-desc hover:text-brand-navy-dark hover:bg-brand-bg-alt transition-all duration-150 no-underline"
-          >
-            {t.pointsOfSale.title.length > 25 ? "Puntos de Venta" : t.pointsOfSale.title}
-          </Link>
-
-          <Link
-            href="/#mapa"
-            onClick={() => triggerHaptic("light")}
-            className="px-3 py-2 rounded-md text-[13px] font-medium text-brand-text-desc hover:text-brand-navy-dark hover:bg-brand-bg-alt transition-all duration-150 no-underline"
-          >
-            {locale === "es" ? "Mapa" : "Map"}
-          </Link>
-
-          <Link
-            href="/#contacto"
-            onClick={() => triggerHaptic("light")}
-            className="px-3 py-2 rounded-md text-[13px] font-medium text-brand-text-desc hover:text-brand-navy-dark hover:bg-brand-bg-alt transition-all duration-150 no-underline"
-          >
-            {locale === "es" ? "Contacto" : "Contact"}
-          </Link>
-
+        <nav aria-label={t.common.appName} className="hidden md:flex items-center gap-3">
           {/* Soporte Técnico (mailto al correo vinculado) */}
           <a
             href={`mailto:${SUPPORT_EMAIL}`}
@@ -168,39 +144,6 @@ export function IncidentNavbar() {
           aria-label="Menú móvil"
           className="md:hidden border-b border-brand-border-subtle bg-brand-white px-4 pt-3 pb-5 space-y-2.5 transition-all duration-200 shadow-md animate-fadeInDown"
         >
-          <Link
-            href="/#puntos-venta"
-            onClick={() => {
-              triggerHaptic("light");
-              closeMobileMenu();
-            }}
-            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-md text-sm font-medium text-brand-text-desc hover:bg-brand-bg-alt active:bg-brand-nav-active transition-colors no-underline"
-          >
-            <span>{locale === "es" ? "Puntos de Venta" : "Stores"}</span>
-          </Link>
-
-          <Link
-            href="/#mapa"
-            onClick={() => {
-              triggerHaptic("light");
-              closeMobileMenu();
-            }}
-            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-md text-sm font-medium text-brand-text-desc hover:bg-brand-bg-alt active:bg-brand-nav-active transition-colors no-underline"
-          >
-            <span>{locale === "es" ? "Mapa 3D" : "3D Map"}</span>
-          </Link>
-
-          <Link
-            href="/#contacto"
-            onClick={() => {
-              triggerHaptic("light");
-              closeMobileMenu();
-            }}
-            className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-md text-sm font-medium text-brand-text-desc hover:bg-brand-bg-alt active:bg-brand-nav-active transition-colors no-underline"
-          >
-            <span>{locale === "es" ? "Contacto y Redes" : "Contact & Social"}</span>
-          </Link>
-
           {/* Soporte Técnico en Móvil */}
           <a
             href={`mailto:${SUPPORT_EMAIL}`}

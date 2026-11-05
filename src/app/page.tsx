@@ -37,6 +37,7 @@ import { GoldenHourSection } from "@/components/landing/GoldenHourSection";
 import { SocialAndContactSection } from "@/components/landing/SocialAndContactSection";
 import { DemoMedicalModal } from "@/components/landing/DemoMedicalModal";
 import { BrandLogo } from "@/components/ui/BrandLogo";
+import { FloatingWhatsAppButton } from "@/components/ui/FloatingWhatsAppButton";
 
 export default function HomePage() {
   const { t } = useLocale();
@@ -127,11 +128,23 @@ export default function HomePage() {
       </section>
 
 
-      {/* ══════════ SECCIÓN: ¿CÓMO FUNCIONA SAFE EN CARRETERA? ══════════ */}
+      {/* ══════════ SECCIÓN: PUNTOS DE VENTA (DISPONIBLE EN TIENDAS) ══════════ */}
+      <PointsOfSaleSection />
+
+      {/* ══════════ SECCIÓN: MAPA INTERACTIVO 3D ══════════ */}
+      <Interactive3DMapSection />
+
+      {/* ══════════ SECCIÓN: ¿CÓMO FUNCIONA EN CARRETERA? ══════════ */}
       <HowItWorksSection />
 
       {/* ══════════ SECCIÓN: EL PRINCIPIO DE LA HORA DORADA ══════════ */}
       <GoldenHourSection />
+
+      {/* ══════════ SECCIÓN: REDES SOCIALES Y CONTACTO ══════════ */}
+      <SocialAndContactSection />
+
+      {/* ══════════ BOTÓN FLOTANTE OFICIAL DE WHATSAPP ══════════ */}
+      <FloatingWhatsAppButton />
 
       {/* ══════════ MODAL: FICHA MÉDICA DE DEMOSTRACIÓN ══════════ */}
       <DemoMedicalModal isOpen={demoModalOpen} onClose={closeDemoModal} />
