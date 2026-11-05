@@ -34,6 +34,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
+import { resolveCountryEmergency } from "@/lib/country-emergency";
 import type { PublicEmergencyContactDTO } from "./medical-contact.types";
 
 /** Props CONGELADOS consumidos por la vista pública de emergencia (Frontend 1). */
@@ -46,6 +47,8 @@ export interface EmergencyActionPanelProps {
   googleMapsUrl?: string | null;
   /** Número de auxilio registrado por el conductor en su perfil (dato real). */
   emergencyNumber?: string | null;
+  /** Código de país del conductor para resolver la central nacional de emergencias */
+  country?: string | null;
   /** Contactos de aviso inmediato de la ficha pública (sin correo expuesto). */
   contacts: PublicEmergencyContactDTO[];
 }
@@ -61,9 +64,10 @@ export function EmergencyActionPanel({
   bloodType,
   googleMapsUrl,
   emergencyNumber,
+  country,
   contacts,
 }: EmergencyActionPanelProps) {
-  const { t } = useLocale();
+  const { locale, t } = useLocale();
   const { triggerHaptic } = useHaptic();
 
   // Confirmación visual temporal tras copiar el enlace de rescate (3 segundos)
@@ -81,17 +85,15 @@ export function EmergencyActionPanel({
     };
   }, []);
 
+  // Central oficial nacional de emergencias según el país del accidentado
+  const officialEmergency = resolveCountryEmergency(country);
+  const emergencyCallTarget = officialEmergency.number;
+  const officialCallLabel = locale === "en" ? officialEmergency.labelEn : officialEmergency.labelEs;
+
   // Contacto principal declarado o, en su defecto, el primero de la lista real
   const primaryContact =
     contacts.find((c) => c.isPrimary) ?? contacts[0] ?? null;
-
-  // Destino de llamada: primero el número de auxilio del perfil; si no existe,
-  // el móvil del contacto principal. Sin ninguno, destino nulo (deshabilitado).
-  const emergencyNumberClean = (emergencyNumber ?? "").trim();
   const contactPhoneClean = (primaryContact?.phone ?? "").trim();
-  const callTarget = emergencyNumberClean || contactPhoneClean || null;
-  // La etiqueta distingue la llamada a la central de auxilio de la llamada familiar
-  const callLabel = emergencyNumberClean ? t.common.call911 : t.common.callContact;
 
   // Enlace de WhatsApp: wa.me exige el móvil internacional SOLO con dígitos
   const whatsappPhone = contactPhoneClean.replace(/\D/g, "");
@@ -160,30 +162,32 @@ export function EmergencyActionPanel({
         </span>
       </div>
 
-      {/* 1. LLAMAR: acción primaria de máximo contraste (mínimo 48px) */}
-      {callTarget ? (
+      {/* 1. LLAMAR A LA CENTRAL NACIONAL DE EMERGENCIAS OFICIAL (ECU 911, Línea 123, 112) */}
+      <a
+        href={`tel:${emergencyCallTarget}`}
+        onClick={() => triggerHaptic("light")}
+        aria-label={officialCallLabel}
+        className="w-full flex flex-col items-center justify-center gap-0.5 py-3 px-4 bg-brand-navy-dark hover:bg-brand-navy-secondary text-white rounded-xl font-sans shadow-sm transition-all active:scale-[0.98] min-h-[50px] no-underline"
+      >
+        <span className="flex items-center gap-2">
+          {PhoneIcon}
+          <span className="font-sans text-lg font-bold tracking-wide">{officialCallLabel}</span>
+        </span>
+        <span className="font-sans text-[11px] uppercase tracking-widest text-slate-300 font-medium">
+          {officialEmergency.agencyName} • {emergencyCallTarget}
+        </span>
+      </a>
+
+      {/* 1b. LLAMADA DIRECTA AL CONTACTO FAMILIAR PRIORITARIO */}
+      {contactPhoneClean && (
         <a
-          href={`tel:${callTarget}`}
+          href={`tel:${contactPhoneClean}`}
           onClick={() => triggerHaptic("light")}
-          aria-label={callLabel}
-          className="w-full flex flex-col items-center justify-center gap-0.5 py-3 px-4 bg-brand-navy-dark hover:bg-brand-navy-secondary text-white rounded-xl font-sans shadow-sm transition-all active:scale-[0.98] min-h-[50px] no-underline"
-        >
-          <span className="flex items-center gap-2">
-            {PhoneIcon}
-            <span className="font-sans text-lg font-bold tracking-wide">{callTarget}</span>
-          </span>
-          <span className="font-sans text-[11px] uppercase tracking-widest text-slate-300 font-medium">{callLabel}</span>
-        </a>
-      ) : (
-        <button
-          type="button"
-          disabled
-          title={t.emergency.noContacts}
-          className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-200 text-slate-500 rounded-xl font-sans font-semibold text-sm cursor-not-allowed opacity-60 min-h-[48px]"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-brand-bg-alt hover:bg-brand-nav-active border border-brand-border-subtle text-brand-navy-dark rounded-xl font-sans text-xs font-bold transition-all no-underline"
         >
           {PhoneIcon}
-          <span>{callLabel}</span>
-        </button>
+          <span>{t.common.callContact}: {primaryContact?.name} ({contactPhoneClean})</span>
+        </a>
       )}
 
       {/* Rejilla de acciones secundarias con separación de 12px (anti-toques accidentales) */}

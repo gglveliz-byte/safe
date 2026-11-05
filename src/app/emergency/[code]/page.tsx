@@ -428,6 +428,7 @@ export default function EmergencyPage({ params }: PageProps) {
         bloodType={displayedMedical.bloodType}
         googleMapsUrl={alertResult?.googleMapsUrl ?? null}
         emergencyNumber={displayedMedical.emergencyNumber ?? null}
+        country={displayedMedical.country ?? null}
         contacts={medical.emergencyContacts}
       />
 

@@ -212,6 +212,8 @@ export function buildProfileUpdatePayload(
     frequentLocation: profile.frequentLocation?.trim() || undefined,
     vehicleInfo: profile.vehicleInfo?.trim() || undefined,
     emergencyContacts: normalizedContacts,
+    companionData: profile.companionData ?? null,
+    locale: profile.locale || undefined,
   };
 }
 

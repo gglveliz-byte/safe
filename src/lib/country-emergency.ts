@@ -1,0 +1,185 @@
+/**
+ * ==============================================================================
+ * PROYECTO: SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
+ * MÓDULO: Configuración Internacional — Centrales de Emergencia Oficiales por País
+ * ARCHIVO: src/lib/country-emergency.ts
+ * ------------------------------------------------------------------------------
+ * DESCRIPCIÓN:
+ * Catálogo canónico de centrales oficiales de rescate y números de emergencia
+ * nacionales según el código ISO-3166-1 alfa-2 del país del motociclista.
+ *
+ * Erradica por completo la necesidad de que el usuario invente o digite un
+ * número de ambulancia manual erróneo (ej. "1234567"), garantizando que la
+ * ficha pública de auxilio marque directamente a la central nacional
+ * correspondiente (ECU 911, Línea 123, 112, etc.).
+ *
+ * LEYES DE INGENIERÍA:
+ * - Límite estricto < 500 líneas físicas (este archivo < 150 líneas).
+ * - Cero números hardcodeados en vistas: consumo a través de resolveCountryEmergency.
+ * - Cabeceras y comentarios canónicos en Español.
+ * ==============================================================================
+ */
+
+export interface CountryEmergencyService {
+  /** Código ISO del país en mayúsculas (ej: EC, CO, PE, ES, US) */
+  countryCode: string;
+  /** Número telefónico de marcación directa (ej: "911", "123", "112") */
+  number: string;
+  /** Nombre institucional de la central de emergencias */
+  agencyName: string;
+  /** Etiqueta de llamada en Español */
+  labelEs: string;
+  /** Etiqueta de llamada en Inglés */
+  labelEn: string;
+}
+
+const COUNTRY_SERVICES: Record<string, Omit<CountryEmergencyService, "countryCode">> = {
+  EC: {
+    number: "911",
+    agencyName: "ECU 911 (Ecuador)",
+    labelEs: "Llamar al ECU 911",
+    labelEn: "Call ECU 911",
+  },
+  CO: {
+    number: "123",
+    agencyName: "Línea 123 (Colombia)",
+    labelEs: "Llamar a Línea 123",
+    labelEn: "Call Line 123",
+  },
+  PE: {
+    number: "911",
+    agencyName: "Central 911 / 105 (Perú)",
+    labelEs: "Llamar al 911 / 105",
+    labelEn: "Call 911 / 105",
+  },
+  MX: {
+    number: "911",
+    agencyName: "911 Emergencias (México)",
+    labelEs: "Llamar al 911",
+    labelEn: "Call 911",
+  },
+  ES: {
+    number: "112",
+    agencyName: "112 Emergencias (España)",
+    labelEs: "Llamar al 112",
+    labelEn: "Call 112",
+  },
+  US: {
+    number: "911",
+    agencyName: "911 Emergency (USA)",
+    labelEs: "Llamar al 911",
+    labelEn: "Call 911",
+  },
+  CA: {
+    number: "911",
+    agencyName: "911 Emergency (Canada)",
+    labelEs: "Llamar al 911",
+    labelEn: "Call 911",
+  },
+  AR: {
+    number: "911",
+    agencyName: "911 Emergencias (Argentina)",
+    labelEs: "Llamar al 911",
+    labelEn: "Call 911",
+  },
+  CL: {
+    number: "131",
+    agencyName: "131 SAMU (Chile)",
+    labelEs: "Llamar al 131 SAMU",
+    labelEn: "Call 131 SAMU",
+  },
+  BR: {
+    number: "192",
+    agencyName: "192 SAMU (Brasil)",
+    labelEs: "Llamar al 192 SAMU",
+    labelEn: "Call 192 SAMU",
+  },
+  UY: {
+    number: "911",
+    agencyName: "911 Emergencias (Uruguay)",
+    labelEs: "Llamar al 911",
+    labelEn: "Call 911",
+  },
+  PY: {
+    number: "911",
+    agencyName: "911 Emergencias (Paraguay)",
+    labelEs: "Llamar al 911",
+    labelEn: "Call 911",
+  },
+  BO: {
+    number: "911",
+    agencyName: "911 Emergencias (Bolivia)",
+    labelEs: "Llamar al 911",
+    labelEn: "Call 911",
+  },
+  VE: {
+    number: "911",
+    agencyName: "VEN 911 (Venezuela)",
+    labelEs: "Llamar al VEN 911",
+    labelEn: "Call VEN 911",
+  },
+  CR: {
+    number: "911",
+    agencyName: "911 Emergencias (Costa Rica)",
+    labelEs: "Llamar al 911",
+    labelEn: "Call 911",
+  },
+  PA: {
+    number: "911",
+    agencyName: "911 Emergencias (Panamá)",
+    labelEs: "Llamar al 911",
+    labelEn: "Call 911",
+  },
+  DO: {
+    number: "911",
+    agencyName: "911 Sistema Nacional (Rep. Dominicana)",
+    labelEs: "Llamar al 911",
+    labelEn: "Call 911",
+  },
+  GT: {
+    number: "123",
+    agencyName: "123 Bomberos / 110 PNC (Guatemala)",
+    labelEs: "Llamar al 123",
+    labelEn: "Call 123",
+  },
+  HN: {
+    number: "911",
+    agencyName: "911 Emergencias (Honduras)",
+    labelEs: "Llamar al 911",
+    labelEn: "Call 911",
+  },
+  SV: {
+    number: "911",
+    agencyName: "911 Emergencias (El Salvador)",
+    labelEs: "Llamar al 911",
+    labelEn: "Call 911",
+  },
+  NI: {
+    number: "118",
+    agencyName: "118 Policía / 911 (Nicaragua)",
+    labelEs: "Llamar al 118",
+    labelEn: "Call 118",
+  },
+};
+
+const DEFAULT_SERVICE: Omit<CountryEmergencyService, "countryCode"> = {
+  number: "911",
+  agencyName: "Central 911",
+  labelEs: "Llamar al 911",
+  labelEn: "Call 911",
+};
+
+/**
+ * Resuelve la central de emergencia oficial según el código ISO del país.
+ *
+ * @param countryCode Código de 2 letras (ej. "EC", "CO", "ES", "US").
+ * @returns Configuración completa de la central con número y rótulo bilingüe.
+ */
+export function resolveCountryEmergency(countryCode?: string | null): CountryEmergencyService {
+  const cleanCode = (countryCode || "EC").trim().toUpperCase();
+  const service = COUNTRY_SERVICES[cleanCode] || DEFAULT_SERVICE;
+  return {
+    countryCode: cleanCode,
+    ...service,
+  };
+}

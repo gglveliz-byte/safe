@@ -28,6 +28,7 @@ import React, { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { IncidentNavbar } from "@/components/ui/IncidentNavbar";
 import { IncidentFooter } from "@/components/ui/IncidentFooter";
+import { FirstVisitLanguageModal } from "@/components/ui/FirstVisitLanguageModal";
 
 export interface PublicChromeProps {
   /** Contenido de la ruta activa entregado por el layout raíz. */
@@ -79,6 +80,7 @@ export function PublicChrome({ children }: PublicChromeProps) {
       <IncidentNavbar />
       <main className="flex-1 w-full">{children}</main>
       <IncidentFooter />
+      <FirstVisitLanguageModal />
     </>
   );
 }

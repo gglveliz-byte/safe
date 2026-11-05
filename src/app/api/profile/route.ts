@@ -34,6 +34,7 @@ import {
 import { requireRider } from "@/lib/auth";
 import { ProfileUpdateSchema } from "@/lib/schemas/profile.schema";
 import { getAdminPinDispatchConfig } from "@/services/settings.service";
+import { resolveCountryEmergency } from "@/lib/country-emergency";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -114,9 +115,13 @@ export async function PUT(request: Request): Promise<NextResponse> {
     if (input.chronicConditions !== undefined) updateData.chronicConditions = input.chronicConditions || null;
     if (input.medications !== undefined) updateData.medications = input.medications || null;
     if (input.insuranceInfo !== undefined) updateData.insuranceInfo = input.insuranceInfo || null;
-    if (input.emergencyNumber !== undefined) updateData.emergencyNumber = input.emergencyNumber || null;
+    if (input.country !== undefined) {
+      updateData.country = input.country || null;
+      updateData.emergencyNumber = resolveCountryEmergency(input.country).number;
+    } else if (input.emergencyNumber !== undefined) {
+      updateData.emergencyNumber = input.emergencyNumber || null;
+    }
     if (input.beneficiaryType !== undefined) updateData.beneficiaryType = input.beneficiaryType;
-    if (input.country !== undefined) updateData.country = input.country || null;
     if (input.city !== undefined) updateData.city = input.city || null;
     if (input.residentialAddress !== undefined) updateData.residentialAddress = input.residentialAddress || null;
     if (input.riderPhone !== undefined) updateData.riderPhone = input.riderPhone || null;
