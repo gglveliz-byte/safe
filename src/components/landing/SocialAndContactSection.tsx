@@ -129,44 +129,6 @@ export function SocialAndContactSection() {
             </a>
           ))}
         </div>
-
-        {/* Ficha Corporativa de Contacto Directo */}
-        <div className="bg-[#101A28] border border-gray-800 rounded-2xl p-6 sm:p-8 max-w-4xl mx-auto shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex flex-col gap-3 text-center md:text-left">
-            <h4 className="font-serif font-bold text-xl text-white">
-              AltusChip — Sede Principal
-            </h4>
-            <div className="space-y-1.5 text-xs sm:text-sm text-gray-300 font-sans">
-              <p className="flex items-center justify-center md:justify-start gap-2">
-                <span className="text-brand-accent">📍</span>
-                <span><strong>{t.social.addressLabel}:</strong> {t.social.addressValue}</span>
-              </p>
-              <p className="flex items-center justify-center md:justify-start gap-2">
-                <span className="text-brand-accent">✉️</span>
-                <span><strong>{t.social.emailLabel}:</strong> <a href={`mailto:${t.social.emailValue}`} className="text-brand-accent hover:underline">{t.social.emailValue}</a></span>
-              </p>
-              <p className="flex items-center justify-center md:justify-start gap-2">
-                <svg className="w-4 h-4 text-[#25D366] fill-current flex-shrink-0" viewBox="0 0 24 24">
-                  <path d="M12.004 0C5.378 0 .008 5.37.008 11.996a11.93 11.93 0 001.637 6.064L0 24l6.109-1.602a11.935 11.935 0 005.895 1.545h.005c6.626 0 11.991-5.37 11.991-11.996S18.63 0 12.004 0zm0 21.99a9.98 9.98 0 01-5.086-1.39l-.365-.216-3.774.99.102-3.676-.237-.378a9.96 9.96 0 01-1.536-5.324c0-5.518 4.49-10.007 10.01-10.007 2.673 0 5.186 1.042 7.075 2.932a9.94 9.94 0 012.93 7.075c0 5.52-4.49 10.009-10.009 10.009z" />
-                </svg>
-                <span><strong>{t.social.whatsappLabel}:</strong> {t.social.whatsappNumber}</span>
-              </p>
-            </div>
-          </div>
-
-          <a
-            href="https://wa.me/593959057138?text=Hola%20AltusChip,%20deseo%20m%C3%A1s%20informaci%C3%B3n"
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => triggerHaptic("light")}
-            className="min-h-[48px] px-6 py-3 bg-[#25D366] hover:bg-[#20ba59] text-black font-bold text-sm rounded-xl transition-all shadow-lg hover:shadow-[#25D366]/30 flex items-center gap-2.5 no-underline cursor-pointer flex-shrink-0"
-          >
-            <svg className="w-5 h-5 fill-current text-black flex-shrink-0" viewBox="0 0 24 24">
-              <path d="M17.472 14.382c-.301-.15-1.78-.879-2.056-.98-.276-.101-.477-.15-.678.15-.2.302-.779.98-.955 1.18-.175.201-.351.226-.652.076-.301-.151-1.27-.468-2.419-1.493-.894-.798-1.497-1.784-1.673-2.086-.176-.301-.019-.464.132-.614.136-.135.301-.351.452-.527.15-.176.201-.301.301-.502.101-.201.05-.377-.025-.527-.075-.151-.678-1.633-.929-2.235-.245-.587-.494-.508-.678-.517l-.578-.01c-.2 0-.527.075-.803.377-.276.301-1.054 1.03-1.054 2.512s1.079 2.913 1.23 3.114c.15.201 2.122 3.24 5.141 4.544.718.31 1.278.495 1.716.634.721.229 1.377.197 1.895.12.578-.087 1.78-.728 2.031-1.431.251-.703.251-1.306.176-1.431-.075-.126-.276-.201-.577-.351zM12.004 0C5.378 0 .008 5.37.008 11.996a11.93 11.93 0 001.637 6.064L0 24l6.109-1.602a11.935 11.935 0 005.895 1.545h.005c6.626 0 11.991-5.37 11.991-11.996S18.63 0 12.004 0zm0 21.99a9.98 9.98 0 01-5.086-1.39l-.365-.216-3.774.99.102-3.676-.237-.378a9.96 9.96 0 01-1.536-5.324c0-5.518 4.49-10.007 10.01-10.007 2.673 0 5.186 1.042 7.075 2.932a9.94 9.94 0 012.93 7.075c0 5.52-4.49 10.009-10.009 10.009z" />
-            </svg>
-            <span>{t.social.chatOnWhatsApp}</span>
-          </a>
-        </div>
       </div>
     </section>
   );
