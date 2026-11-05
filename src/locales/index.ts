@@ -221,7 +221,7 @@ export interface Dictionary {
     liveRideSafetyTip: string;
     liveRideSafetyTipDesc: string;
     riderMapLive: string; riderMapLastKnown: string; riderMapWaitingSignal: string;
-    riderMapLocateBtn: string; riderMapOpenMaps: string; riderMapOpenWaze: string; riderMapLoading: string;
+    riderMapLocateBtn: string; riderMapOpenMaps: string; riderMapLoading: string;
   };
   admin: {
     title: string;

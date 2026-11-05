@@ -9,8 +9,8 @@
  * 1. Columna Izquierda: Tarjeta Boutique de la Sede Matriz Oficial con fotografía
  *    de motocicleta, dirección física verificada, horarios y botones de contacto.
  * 2. Columna Derecha: Mapa oficial interactivo Google Maps de alta precisión,
- *    conmutación instantánea entre Callejero y Satelital HD, navegación a Waze
- *    y enlace directo a la app nativa de Google Maps.
+ *    conmutación instantánea entre Callejero y Satelital HD, y enlace directo
+ *    a la app nativa de Google Maps.
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 500 líneas físicas.
@@ -44,7 +44,6 @@ export function LocationAndMapSection() {
     hours: t.pointsOfSale.store1Hours,
     phone: t.pointsOfSale.store1Phone,
     mapsUrl: "https://www.google.com/maps/search/?api=1&query=Parque+Industrial+Cuenca+Ecuador",
-    wazeUrl: `https://waze.com/ul?ll=${LATITUDE},${LONGITUDE}&navigate=yes`,
     whatsappUrl: "https://wa.me/593959057138?text=Hola%20AltusChip,%20deseo%20visitar%20su%20sede%20en%20el%20Parque%20Industrial%20para%20adquirir%20mi%20kit",
   };
 
@@ -80,7 +79,7 @@ export function LocationAndMapSection() {
             </p>
           </div>
 
-          {/* Acceso Rápido a Navegadores GPS Externos */}
+          {/* Acceso Rápido a Google Maps */}
           <div className="flex items-center gap-2 flex-wrap">
             <a
               href={store.mapsUrl}
@@ -90,16 +89,6 @@ export function LocationAndMapSection() {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#152336] hover:bg-[#1C2F48] border border-gray-700/60 text-xs font-semibold text-gray-200 transition-colors shadow-sm"
             >
               <span>📍 Google Maps</span>
-              <span className="text-[10px] text-gray-400">↗</span>
-            </a>
-            <a
-              href={store.wazeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => triggerHaptic("light")}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#152336] hover:bg-[#1C2F48] border border-gray-700/60 text-xs font-semibold text-gray-200 transition-colors shadow-sm"
-            >
-              <span>🧭 Waze</span>
               <span className="text-[10px] text-gray-400">↗</span>
             </a>
           </div>

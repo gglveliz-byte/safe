@@ -8,8 +8,8 @@
  * Componente modular de mapa compacto Google Maps interactivo para el panel
  * del conductor. Muestra la ubicación exacta de la motocicleta en tiempo real
  * (o su último punto satelital registrado) replicando la estética oficial de la
- * landing: conmutador rápido entre Callejero y Satelital HD, enlaces directos
- * a Google Maps y Waze, y estado de espera con botón de geolocalización.
+ * landing: conmutador rápido entre Callejero y Satelital HD, enlace directo
+ * a Google Maps y estado de espera con botón de geolocalización.
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 500 líneas físicas (componente compacto ~180 líneas).
@@ -60,10 +60,6 @@ export function RiderMiniMap({
 
   const mapsUrl = coords
     ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
-    : "#";
-
-  const wazeUrl = coords
-    ? `https://waze.com/ul?ll=${coords.lat},${coords.lng}&navigate=yes`
     : "#";
 
   const handleToggleMode = (mode: "street" | "satellite") => {
@@ -168,17 +164,6 @@ export function RiderMiniMap({
               title={t.dashboard.riderMapOpenMaps}
             >
               <span>Maps</span>
-              <span className="text-[9px] text-gray-400">↗</span>
-            </a>
-            <a
-              href={wazeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => triggerHaptic("light")}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#1C2F48] hover:bg-[#253D5C] text-[11px] font-semibold text-gray-200 transition-colors border border-gray-700/60 no-underline shadow-xs"
-              title={t.dashboard.riderMapOpenWaze}
-            >
-              <span>Waze</span>
               <span className="text-[9px] text-gray-400">↗</span>
             </a>
           </div>

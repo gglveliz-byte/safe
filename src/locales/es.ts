@@ -192,7 +192,6 @@ export const es: Dictionary = {
     riderMapWaitingSignal: "Esperando señal satelital GPS de tu motocicleta...",
     riderMapLocateBtn: "Detectar mi ubicación actual",
     riderMapOpenMaps: "Google Maps",
-    riderMapOpenWaze: "Waze",
     riderMapLoading: "Cargando mapa GPS...",
   },
   admin: {
