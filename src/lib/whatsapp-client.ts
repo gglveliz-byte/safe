@@ -20,6 +20,13 @@ export interface WhatsAppStatusDTO {
   portalUrl: string;
 }
 
+export interface ConnectedPhoneNumberDTO {
+  phoneNumber: string;
+  phoneNumberId: string;
+  wabaName: string;
+  tokenStatus?: string;
+}
+
 export interface WhatsAppTemplateComponentDTO {
   type: string;
   format?: string;
@@ -53,6 +60,7 @@ export interface SendWhatsAppPayload {
   languageCode?: string;
   bodyParameters?: string[];
   customKey?: string;
+  fromPhoneNumberId?: string;
 }
 
 async function handleHttpError(res: Response): Promise<never> {
@@ -80,9 +88,25 @@ export const whatsAppClient = {
     return json.data;
   },
 
-  /** Obtiene las plantillas oficiales de Meta desde NeuroAPI */
-  async getTemplates(customKey?: string): Promise<WhatsAppTemplatesResponse> {
+  /** Obtiene las líneas telefónicas oficiales de WhatsApp conectadas a NeuroAPI */
+  async getNumbers(customKey?: string): Promise<{ numbers: ConnectedPhoneNumberDTO[] }> {
     const query = customKey ? `?customKey=${encodeURIComponent(customKey.trim())}` : "";
+    const res = await fetch(`/api/admin/whatsapp/numbers${query}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) await handleHttpError(res);
+    const json = await res.json();
+    return json.data;
+  },
+
+  /** Obtiene las plantillas oficiales de Meta desde NeuroAPI para un número específico */
+  async getTemplates(customKey?: string, phoneNumberId?: string): Promise<WhatsAppTemplatesResponse> {
+    const params = new URLSearchParams();
+    if (customKey) params.set("customKey", customKey.trim());
+    if (phoneNumberId) params.set("phoneNumberId", phoneNumberId.trim());
+    const query = params.toString() ? `?${params.toString()}` : "";
     const res = await fetch(`/api/admin/whatsapp/templates${query}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },

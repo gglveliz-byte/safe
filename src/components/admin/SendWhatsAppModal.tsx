@@ -29,6 +29,7 @@ import {
 export interface SendWhatsAppModalProps {
   template: WhatsAppTemplateDTO;
   customApiKey?: string;
+  fromPhoneNumberId?: string;
   onClose: () => void;
   onSuccess?: (messageId: string) => void;
 }
@@ -36,6 +37,7 @@ export interface SendWhatsAppModalProps {
 export function SendWhatsAppModal({
   template,
   customApiKey,
+  fromPhoneNumberId,
   onClose,
   onSuccess,
 }: SendWhatsAppModalProps) {
@@ -123,6 +125,7 @@ export function SendWhatsAppModal({
         languageCode: template.language || "es",
         bodyParameters: orderedParams,
         customKey: customApiKey?.trim() || undefined,
+        fromPhoneNumberId: fromPhoneNumberId?.trim() || undefined,
       });
 
       triggerHaptic("success");

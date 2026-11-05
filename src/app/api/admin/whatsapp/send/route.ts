@@ -38,6 +38,7 @@ const SendWhatsAppSchema = z
     languageCode: z.string().optional().default("es"),
     bodyParameters: z.array(z.string()).optional().default([]),
     customKey: z.string().optional(),
+    fromPhoneNumberId: z.string().optional(),
   })
   .strict();
 
@@ -52,6 +53,7 @@ export async function POST(request: Request): Promise<NextResponse> {
         templateName: input.templateName,
         languageCode: input.languageCode,
         bodyParameters: input.bodyParameters,
+        fromPhoneNumberId: input.fromPhoneNumberId,
       },
       input.customKey,
     );

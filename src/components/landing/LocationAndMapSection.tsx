@@ -27,7 +27,7 @@ import Image from "next/image";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
 
-const MOTORCYCLE_IMAGE = "https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80";
+const MOTORCYCLE_IMAGE = "/branding/motorcycle-hero.jpg";
 const LATITUDE = -2.8756;
 const LONGITUDE = -78.9865;
 

@@ -5,19 +5,9 @@
  * ARCHIVO: src/services/whatsapp.service.ts
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Integra WhatsApp Business Cloud API oficial a través del portal de NeuroAPI
- * (NeuroChat). Proporciona métodos para consultar las plantillas oficiales
- * aprobadas por Meta Graph API y despachar mensajes de notificación de tipo
- * plantilla (type: "template") de forma segura, garantizando entrega fuera
- * de la ventana de 24 horas para alertas críticas de emergencia o avisos.
- *
- * ENTRADAS: API Key de NeuroAPI (x-api-key), plantillas y teléfonos en formato E.164.
- * SALIDAS: Respuestas tipadas con message_id, estados de plantilla y diagnósticos.
- * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas físicas.
- * - Cero secretos o teléfonos completos en logs públicos.
- * - Cabecera x-api-key con scope obligatorio 'whatsapp_cloud_api'.
- * - Validación y normalización estricta de teléfonos a E.164 (solo dígitos).
+ * Conecta WhatsApp Business Cloud API vía NeuroAPI. Gestiona líneas conectadas,
+ * consulta de plantillas Meta y despacho de notificaciones de emergencia.
+ * Regla: Límite estricto < 500 líneas físicas.
  * ==============================================================================
  */
 
@@ -31,10 +21,7 @@ export interface MetaTemplateComponent {
   type: "HEADER" | "BODY" | "FOOTER" | "BUTTONS";
   format?: "TEXT" | "IMAGE" | "DOCUMENT" | "VIDEO";
   text?: string;
-  example?: {
-    header_text?: string[];
-    body_text?: string[][];
-  };
+  example?: { header_text?: string[]; body_text?: string[][] };
 }
 
 /** Modelo de plantilla de WhatsApp retornada por NeuroAPI */
@@ -61,6 +48,22 @@ export interface ListTemplatesResult {
   templates: WhatsAppTemplate[];
   error?: string;
   isMetaPermissionNotice?: boolean;
+  requiresSelection?: boolean;
+}
+
+/** Línea telefónica oficial de WhatsApp conectada en NeuroAPI */
+export interface ConnectedPhoneNumber {
+  phoneNumber: string;
+  phoneNumberId: string;
+  wabaName: string;
+  tokenStatus?: string;
+}
+
+/** Resultado de listar líneas telefónicas conectadas */
+export interface ListPhoneNumbersResult {
+  success: boolean;
+  numbers: ConnectedPhoneNumber[];
+  error?: string;
 }
 
 /** Parámetros para envío de notificación basada en plantilla */
@@ -114,12 +117,59 @@ export function getNeuroApiKey(): string | null {
 }
 
 /**
- * Consulta la lista de plantillas oficiales de Meta sincronizadas en NeuroAPI.
+ * Consulta la lista de números telefónicos oficiales conectados en NeuroAPI.
+ * Permite filtrar plantillas y envíos por línea telefónica específica (phone_number_id).
+ */
+export async function listConnectedPhoneNumbers(customApiKey?: string): Promise<ListPhoneNumbersResult> {
+  const apiKey = (customApiKey || getNeuroApiKey())?.trim();
+
+  if (!apiKey) {
+    return { success: false, numbers: [], error: "La API Key de NeuroAPI no está configurada." };
+  }
+
+  try {
+    const response = await fetch(`${NEUROAPI_BASE_URL}/neuroapi/messaging/webhooks/numbers`, {
+      method: "GET",
+      headers: { "x-api-key": apiKey, Accept: "application/json" },
+      cache: "no-store",
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      return {
+        success: false,
+        numbers: [],
+        error: data.message || `Error ${response.status} al consultar números en NeuroAPI`,
+      };
+    }
+
+    const rawList = Array.isArray(data.data) ? data.data : [];
+    const numbers: ConnectedPhoneNumber[] = rawList.map((item: Record<string, unknown>) => ({
+      phoneNumber: String(item.phone_number || ""),
+      phoneNumberId: String(item.phone_number_id || ""),
+      wabaName: String(item.waba_name || "Línea WhatsApp"),
+      tokenStatus: typeof item.token_status === "string" ? item.token_status : undefined,
+    }));
+
+    return { success: true, numbers };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    logEvent("error", "Error de red al listar números de WhatsApp en NeuroAPI", { error: errorMsg });
+    return { success: false, numbers: [], error: "No se pudo conectar con el catálogo de líneas de NeuroAPI." };
+  }
+}
+
+/**
+ * Consulta la lista de plantillas oficiales de Meta asociadas a un número específico.
  *
  * @param customApiKey Clave opcional para pruebas desde la interfaz si aún no está en .env
+ * @param phoneNumberId ID de teléfono en Meta para aislar plantillas y evitar fugas cross-WABA
  * @returns Lista de plantillas clasificadas por estado y categoría.
  */
-export async function listWhatsAppTemplates(customApiKey?: string): Promise<ListTemplatesResult> {
+export async function listWhatsAppTemplates(
+  customApiKey?: string,
+  phoneNumberId?: string,
+): Promise<ListTemplatesResult> {
   const apiKey = (customApiKey || getNeuroApiKey())?.trim();
 
   if (!apiKey) {
@@ -130,8 +180,27 @@ export async function listWhatsAppTemplates(customApiKey?: string): Promise<List
     };
   }
 
+  const targetId = (phoneNumberId || getEnv().NEUROAPI_PHONE_NUMBER_ID)?.trim();
+
+  // Aislamiento estricto: Si no se especifica el ID del número, requerir selección
+  // para evitar que NeuroAPI devuelva por defecto plantillas ajenas de otros WABA.
+  if (!targetId) {
+    return {
+      success: true,
+      stats: { total: 0, approved: 0, pending: 0 },
+      templates: [],
+      requiresSelection: true,
+      error: "Selecciona una línea de WhatsApp conectada para consultar sus plantillas oficiales.",
+    };
+  }
+
   try {
-    const response = await fetch(`${NEUROAPI_BASE_URL}/neuroapi/messaging/templates?limit=50`, {
+    const queryParams = new URLSearchParams({
+      phone_number_id: targetId,
+      limit: "50",
+    });
+
+    const response = await fetch(`${NEUROAPI_BASE_URL}/neuroapi/messaging/templates?${queryParams.toString()}`, {
       method: "GET",
       headers: {
         "x-api-key": apiKey,
@@ -360,21 +429,13 @@ export interface EmergencyAlertWhatsAppPayload {
   alertId: string;
 }
 
-/**
- * Despacha notificaciones de auxilio vía WhatsApp oficial a los contactos de emergencia
- * del motociclista cuando su casco NFC/QR es escaneado en carretera.
- *
- * @param payload Datos del siniestro, motociclista y lista de contactos de auxilio.
- * @param templateName Nombre de plantilla opcional (por defecto NEUROAPI_EMERGENCY_TEMPLATE o alerta_emergencia_safe).
- */
+/** Despacha notificaciones de auxilio vía WhatsApp oficial a contactos de emergencia */
 export async function sendEmergencyWhatsAppAlerts(
   payload: EmergencyAlertWhatsAppPayload,
   templateName?: string,
 ): Promise<{ sentCount: number; errors: string[] }> {
   const apiKey = getNeuroApiKey();
-  if (!apiKey || payload.contacts.length === 0) {
-    return { sentCount: 0, errors: [] };
-  }
+  if (!apiKey || payload.contacts.length === 0) return { sentCount: 0, errors: [] };
 
   const tplName = (templateName || process.env.NEUROAPI_EMERGENCY_TEMPLATE || "alerta_emergencia_safe").trim();
   let sentCount = 0;
@@ -385,11 +446,6 @@ export async function sendEmergencyWhatsAppAlerts(
       const cleanPhone = formatE164Phone(contact.phone);
       if (cleanPhone.length < 8) continue;
 
-      // Variables estándar para la plantilla de auxilio de Meta:
-      // {{1}}: Nombre del contacto familiar
-      // {{2}}: Nombre del motociclista
-      // {{3}}: Grupo sanguíneo
-      // {{4}}: Enlace a Google Maps con ubicación satelital
       const bodyParameters = [
         contact.name,
         payload.riderName,

@@ -32,8 +32,9 @@ export async function GET(request: Request): Promise<NextResponse> {
     // Permite probar una API key ingresada en el modal antes de persistirla
     const { searchParams } = new URL(request.url);
     const customKey = searchParams.get("customKey") || request.headers.get("x-custom-api-key") || undefined;
+    const phoneNumberId = searchParams.get("phoneNumberId") || undefined;
 
-    const result = await listWhatsAppTemplates(customKey);
+    const result = await listWhatsAppTemplates(customKey, phoneNumberId);
 
     if (!result.success) {
       throw new AppError("VALIDATION_ERROR", result.error || "Fallo al consultar plantillas en NeuroAPI", 400);

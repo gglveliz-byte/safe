@@ -5,14 +5,13 @@
  * ARCHIVO: src/components/admin/WhatsAppManager.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Vista de administración para gestionar la conexión de WhatsApp Cloud API y
- * el listado de plantillas oficiales para el envío de notificaciones de auxilio.
- * Incluye botón directo para consultar plantillas y botón para vincular el
- * número telefónico oficial mediante Meta Embedded Signup (Coexistencia).
+ * Vista de administración para gestionar la conexión de WhatsApp Cloud API oficial
+ * para el número de la empresa (593) 959 057 138. Permite conectar la línea
+ * por Coexistencia con Meta Embedded Signup y auditar plantillas aprobadas.
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 500 líneas físicas.
- * - Cero datos hardcodeados o mocks de demostración.
+ * - Cero datos hardcodeados ajenos o exposición de números no autorizados.
  * - Objetivos táctiles mínimos de 44x44px y háptica en interacciones.
  * ==============================================================================
  */
@@ -63,12 +62,14 @@ export function WhatsAppManager() {
     }
   }, []);
 
-  // Consultar plantillas oficiales desde Meta / NeuroAPI
+  // Consultar plantillas oficiales asociadas internamente a la línea oficial
   const handleConsultarPlantillas = useCallback(async () => {
     setIsLoadingTemplates(true);
     setTemplatesNotice("");
     triggerHaptic("light");
+
     try {
+      // Consulta interna sin exponer listas de números en el frontend
       const data = await whatsAppClient.getTemplates();
       setTemplates(data.templates || []);
       setStats(data.stats || null);
@@ -101,8 +102,7 @@ export function WhatsAppManager() {
 
   useEffect(() => {
     void loadStatus();
-    void handleConsultarPlantillas();
-  }, [loadStatus, handleConsultarPlantillas]);
+  }, [loadStatus]);
 
   const getBodyComponent = (template: WhatsAppTemplateDTO): WhatsAppTemplateComponentDTO | undefined => {
     return template.components.find((c) => c.type === "BODY");
@@ -146,7 +146,7 @@ export function WhatsAppManager() {
             {isLoadingStatus
               ? "Verificando conexión..."
               : status?.isConfigured
-                ? "Servicio activo y autenticado para envío de alertas por WhatsApp."
+                ? "Línea oficial objetivo: (593) 959 057 138 · Pendiente de vincular por Coexistencia."
                 : "Se requiere configurar la API Key de WhatsApp en las variables del servidor."}
           </p>
         </div>
@@ -158,7 +158,7 @@ export function WhatsAppManager() {
             onClick={handleConectarWhatsApp}
             disabled={isConnecting}
             className="min-h-[44px] px-4 py-2 inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs transition-all cursor-pointer disabled:opacity-50"
-            title="Conecta tu WhatsApp Business de tu teléfono para convivir con la Cloud API (Modo Coexistencia)"
+            title="Conecta el WhatsApp Business de tu teléfono para convivir con la Cloud API (Modo Coexistencia)"
           >
             <span>📲</span>
             <span>{isConnecting ? "Abriendo Meta..." : "Conectar WhatsApp (Coexistencia)"}</span>
@@ -175,6 +175,12 @@ export function WhatsAppManager() {
           </button>
         </div>
       </div>
+
+      {templatesNotice && (
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs font-sans text-amber-900">
+          {templatesNotice}
+        </div>
+      )}
 
       {/* 2. Estadísticas de Plantillas (si existen) */}
       {stats && stats.total > 0 && (
@@ -204,11 +210,11 @@ export function WhatsAppManager() {
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h3 className="font-serif text-lg font-bold text-brand-navy-dark">
-            Plantillas Disponibles en WhatsApp
+            Plantillas Disponibles en Meta
           </h3>
           {templates.length > 0 && (
             <span className="font-sans text-xs text-brand-text-muted">
-              {templates.length} plantilla(s) lista(s) para enviar
+              {templates.length} plantilla(s) sincronizada(s)
             </span>
           )}
         </div>
@@ -277,22 +283,20 @@ export function WhatsAppManager() {
             })}
           </div>
         ) : (
-          /* Estado cuando no hay plantillas sincronizadas o falta vincular número */
+          /* Estado cuando la línea oficial aún no ha sido conectada o no tiene plantillas */
           <div className="bg-brand-white border border-brand-border-subtle rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
             <div className="flex items-start gap-3">
               <span className="text-2xl">📋</span>
               <div>
                 <h4 className="font-serif text-base font-bold text-brand-navy-dark">
-                  Sin plantillas disponibles en Meta
+                  Línea Oficial: (593) 959 057 138 · Pendiente de Conexión
                 </h4>
                 <p className="font-sans text-xs text-brand-text-desc mt-1 leading-relaxed">
-                  Para que las plantillas aparezcan en este listado:
+                  Para emitir notificaciones oficiales y sincronizar plantillas con tu número de Ecuador:
                   <br />
-                  1. Conecta tu WhatsApp pulsando el botón <strong>&quot;Conectar WhatsApp (Coexistencia)&quot;</strong> arriba.
+                  1. Pulsa el botón verde <strong>&quot;Conectar WhatsApp (Coexistencia)&quot;</strong> arriba para vincular tu WhatsApp Business en Meta.
                   <br />
-                  2. En Meta Business Suite o NeuroChat crea y aprueba tus plantillas de mensajes (ej: <code>alerta_accidente</code>).
-                  <br />
-                  3. Pulsa el botón <strong>&quot;Consultar Plantillas&quot;</strong>.
+                  2. Una vez completado el flujo oficial, tus plantillas aprobadas se cargarán automáticamente.
                 </p>
               </div>
             </div>
@@ -300,7 +304,7 @@ export function WhatsAppManager() {
             {/* Alternativa: Probar plantilla directa si ya está aprobada en Meta */}
             <div className="pt-3 border-t border-brand-separator">
               <span className="font-sans text-[11px] font-bold uppercase tracking-wider text-brand-text-muted block mb-2">
-                O usar plantilla por nombre directo
+                O probar plantilla por nombre directo
               </span>
               <form onSubmit={handleLaunchManualTemplate} className="flex flex-col sm:flex-row items-end gap-2.5">
                 <div className="flex-1 w-full">
@@ -309,7 +313,7 @@ export function WhatsAppManager() {
                     required
                     value={manualTemplateName}
                     onChange={(e) => setManualTemplateName(e.target.value)}
-                    placeholder="Nombre exacto en Meta (ej: alerta_accidente)"
+                    placeholder="Nombre exacto en Meta (ej: alerta_accidente_safe)"
                     className="w-full px-3 py-2 text-xs font-mono bg-brand-bg-alt border border-brand-border-field rounded-lg text-brand-navy-dark focus:outline-none focus:ring-2 focus:ring-brand-nav-blue"
                   />
                 </div>

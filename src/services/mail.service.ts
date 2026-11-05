@@ -74,6 +74,18 @@ const MAIL_NOT_CONFIGURED_MESSAGE = "El servicio de avisos no está configurado.
 /** Longitud máxima del resumen de error que viaja en `deliveries.error`. */
 const MAX_ERROR_LENGTH = 180;
 
+/** Opciones de cabeceras de alta prioridad y no-spam para clientes de correo */
+const HIGH_PRIORITY_MAIL_OPTIONS = {
+  priority: "high" as const,
+  headers: {
+    "X-Priority": "1",
+    "X-MSMail-Priority": "High",
+    "Importance": "high",
+    "Priority": "urgent",
+    "X-Auto-Response-Suppress": "OOF, AutoReply",
+  },
+};
+
 /** Credenciales resueltas del entorno para el transporte y el remitente. */
 interface MailSettings { user: string; appPassword: string; fromName: string; }
 
@@ -205,7 +217,15 @@ async function mailWorker(queue: QueueItem[], task: SendTask): Promise<void> {
     }
     try {
       const content = buildEmergencyEmailContent(task.payload, task.locale, item.recipient.name || undefined);
-      const info = await task.transporter.sendMail({ from: task.from, to: item.recipient.email, subject: content.subject, html: content.html, text: content.text });
+      const info = await task.transporter.sendMail({
+        from: task.from,
+        to: item.recipient.email,
+        replyTo: task.from,
+        subject: content.subject,
+        html: content.html,
+        text: content.text,
+        ...HIGH_PRIORITY_MAIL_OPTIONS,
+      });
       task.deliveries[item.slot] = {
         email: item.recipient.email,
         delivered: true,
@@ -315,9 +335,11 @@ export async function sendPasswordResetEmail(
     const info = await transporter.sendMail({
       from: buildFromAddress(settings),
       to: normalizedEmail,
+      replyTo: buildFromAddress(settings),
       subject: content.subject,
       text: content.text,
       html: content.html,
+      ...HIGH_PRIORITY_MAIL_OPTIONS,
     });
 
     logEvent("info", "Correo de recuperación de contraseña enviado exitosamente", {
@@ -360,9 +382,11 @@ export async function sendWelcomeEmail(params: WelcomeEmailPayload): Promise<boo
     const info = await transporter.sendMail({
       from: buildFromAddress(settings),
       to: normalizedEmail,
+      replyTo: buildFromAddress(settings),
       subject: content.subject,
       text: content.text,
       html: content.html,
+      ...HIGH_PRIORITY_MAIL_OPTIONS,
     });
 
     logEvent("info", "Correo de bienvenida enviado exitosamente", {
@@ -408,9 +432,11 @@ export async function sendAdminPinNotificationEmail(
     const info = await transporter.sendMail({
       from: buildFromAddress(settings),
       to: normalizedAdminEmail,
+      replyTo: buildFromAddress(settings),
       subject: content.subject,
       text: content.text,
       html: content.html,
+      ...HIGH_PRIORITY_MAIL_OPTIONS,
     });
 
     logEvent("info", "Correo de notificación de PIN a admin enviado exitosamente", {
