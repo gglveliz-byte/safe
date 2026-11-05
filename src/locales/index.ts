@@ -448,12 +448,14 @@ export interface Dictionary {
   };
   pointsOfSale: {
     title: string; subtitle: string; viewOnGoogleMaps: string; schedule: string; phone: string; callDirect: string;
+    badgeOfficial: string; directWhatsApp: string;
     store1Name: string; store1Address: string; store1Hours: string; store1Phone: string;
     store2Name: string; store2Address: string; store2Hours: string; store2Phone: string;
     store3Name: string; store3Address: string; store3Hours: string; store3Phone: string;
   };
   map3d: {
-    title: string; subtitle: string; toggle3d: string; toggle2d: string;
+    title: string; subtitle: string; toggleSatellite: string; toggleStreet: string;
+    toggle3d: string; toggle2d: string;
     filterAll: string; filterMatriz: string; filterPartners: string;
     viewDetails: string; openInMaps: string; pinTooltip: string;
   };

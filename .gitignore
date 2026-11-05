@@ -38,3 +38,4 @@ yarn-error.log*
 
 # Scripts de prueba locales (no son código de producción)
 scratch/
+.playwright-mcp/
