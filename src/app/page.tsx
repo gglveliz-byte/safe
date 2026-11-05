@@ -25,7 +25,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
@@ -34,24 +34,12 @@ import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { LocationAndMapSection } from "@/components/landing/LocationAndMapSection";
 import { GoldenHourSection } from "@/components/landing/GoldenHourSection";
 import { SocialAndContactSection } from "@/components/landing/SocialAndContactSection";
-import { DemoMedicalModal } from "@/components/landing/DemoMedicalModal";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { FloatingWhatsAppButton } from "@/components/ui/FloatingWhatsAppButton";
 
 export default function HomePage() {
   const { t } = useLocale();
   const { triggerHaptic } = useHaptic();
-  const [demoModalOpen, setDemoModalOpen] = useState(false);
-
-  const openDemoModal = () => {
-    triggerHaptic("light");
-    setDemoModalOpen(true);
-  };
-
-  const closeDemoModal = () => {
-    triggerHaptic("light");
-    setDemoModalOpen(false);
-  };
 
   return (
     <div className="w-full bg-brand-white">
@@ -78,31 +66,22 @@ export default function HomePage() {
               {t.landing.heroSubheadline}
             </p>
 
-            {/* Botones de Acción Interactivos */}
+            {/* Botón de Acción Principal */}
             <div className="flex flex-wrap items-center gap-4">
-              <button
-                type="button"
-                onClick={openDemoModal}
-                aria-haspopup="dialog"
-                className="group inline-flex items-center justify-center px-6 py-3.5 bg-brand-white text-brand-navy-dark border border-brand-border-subtle hover:border-brand-nav-blue hover:bg-brand-nav-active hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] text-[13px] md:text-[14px] font-semibold rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer"
+              <Link
+                href="/login"
+                onClick={() => triggerHaptic("light")}
+                className="group inline-flex items-center justify-center px-7 py-3.5 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] text-[14px] md:text-[15px] font-semibold rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-nav-blue no-underline"
               >
-                <span>{t.landing.exploreEmergencyCta}</span>
+                <span>{t.nav.login}</span>
                 <svg
-                  className="ml-2.5 w-4 h-4 text-brand-nav-blue transform group-hover:translate-x-1.5 transition-transform duration-200"
+                  className="ml-2.5 w-4 h-4 text-brand-accent transform group-hover:translate-x-1.5 transition-transform duration-200"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
-              </button>
-
-              <Link
-                href="/login"
-                onClick={() => triggerHaptic("light")}
-                className="inline-flex items-center justify-center px-6 py-3.5 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] text-[13px] md:text-[14px] font-semibold rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-nav-blue no-underline"
-              >
-                {t.nav.login}
               </Link>
             </div>
 
@@ -141,9 +120,6 @@ export default function HomePage() {
 
       {/* ══════════ BOTÓN FLOTANTE OFICIAL DE WHATSAPP ══════════ */}
       <FloatingWhatsAppButton />
-
-      {/* ══════════ MODAL: FICHA MÉDICA DE DEMOSTRACIÓN ══════════ */}
-      <DemoMedicalModal isOpen={demoModalOpen} onClose={closeDemoModal} />
     </div>
   );
 }

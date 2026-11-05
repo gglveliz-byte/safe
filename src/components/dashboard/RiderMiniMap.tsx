@@ -74,9 +74,12 @@ export function RiderMiniMap({
     return (
       <div className="w-full rounded-xl border border-brand-border-subtle bg-brand-bg-alt p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left transition-all">
         <div className="flex items-center gap-3">
-          <span className="text-2xl" aria-hidden="true">
-            🛰️
-          </span>
+          <div className="w-8 h-8 rounded-full bg-brand-navy-dark/10 flex items-center justify-center flex-shrink-0">
+            <svg className="w-4 h-4 text-brand-navy-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
           <div className="flex flex-col">
             <span className="font-serif font-bold text-sm text-brand-navy-dark">
               {t.dashboard.riderMapWaitingSignal}
@@ -92,7 +95,10 @@ export function RiderMiniMap({
             onClick={onLocate}
             className="min-h-[42px] px-4 py-2 bg-brand-navy-dark hover:bg-brand-navy-secondary text-white text-xs font-semibold rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs whitespace-nowrap active:scale-95"
           >
-            <span>📍</span>
+            <svg className="w-3.5 h-3.5 text-brand-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
             <span>{t.dashboard.riderMapLocateBtn}</span>
           </button>
         )}
@@ -113,9 +119,10 @@ export function RiderMiniMap({
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
             </span>
           ) : (
-            <span className="text-xs flex-shrink-0" aria-hidden="true">
-              📍
-            </span>
+            <svg className="w-3.5 h-3.5 text-brand-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
           )}
           <span className="font-sans text-xs font-semibold text-gray-200 truncate">
             {isLiveRideActive

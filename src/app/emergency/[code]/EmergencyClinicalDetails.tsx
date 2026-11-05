@@ -79,8 +79,12 @@ export function EmergencyClinicalDetails({
             {(medical.city || medical.country) && (
               <>
                 <span>•</span>
-                <span className="text-brand-navy-dark font-semibold">
-                  📍 {[medical.city, medical.country].filter(Boolean).join(", ")}
+                <span className="text-brand-navy-dark font-semibold inline-flex items-center gap-1">
+                  <svg className="w-3.5 h-3.5 text-brand-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span>{[medical.city, medical.country].filter(Boolean).join(", ")}</span>
                 </span>
               </>
             )}
@@ -155,13 +159,17 @@ export function EmergencyClinicalDetails({
         <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-brand-bg-alt border border-brand-border-subtle rounded-xl text-xs">
           {medical.vehicleInfo && (
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-brand-text-muted">🏍️ {t.activate.vehicleInfoLabel}:</span>
+              <span className="font-bold text-brand-text-muted">{t.activate.vehicleInfoLabel}:</span>
               <span className="font-mono font-bold text-brand-navy-dark">{medical.vehicleInfo}</span>
             </div>
           )}
           {medical.frequentLocation && (
             <div className="flex items-center gap-1.5">
-              <span className="font-bold text-brand-text-muted">📍 {t.activate.frequentLocationLabel}:</span>
+              <svg className="w-3.5 h-3.5 text-brand-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="font-bold text-brand-text-muted">{t.activate.frequentLocationLabel}:</span>
               <span className="font-sans font-semibold text-brand-navy-dark">{medical.frequentLocation}</span>
             </div>
           )}

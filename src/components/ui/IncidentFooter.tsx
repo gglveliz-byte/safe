@@ -48,10 +48,26 @@ export function IncidentFooter() {
           <p className="text-xs text-brand-text-muted font-sans">
             {"©"} {currentYear} {t.common.appName}. {t.common.allRightsReserved}
           </p>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-brand-text-muted font-sans pt-1">
-            <span>📍 Parque Industrial (Uncovia), Cuenca - Ecuador</span>
-            <span>✉️ <a href="mailto:info@altuschip.com" className="hover:underline text-brand-navy-dark">info@altuschip.com</a></span>
-            <span>💬 <a href="https://wa.me/593959057138" target="_blank" rel="noopener noreferrer" className="hover:underline text-brand-navy-dark">+593 959 057 138</a></span>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-brand-text-muted font-sans pt-1">
+            <span className="inline-flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5 text-brand-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span>Parque Industrial (Uncovia), Cuenca - Ecuador</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5 text-brand-nav-blue flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <a href="mailto:info@altuschip.com" className="hover:underline text-brand-navy-dark">info@altuschip.com</a>
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5 fill-[#25D366] flex-shrink-0" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.301-.15-1.78-.879-2.056-.98-.276-.101-.477-.15-.678.15-.2.302-.779.98-.955 1.18-.175.201-.351.226-.652.076-.301-.151-1.27-.468-2.419-1.493-.894-.798-1.497-1.784-1.673-2.086-.176-.301-.019-.464.132-.614.136-.135.301-.351.452-.527.15-.176.201-.301.301-.502.101-.201.05-.377-.025-.527-.075-.151-.678-1.633-.929-2.235-.245-.587-.494-.508-.678-.517l-.578-.01c-.2 0-.527.075-.803.377-.276.301-1.054 1.03-1.054 2.512s1.079 2.913 1.23 3.114c.15.201 2.122 3.24 5.141 4.544.718.31 1.278.495 1.716.634.721.229 1.377.197 1.895.12.578-.087 1.78-.728 2.031-1.431.251-.703.251-1.306.176-1.431-.075-.126-.276-.201-.577-.351zM12.004 0C5.378 0 .008 5.37.008 11.996a11.93 11.93 0 001.637 6.064L0 24l6.109-1.602a11.935 11.935 0 005.895 1.545h.005c6.626 0 11.991-5.37 11.991-11.996S18.63 0 12.004 0zm0 21.99a9.98 9.98 0 01-5.086-1.39l-.365-.216-3.774.99.102-3.676-.237-.378a9.96 9.96 0 01-1.536-5.324c0-5.518 4.49-10.007 10.01-10.007 2.673 0 5.186 1.042 7.075 2.932a9.94 9.94 0 012.93 7.075c0 5.52-4.49 10.009-10.009 10.009z" />
+              </svg>
+              <a href="https://wa.me/593959057138" target="_blank" rel="noopener noreferrer" className="hover:underline text-brand-navy-dark font-medium">+593 959 057 138</a>
+            </span>
           </div>
         </div>
 

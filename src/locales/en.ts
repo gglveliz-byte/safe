@@ -451,8 +451,8 @@ export const en: Dictionary = {
   map3d: {
     title: "LOCATION & SATELLITE MAP",
     subtitle: "Real-time location of our headquarters in Parque Industrial (Uncovia), Cuenca",
-    toggleSatellite: "🛰️ Satellite HD", toggleStreet: "🗺️ Street Map",
-    toggle3d: "🛰️ Satellite HD", toggle2d: "🗺️ Street Map",
+    toggleSatellite: "Satellite HD", toggleStreet: "Street Map",
+    toggle3d: "Satellite HD", toggle2d: "Street Map",
     filterAll: "Cuenca HQ", filterMatriz: "Parque Industrial", filterPartners: "Ecuador",
     viewDetails: "View Details", openInMaps: "Open in Google Maps", pinTooltip: "AltusChip Headquarters",
   },

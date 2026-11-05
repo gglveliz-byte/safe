@@ -25,7 +25,7 @@
  * ==============================================================================
  */
 
-const CACHE_NAME = 'safe-incident-cache-v1';
+const CACHE_NAME = 'altuschip-cache-v3';
 
 // Recursos críticos para arranque offline
 const PRECACHE_RESOURCES = [
@@ -103,6 +103,13 @@ self.addEventListener('fetch', (event) => {
 
   // Solo procesar peticiones HTTP y HTTPS (descarta extensiones o esquemas internos)
   if (!url.protocol.startsWith('http')) {
+    return;
+  }
+
+  // Solo interceptar peticiones de nuestro propio origen.
+  // Los recursos externos de terceros (CDNs, imágenes remotas, mapas) los resuelve el navegador
+  // de forma nativa para evitar que la evaluación de fetch() active bloqueos connect-src de CSP.
+  if (url.origin !== self.location.origin) {
     return;
   }
 

@@ -451,8 +451,8 @@ export const es: Dictionary = {
   map3d: {
     title: "MAPA DE UBICACIÓN Y VISTA SATELITAL",
     subtitle: "Localización en tiempo real de nuestra sede matriz en Parque Industrial (Uncovia), Cuenca",
-    toggleSatellite: "🛰️ Satelital HD", toggleStreet: "🗺️ Callejero",
-    toggle3d: "🛰️ Satelital HD", toggle2d: "🗺️ Callejero",
+    toggleSatellite: "Satelital HD", toggleStreet: "Callejero",
+    toggle3d: "Satelital HD", toggle2d: "Callejero",
     filterAll: "Sede Cuenca", filterMatriz: "Parque Industrial", filterPartners: "Ecuador",
     viewDetails: "Ver detalles", openInMaps: "Abrir en Google Maps", pinTooltip: "Sede Matriz AltusChip",
   },

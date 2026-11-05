@@ -48,7 +48,7 @@ const CONTENT_SECURITY_POLICY = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline' https://unpkg.com",
   "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://*.google.com https://*.googleapis.com https://*.googleusercontent.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://server.arcgisonline.com https://*.basemaps.cartocdn.com",
-  "connect-src 'self' ws: wss: https://*.neon.tech https://api.cloudinary.com https://*.google.com https://*.basemaps.cartocdn.com https://server.arcgisonline.com",
+  "connect-src 'self' ws: wss: https://*.neon.tech https://api.cloudinary.com https://images.unsplash.com https://*.google.com https://*.basemaps.cartocdn.com https://server.arcgisonline.com",
   "font-src 'self'",
   "frame-src 'self' https://www.google.com https://maps.google.com https://*.google.com https://*.openstreetmap.org",
   "frame-ancestors 'none'",
