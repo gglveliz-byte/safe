@@ -74,14 +74,10 @@ const MAIL_NOT_CONFIGURED_MESSAGE = "El servicio de avisos no está configurado.
 /** Longitud máxima del resumen de error que viaja en `deliveries.error`. */
 const MAX_ERROR_LENGTH = 180;
 
-/** Opciones de cabeceras de alta prioridad y no-spam para clientes de correo */
+/** Opciones de cabeceras de entrega limpia y prioridad para clientes de correo */
 const HIGH_PRIORITY_MAIL_OPTIONS = {
-  priority: "high" as const,
   headers: {
-    "X-Priority": "1",
-    "X-MSMail-Priority": "High",
     "Importance": "high",
-    "Priority": "urgent",
     "X-Auto-Response-Suppress": "OOF, AutoReply",
   },
 };
