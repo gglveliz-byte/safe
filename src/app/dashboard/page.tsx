@@ -50,6 +50,7 @@ import {
   type EmergencyContact,
   type DashboardResponse,
 } from "@/lib/api-client";
+import type { CompanionData } from "@/lib/api-types";
 import { IncidentButton } from "@/components/ui/IncidentButton";
 import { IncidentHairline } from "@/components/ui/IncidentHairline";
 import { LiveRideCard } from "@/components/dashboard/LiveRideCard";
@@ -190,6 +191,7 @@ function DashboardContent() {
           frequentLocation: data.profile.frequentLocation || "",
           vehicleInfo: data.profile.vehicleInfo || "",
           locale: data.profile.locale === "en" ? "en" : "es",
+          companionData: (data.profile.companionData as CompanionData) || null,
           contacts: formattedContacts,
         });
       }

@@ -144,6 +144,7 @@ export async function POST(request: Request): Promise<NextResponse> {
                 medications: true,
                 emergencyContacts: true,
                 locale: true,
+                companionData: true,
               },
             },
           },
@@ -292,8 +293,22 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     const mailContacts = contactsResult.success ? contactsResult.data : [];
 
-    // 11b. Idioma del correo según el locale persistido del perfil médico
-    //      (hallazgo H-07): "en" → inglés; cualquier otro valor o null → español.
+    // 11b. Extracción segura del acompañante habitual si viajan juntos
+    const rawComp = device.user.medicalProfile.companionData as Record<string, unknown> | null;
+    const companionPayload = (rawComp && rawComp.isEnabled === true && typeof rawComp.fullName === "string" && rawComp.fullName.trim().length > 0)
+      ? {
+          fullName: String(rawComp.fullName),
+          relationship: rawComp.relationship ? String(rawComp.relationship) : null,
+          bloodType: String(rawComp.bloodType || "DESCONOCIDO"),
+          allergies: rawComp.allergies ? String(rawComp.allergies) : null,
+          chronicConditions: rawComp.chronicConditions ? String(rawComp.chronicConditions) : null,
+          medications: rawComp.medications ? String(rawComp.medications) : null,
+          nationalId: rawComp.nationalId ? String(rawComp.nationalId) : null,
+          phone: rawComp.phone ? String(rawComp.phone) : null,
+        }
+      : null;
+
+    // 11c. Idioma del correo según el locale persistido del perfil médico
     const profileLocale = device.user.medicalProfile.locale;
 
     const mailResult = await sendEmergencyAlertEmail(
@@ -308,11 +323,12 @@ export async function POST(request: Request): Promise<NextResponse> {
         googleMapsUrl: mapsData.googleMapsUrl,
         scannedAt: alert.createdAt,
         alertId: alert.id,
+        companion: companionPayload,
       },
       profileLocale === "en" ? "en" : "es",
     );
 
-    // 11c. Actualización del conteo de correos enviados y registro de entregas.
+    // 11d. Actualización del conteo de correos enviados y registro de entregas.
     await db.emergencyAlert.update({
       where: { id: alert.id },
       data: {
@@ -321,7 +337,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       },
     });
 
-    // 11d. Despacho complementario por WhatsApp oficial a los contactos con teléfono
+    // 11e. Despacho complementario por WhatsApp oficial a los contactos con teléfono
     let whatsAppSentCount = 0;
     const phoneContacts = mailContacts
       .filter((c) => Boolean(c.phone && c.phone.trim().length >= 8))
@@ -337,6 +353,7 @@ export async function POST(request: Request): Promise<NextResponse> {
           dmsFormatted: mapsData.dmsFormatted,
           alertId: alert.id,
           locale: profileLocale === "en" ? "en" : "es",
+          companion: companionPayload ? { fullName: companionPayload.fullName, bloodType: companionPayload.bloodType } : null,
         });
         whatsAppSentCount = waResult.sentCount;
       } catch (waErr: unknown) {

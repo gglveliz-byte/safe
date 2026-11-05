@@ -5,17 +5,25 @@
  * ARCHIVO: src/app/activate/[code]/page.tsx
  * ------------------------------------------------------------------------------
  * DESCRIPCIÓN:
- * Pantalla directa y unificada de registro y activación de kit físico:
- * (1) Tarjeta única con los datos del motociclista y el campo del PIN de activación.
- * (2) Un solo botón de acción:
- *     - Inicial: "Solicitar Código de Activación" (registra la cuenta y envía el PIN al admin).
- *     - Tras registrar: Los campos se oscurecen y bloquean ("no vale cambiar").
- *     - El campo del PIN se habilita y el mismo botón cambia a "Activar Cuenta".
- * (3) Al ingresar el PIN de 6 dígitos y presionar "Activar Cuenta", vincula el kit
- *     y redirige directamente al panel (/dashboard).
+ * Pantalla directa y unificada de registro y activación de kit físico con
+ * soporte para DOS MODALIDADES CANÓNICAS:
+ *
+ * 1. MODALIDAD AUTOMÁTICA (PIN en mano o incrustado en QR):
+ *    El piloto cuenta con su PIN de 6 dígitos impreso en el kit/tarjeta o en
+ *    la URL del QR (?pin=XXXXXX). Llena sus datos y presiona:
+ *    "⚡ Registrar y Activar Kit Directo".
+ *    El sistema registra la cuenta, activa el dispositivo y redirige al panel
+ *    en 1 solo paso inmediato.
+ *
+ * 2. MODALIDAD ASISTIDA POR ASESOR / ADMIN (Sin PIN en mano):
+ *    El piloto no tiene el PIN impreso o prefiere recibirlo de su asesor.
+ *    Llena sus datos y presiona "📩 Solicitar Código a mi Asesor".
+ *    El sistema registra la cuenta, notifica al administrador por correo
+ *    con el PIN desencriptado y enlace a WhatsApp, bloquea los datos personales
+ *    ("no vale cambiar") y espera a que el usuario ingrese el PIN recibido.
  *
  * LEYES DE INGENIERÍA:
- * - Límite estricto < 500 líneas físicas (este archivo < 250 líneas).
+ * - Límite estricto < 500 líneas físicas.
  * - Cero textos hardcodeados (100% diccionario bilingüe vía useLocale).
  * - Paleta Incident oficial, táctiles ≥44px y respuesta háptica.
  * ==============================================================================
@@ -25,7 +33,7 @@
 
 import React, { use, useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
@@ -48,16 +56,33 @@ function ActivatePageContent({ params }: PageProps) {
   const code = (resolvedParams?.code ?? "").trim().toUpperCase();
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlPin = (searchParams?.get("pin") ?? "").trim();
+
   const { locale, t } = useLocale();
   const { triggerHaptic } = useHaptic();
   const form = useActivateForm(code, locale, t);
 
-  const [pin, setPin] = useState("");
+  const [pin, setPin] = useState(() => urlPin.replace(/\D/g, "").slice(0, 6));
+  const [activationMode, setActivationMode] = useState<"direct" | "assisted">(() =>
+    urlPin ? "direct" : "direct",
+  );
   const [isPinSubmitting, setIsPinSubmitting] = useState(false);
   const [pinError, setPinError] = useState<string | null>(null);
 
   const pinInputRef = useRef<HTMLInputElement | null>(null);
   const errorRef = useRef<HTMLDivElement | null>(null);
+
+  // Si el PIN viene por query param (?pin=...), inicializarlo y priorizar modo directo
+  useEffect(() => {
+    if (urlPin) {
+      const cleanDigits = urlPin.replace(/\D/g, "").slice(0, 6);
+      if (cleanDigits) {
+        setPin(cleanDigits);
+        setActivationMode("direct");
+      }
+    }
+  }, [urlPin]);
 
   // Detección de cuenta ya registrada previamente en espera de PIN
   const [existingPending, setExistingPending] = useState<{
@@ -109,7 +134,7 @@ function ActivatePageContent({ params }: PageProps) {
   const currentEmail = isRegistered && registeredData ? registeredData.email : form.email;
   const currentRiderPhone = isRegistered && registeredData ? registeredData.riderPhone : form.riderPhone;
 
-  // Auto-foco en el input de PIN una vez que se completa el registro
+  // Auto-foco en el input de PIN una vez que se completa el registro o se selecciona modo directo
   useEffect(() => {
     if (isRegistered && pinInputRef.current) {
       pinInputRef.current.focus();
@@ -119,6 +144,9 @@ function ActivatePageContent({ params }: PageProps) {
   const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const cleanDigits = e.target.value.replace(/\D/g, "").slice(0, 6);
     setPin(cleanDigits);
+    if (cleanDigits.length > 0) {
+      setActivationMode("direct");
+    }
     if (pinError) setPinError(null);
   };
 
@@ -126,20 +154,52 @@ function ActivatePageContent({ params }: PageProps) {
     e.preventDefault();
     setPinError(null);
 
-    // Estado 1: Solicitar código de activación (Registro)
+    const cleanPin = pin.trim();
+    const isDirectWithPin = activationMode === "direct" && cleanPin.length === 6;
+
+    // Caso 1: Usuario aún no registrado
     if (!isRegistered) {
       triggerHaptic("light");
       const ok = await form.submit();
-      if (ok) {
-        triggerHaptic("success");
-      } else {
+      if (!ok) {
         triggerHaptic("error");
+        return;
+      }
+
+      // Si el usuario eligió activación automática directa y ya ingresó los 6 dígitos
+      if (isDirectWithPin) {
+        setIsPinSubmitting(true);
+        try {
+          const res = await apiClient.claimDevice({
+            code,
+            pin: cleanPin,
+          });
+
+          if (!res.success) {
+            throw new Error(res.message || t.activate.errorPinInvalid);
+          }
+
+          triggerHaptic("success");
+          router.push("/dashboard");
+          return;
+        } catch (err: unknown) {
+          triggerHaptic("error");
+          const msg = err instanceof Error ? err.message : t.activate.errorPinInvalid;
+          setPinError(msg);
+          if (errorRef.current) {
+            errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        } finally {
+          setIsPinSubmitting(false);
+        }
+      } else {
+        // Modo asistido: se registró la cuenta, admin notificado, pasamos a esperar el PIN
+        triggerHaptic("success");
       }
       return;
     }
 
-    // Estado 2: Activar cuenta con el PIN de 6 dígitos
-    const cleanPin = pin.trim();
+    // Caso 2: Usuario ya registrado, validando el PIN de 6 dígitos
     if (cleanPin.length !== 6) {
       setPinError(t.activate.errorPinInvalid);
       triggerHaptic("warning");
@@ -174,6 +234,8 @@ function ActivatePageContent({ params }: PageProps) {
   };
 
   const activeErrorMessage = pinError || form.errorMessage;
+  const isDirectMode = activationMode === "direct";
+  const hasFullPin = pin.trim().length === 6;
 
   return (
     <div className="w-full max-w-xl mx-auto px-4 py-8 sm:py-12 min-h-[100dvh] flex flex-col gap-6 animate-fadeInUp">
@@ -193,7 +255,7 @@ function ActivatePageContent({ params }: PageProps) {
         </p>
       </section>
 
-      {/* Tarjeta Única con Formulario y PIN Integrado */}
+      {/* Tarjeta Única con Formulario y 2 Opciones de Activación */}
       <form onSubmit={handleFormSubmit} className="flex flex-col gap-5" noValidate>
         <div className="bg-brand-white border border-brand-border-subtle rounded-xl p-5 sm:p-7 shadow-xs flex flex-col gap-4">
           {/* Nombre Completo */}
@@ -287,30 +349,87 @@ function ActivatePageContent({ params }: PageProps) {
             </span>
           </label>
 
-          {/* Apartado Único: Código de Activación */}
-          <div className="border-t border-brand-separator pt-5 flex flex-col gap-2.5">
-            <label className="font-serif font-bold text-sm text-brand-navy-dark text-center">
-              {t.activate.pinSectionTitle} *
-            </label>
-            <input
-              ref={pinInputRef}
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={6}
-              disabled={!isRegistered || isPinSubmitting}
-              value={pin}
-              onChange={handlePinChange}
-              placeholder="1 2 3 4 5 6"
-              className={`w-full max-w-xs mx-auto h-12 text-center font-mono text-2xl font-bold tracking-[0.4em] rounded-lg border transition-all ${
-                isRegistered
-                  ? "bg-brand-white border-2 border-brand-navy-dark text-brand-navy-dark focus:border-brand-accent shadow-xs"
-                  : "bg-brand-bg-alt/70 border-brand-border-field text-brand-text-muted opacity-50 cursor-not-allowed"
-              }`}
-            />
-            <p className="font-sans text-xs text-brand-text-muted text-center px-4">
-              {t.activate.pinHelpNotice}
-            </p>
+          {/* Apartado de Activación: Selector de las 2 Opciones */}
+          <div className="border-t border-brand-separator pt-5 flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+              <label className="font-serif font-bold text-sm text-brand-navy-dark">
+                {t.activate.pinSectionTitle}
+              </label>
+
+              {/* Selector de Opciones (Directo con PIN vs. Asistido con Asesor) */}
+              {!isRegistered && (
+                <div className="inline-flex items-center p-1 bg-brand-bg-alt rounded-lg border border-brand-border-subtle text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivationMode("direct");
+                      pinInputRef.current?.focus();
+                    }}
+                    className={`px-3 py-1 rounded-md font-sans text-xs font-semibold transition-all cursor-pointer ${
+                      isDirectMode
+                        ? "bg-brand-navy-dark text-white shadow-xs"
+                        : "text-brand-text-muted hover:text-brand-navy-dark"
+                    }`}
+                  >
+                    {t.activate.optionHasPin}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivationMode("assisted");
+                      setPin("");
+                    }}
+                    className={`px-3 py-1 rounded-md font-sans text-xs font-semibold transition-all cursor-pointer ${
+                      !isDirectMode
+                        ? "bg-brand-navy-dark text-white shadow-xs"
+                        : "text-brand-text-muted hover:text-brand-navy-dark"
+                    }`}
+                  >
+                    {t.activate.optionNeedsPin}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Aviso de PIN auto-detectado por QR */}
+            {urlPin && (
+              <div className="inline-flex items-center justify-center gap-1.5 py-1 px-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-md text-xs font-semibold text-center">
+                <span>⚡</span>
+                <span>{t.activate.pinAutoDetectedBadge}</span>
+              </div>
+            )}
+
+            {/* Input del PIN de 6 dígitos */}
+            {(isDirectMode || isRegistered) && (
+              <div className="flex flex-col items-center gap-2">
+                <input
+                  ref={pinInputRef}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  disabled={form.isSubmitting || isPinSubmitting}
+                  value={pin}
+                  onChange={handlePinChange}
+                  placeholder="1 2 3 4 5 6"
+                  className="w-full max-w-xs mx-auto h-12 text-center font-mono text-2xl font-bold tracking-[0.4em] rounded-lg border-2 border-brand-navy-dark text-brand-navy-dark focus:border-brand-accent shadow-xs bg-brand-white transition-all"
+                />
+                <p className="font-sans text-xs text-brand-text-muted text-center px-4">
+                  {isRegistered
+                    ? t.activate.waitingAdvisorPinNotice
+                    : t.activate.pinNoticeHasPin}
+                </p>
+              </div>
+            )}
+
+            {/* Mensaje informativo del Modo Asistido antes de registrarse */}
+            {!isDirectMode && !isRegistered && (
+              <div className="p-3 bg-brand-nav-active border border-brand-nav-blue/20 rounded-lg text-center">
+                <p className="font-sans text-xs text-brand-navy-dark leading-relaxed">
+                  {t.activate.pinNoticeNeedsPin}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Alerta de error si ocurre alguno */}
@@ -320,21 +439,27 @@ function ActivatePageContent({ params }: PageProps) {
             </div>
           )}
 
-          {/* UN SOLO BOTÓN DE ACCIÓN */}
+          {/* BOTÓN INTELIGENTE ADAPTABLE */}
           <div className="pt-2">
             <button
               type="submit"
               disabled={form.isSubmitting || isPinSubmitting}
               className="w-full min-h-[48px] inline-flex items-center justify-center px-6 py-3 bg-brand-navy-dark text-white hover:bg-brand-navy-secondary text-sm font-semibold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {form.isSubmitting ? (
-                <span>{t.activate.registerSubmittingButton}</span>
-              ) : isPinSubmitting ? (
-                <span>{t.activate.activatingAccountButton}</span>
+              {form.isSubmitting || isPinSubmitting ? (
+                <span>
+                  {isDirectMode && hasFullPin
+                    ? t.activate.registerAndActivateSubmittingButton
+                    : isRegistered
+                    ? t.activate.activatingAccountButton
+                    : t.activate.registerSubmittingButton}
+                </span>
               ) : isRegistered ? (
                 <span>{t.activate.activateAccountButton}</span>
+              ) : isDirectMode && hasFullPin ? (
+                <span>{t.activate.registerAndActivateDirectButton}</span>
               ) : (
-                <span>{t.activate.registerSubmitButton}</span>
+                <span>{t.activate.requestPinFromAdvisorButton}</span>
               )}
             </button>
           </div>

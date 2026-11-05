@@ -24,7 +24,7 @@
  */
 
 import type {
-  EmergencyContact, MedicalProfileData, SessionUser, SessionResponse, DashboardResponse,
+  EmergencyContact, MedicalProfileData, CompanionData, SessionUser, SessionResponse, DashboardResponse,
   EmergencyAlertResult, AdminDeviceItem, AdminBatchSummary, AdminBatchDetail, AdminRiderItem, CreatedBatchResult,
   RegisterRiderPayload, RegisterRiderResponse, ClaimDevicePayload, ClaimDeviceResponse, ActivateDeviceLegacyPayload,
 } from "./api-types";
@@ -42,7 +42,7 @@ import {
 export { HttpApiError, ensureContactUuid };
 
 export type {
-  EmergencyContact, MedicalProfileData, SessionUser, SessionResponse, DashboardResponse,
+  EmergencyContact, MedicalProfileData, CompanionData, SessionUser, SessionResponse, DashboardResponse,
   EmergencyAlertResult, AdminDeviceItem, AdminBatchSummary, AdminBatchDetail, AdminRiderItem, CreatedBatchResult,
   RegisterRiderPayload, RegisterRiderResponse, ClaimDevicePayload, ClaimDeviceResponse, ActivateDeviceLegacyPayload,
 };

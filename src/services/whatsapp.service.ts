@@ -43,45 +43,28 @@ export interface WhatsAppTemplateStats {
 
 /** Resultado de consulta de plantillas */
 export interface ListTemplatesResult {
-  success: boolean;
-  stats?: WhatsAppTemplateStats;
-  templates: WhatsAppTemplate[];
-  error?: string;
-  isMetaPermissionNotice?: boolean;
-  requiresSelection?: boolean;
+  success: boolean; stats?: WhatsAppTemplateStats; templates: WhatsAppTemplate[];
+  error?: string; isMetaPermissionNotice?: boolean; requiresSelection?: boolean;
 }
 
 /** Línea telefónica oficial de WhatsApp conectada en NeuroAPI */
 export interface ConnectedPhoneNumber {
-  phoneNumber: string;
-  phoneNumberId: string;
-  wabaName: string;
-  tokenStatus?: string;
+  phoneNumber: string; phoneNumberId: string; wabaName: string; tokenStatus?: string;
 }
 
 /** Resultado de listar líneas telefónicas conectadas */
 export interface ListPhoneNumbersResult {
-  success: boolean;
-  numbers: ConnectedPhoneNumber[];
-  error?: string;
+  success: boolean; numbers: ConnectedPhoneNumber[]; error?: string;
 }
 
 /** Parámetros para envío de notificación basada en plantilla */
 export interface SendTemplateParams {
-  to: string;
-  templateName: string;
-  languageCode?: string;
-  bodyParameters?: string[];
-  fromPhoneNumberId?: string;
+  to: string; templateName: string; languageCode?: string; bodyParameters?: string[]; fromPhoneNumberId?: string;
 }
 
 /** Resultado de despacho de mensaje de WhatsApp */
 export interface SendWhatsAppResult {
-  success: boolean;
-  messageId?: string;
-  status?: string;
-  error?: string;
-  errorCode?: string | number;
+  success: boolean; messageId?: string; status?: string; error?: string; errorCode?: string | number;
 }
 
 /**
@@ -215,13 +198,7 @@ export async function listWhatsAppTemplates(
       const metaCode = data.details?.error?.code;
       const metaSubcode = data.details?.error?.error_subcode;
       if (metaCode === 100 || metaSubcode === 33) {
-        return {
-          success: true,
-          stats: { total: 0, approved: 0, pending: 0 },
-          templates: [],
-          isMetaPermissionNotice: true,
-          error: "Conexión oficial activa. Tu cuenta aún no tiene plantillas creadas en Meta Business Suite o requiere el permiso de lectura en el WABA. Puedes ingresar el nombre de tu plantilla manualmente.",
-        };
+        return { success: true, stats: { total: 0, approved: 0, pending: 0 }, templates: [], isMetaPermissionNotice: true, error: "Conexión oficial activa. Tu cuenta aún no tiene plantillas creadas en Meta Business Suite o requiere el permiso de lectura en el WABA. Puedes ingresar el nombre de tu plantilla manualmente." };
       }
 
       const errorMsg = data.message || `Error ${response.status} al consultar plantillas en NeuroAPI`;
@@ -424,6 +401,10 @@ export interface EmergencyAlertWhatsAppPayload {
   dmsFormatted?: string;
   alertId: string;
   locale?: "es" | "en";
+  companion?: {
+    fullName: string;
+    bloodType?: string;
+  } | null;
 }
 
 /** Despacha notificaciones de auxilio vía WhatsApp oficial a contactos de emergencia en su idioma preferido */
@@ -444,21 +425,36 @@ export async function sendEmergencyWhatsAppAlerts(
   let sentCount = 0;
   const errors: string[] = [];
 
+  // Formato elegante de conductor (+ acompañante habitual si viajan juntos)
+  const riderLabel = payload.companion?.fullName
+    ? (isEn
+        ? `${payload.riderName} and passenger ${payload.companion.fullName}`
+        : `${payload.riderName} y su acompañante ${payload.companion.fullName}`)
+    : payload.riderName;
+
   for (const contact of payload.contacts) {
     try {
       const cleanPhone = formatE164Phone(contact.phone);
       if (cleanPhone.length < 8) continue;
 
-      // Formato elegante unificado en {{1}}: familiar + piloto juntos en el idioma del piloto
+      // Variable {{1}}: Saludo personalizado familiar + piloto y acompañante
       const unifiedRecipient = isEn
         ? (contact.relation
-            ? `${contact.name} (${contact.relation} of ${payload.riderName})`
-            : `${contact.name} (family contact of ${payload.riderName})`)
+            ? `${contact.name} (${contact.relation} of ${riderLabel})`
+            : `${contact.name} (family contact of ${riderLabel})`)
         : (contact.relation
-            ? `${contact.name} (${contact.relation} de ${payload.riderName})`
-            : `${contact.name} (familiar de ${payload.riderName})`);
+            ? `${contact.name} (${contact.relation} de ${riderLabel})`
+            : `${contact.name} (familiar de ${riderLabel})`);
 
-      const bloodVal = payload.bloodType || (isEn ? "Unknown" : "Desconocido");
+      // Variable {{2}}: Grupo sanguíneo de conductor (+ acompañante si viajan juntos)
+      let bloodVal = payload.bloodType || (isEn ? "Unknown" : "Desconocido");
+      if (payload.companion?.fullName && payload.companion.bloodType) {
+        bloodVal = isEn
+          ? `Rider: ${bloodVal} | Passenger: ${payload.companion.bloodType}`
+          : `Piloto: ${bloodVal} | Acompañante: ${payload.companion.bloodType}`;
+      }
+
+      // Variable {{3}}: Enlace satelital de Google Maps
       const mapsVal = payload.googleMapsUrl || (isEn ? "Satellite location in progress" : "Ubicación satelital en proceso");
       const bodyParameters = [unifiedRecipient, bloodVal, mapsVal];
 
@@ -485,6 +481,7 @@ export async function sendEmergencyWhatsAppAlerts(
     idioma: langCode,
     totalContactos: payload.contacts.length,
     enviadosExitosos: sentCount,
+    conAcompanante: Boolean(payload.companion?.fullName),
     errores: errors.length > 0 ? errors : undefined,
   });
 

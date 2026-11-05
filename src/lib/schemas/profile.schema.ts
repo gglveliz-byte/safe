@@ -29,6 +29,31 @@
  */
 
 import { z } from "zod";
+
+/**
+ * Esquema de validación para el Acompañante Habitual / Copiloto del motociclista.
+ */
+export const CompanionDataSchema = z.object({
+  isEnabled: z.boolean().default(false),
+  fullName: z.string().trim().max(100).default(""),
+  nationalId: z.string().trim().max(30).optional().default(""),
+  relationship: z.string().trim().max(50).optional().default(""),
+  phone: z.string().trim().max(30).optional().default(""),
+  bloodType: z.string().trim().default("DESCONOCIDO"),
+  allergies: z.string().trim().max(500).nullable().optional(),
+  chronicConditions: z.string().trim().max(500).nullable().optional(),
+  medications: z.string().trim().max(500).nullable().optional(),
+  insuranceInfo: z.string().trim().max(200).nullable().optional(),
+  photoUrl: z.string().trim().max(2048).nullable().optional(),
+  photoPublicId: z.string().trim().max(255).nullable().optional(),
+  idCardFrontUrl: z.string().trim().max(2048).nullable().optional(),
+  idCardFrontPublicId: z.string().trim().max(255).nullable().optional(),
+  idCardBackUrl: z.string().trim().max(2048).nullable().optional(),
+  idCardBackPublicId: z.string().trim().max(255).nullable().optional(),
+  birthDate: z.string().nullable().optional(),
+});
+
+export type CompanionDataInput = z.infer<typeof CompanionDataSchema>;
 import {
   BloodTypeSchema,
   EmergencyContactsSchema,
@@ -138,6 +163,9 @@ export const ProfileUpdateSchema = z
 
     /** Idioma preferido del conductor para correos y avisos de emergencia ("es" | "en") */
     locale: z.enum(["es", "en"]).optional(),
+
+    /** Datos clínicos y personales del acompañante habitual / copiloto (JSONB) */
+    companionData: CompanionDataSchema.nullable().optional(),
   })
   .strict()
   .refine((data) => Object.values(data).some((value) => value !== undefined), {

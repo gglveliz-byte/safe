@@ -214,6 +214,13 @@ export async function GET(
 
     if (device.status === "UNCLAIMED" || !device.userId) {
       const activateUrl = new URL(`/activate/${validatedCode}`, origin);
+      const pinParam = request.nextUrl.searchParams.get("pin");
+      if (pinParam) {
+        activateUrl.searchParams.set("pin", pinParam.trim());
+      }
+      if (v) {
+        activateUrl.searchParams.set("v", v);
+      }
       return NextResponse.redirect(activateUrl, 307);
     }
 

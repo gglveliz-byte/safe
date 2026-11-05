@@ -46,6 +46,17 @@ export interface EmergencyEmailPayload {
   scannedAt: Date;
   /** Folio público del registro de alerta (UUID de `EmergencyAlert`). */
   alertId: string;
+  /** Datos del acompañante habitual / copiloto si viajan juntos */
+  companion?: {
+    fullName: string;
+    relationship?: string | null;
+    bloodType: string;
+    allergies?: string | null;
+    chronicConditions?: string | null;
+    medications?: string | null;
+    nationalId?: string | null;
+    phone?: string | null;
+  } | null;
 }
 
 /** Trío de representaciones del aviso para Nodemailer (cliente elige formato). */
@@ -184,8 +195,13 @@ const BLOCK_COPY: Record<"es" | "en", BlockCopy> = {
  * Asunto literal del contrato §11 (CONGELADO) en el idioma del aviso. El
  * nombre crudo no se escapa: los asuntos de correo no admiten HTML.
  */
-function buildSubject(riderName: string, locale: "es" | "en"): string {
+function buildSubject(riderName: string, locale: "es" | "en", companionName?: string): string {
   const name = resolveRiderName(riderName, locale);
+  if (companionName) {
+    return locale === "es"
+      ? `🚨 ALERTA MÉDICA ALTUS-CHIP: Casco de ${name} y su acompañante escaneado en carretera`
+      : `🚨 ALTUS-CHIP EMERGENCY ALERT: ${name} and passenger's helmet scanned on route`;
+  }
   return locale === "es"
     ? `🚨 ALERTA MÉDICA ALTUS-CHIP: Casco de ${name} escaneado en carretera`
     : `🚨 ALTUS-CHIP EMERGENCY ALERT: ${name}'s helmet scanned on route`;
@@ -266,6 +282,18 @@ function renderHtmlBlock(
       : renderDataRow(copy.labelMaps, copy.gpsPendingWarning),
   ].join("");
 
+  const companionBlock = payload.companion?.fullName
+    ? `<div style="margin:0 0 18px;padding:14px 16px;background-color:${COLOR_PAPER};border:1px solid ${COLOR_SIGNAL};border-radius:12px;">` +
+      `<p style="margin:0 0 10px;font-family:${FONT_ARIAL};font-size:12px;font-weight:700;letter-spacing:1px;color:${COLOR_SIGNAL};text-transform:uppercase;">${language === "es" ? "ACOMPAÑANTE / COPILOTO REGISTRADO" : "PASSENGER / CO-RIDER RECORD"}</p>` +
+      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;">` +
+      renderDataRow(language === "es" ? "Nombre acompañante" : "Passenger name", payload.companion.fullName) +
+      renderDataRow(language === "es" ? "Parentesco" : "Relationship", payload.companion.relationship || copy.notDeclared) +
+      renderDataRow(language === "es" ? "Tipo de sangre" : "Blood type", payload.companion.bloodType || copy.notDeclared) +
+      renderDataRow(language === "es" ? "Alergias" : "Allergies", clinicalValue(payload.companion.allergies ?? null, copy.notDeclared)) +
+      renderDataRow(language === "es" ? "Medicamentos" : "Medications", clinicalValue(payload.companion.medications ?? null, copy.notDeclared)) +
+      `</table></div>`
+    : "";
+
   const mapsSection = hasGps
     ? `<p style="margin:0 0 16px;text-align:center;">${renderMapsButton(copy, payload.googleMapsUrl)}</p>`
     : `<div style="margin:0 0 16px;padding:14px 18px;background-color:${COLOR_ALERT_WASH};border:2px dashed ${COLOR_SIGNAL};border-radius:8px;text-align:center;">` +
@@ -281,6 +309,7 @@ function renderHtmlBlock(
     `<p style="margin:0;font-family:${FONT_TIMES};font-size:24px;font-weight:700;line-height:1.2;color:${COLOR_INK};">${escapeHtml(copy.headlineFor(rider))}</p></div>` +
     `<p style="margin:0 0 18px;font-family:${FONT_TIMES};font-size:16px;line-height:1.4;color:${COLOR_INK};">${escapeHtml(copy.lead)}</p>` +
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background-color:${COLOR_PAPER};border:1px solid ${COLOR_EMBER};border-radius:12px;margin:0 0 18px;">${rows}</table>` +
+    companionBlock +
     mapsSection +
     `<p style="margin:0 0 14px;padding:12px 14px;background-color:${COLOR_CONCRETE};border-left:3px solid ${COLOR_SIGNAL};font-family:${FONT_TIMES};font-size:16px;line-height:1.4;color:${COLOR_INK};">${escapeHtml(copy.callHelp)}</p>` +
     `<p style="margin:0;font-family:${FONT_ARIAL};font-size:13px;color:${COLOR_INK};">${escapeHtml(copy.footerNote)}</p>` +
@@ -390,7 +419,7 @@ export function buildEmergencyEmailContent(
   recipientName?: string,
 ): EmailContent {
   return {
-    subject: buildSubject(payload.riderName, locale),
+    subject: buildSubject(payload.riderName, locale, payload.companion?.fullName),
     html: renderHtmlDocument(payload, locale, recipientName),
     text: renderTextDocument(payload, locale, recipientName),
   };

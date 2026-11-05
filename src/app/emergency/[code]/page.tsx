@@ -80,6 +80,8 @@ export default function EmergencyPage({ params }: PageProps) {
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   // Origen del escaneo exhibido como microetiqueta (nfc/qr/direct: dato técnico)
   const [scanSource, setScanSource] = useState<ScanSource>("direct");
+  // Conmutador activo entre conductor titular y acompañante habitual
+  const [activeTab, setActiveTab] = useState<"rider" | "companion">("rider");
 
   // Marca de vigencia del montaje: evita actualizar estado tras navegar fuera
   const cancelledRef = useRef(false);
@@ -277,6 +279,35 @@ export default function EmergencyPage({ params }: PageProps) {
     : new Intl.DateTimeFormat(locale === "es" ? "es-ES" : "en-GB", { dateStyle: "long" }).format(updatedAtDate);
 
   const medical = profile.profile;
+  const companion = medical.companion;
+  const hasCompanion = Boolean(companion && companion.isEnabled && companion.fullName);
+
+  // Proyección dinámica del expediente clínico (conductor o acompañante)
+  const displayedMedical = activeTab === "companion" && companion ? {
+    fullName: companion.fullName,
+    nationalIdMasked: companion.nationalIdMasked || "—",
+    birthDate: companion.birthDate || null,
+    bloodType: companion.bloodType,
+    allergies: companion.allergies || null,
+    chronicConditions: companion.chronicConditions || null,
+    medications: companion.medications || null,
+    insuranceInfo: companion.insuranceInfo || null,
+    emergencyNumber: companion.phone || medical.emergencyNumber,
+    photoUrl: companion.photoUrl || medical.photoUrl,
+    beneficiaryType: companion.relationship || "ACOMPAÑANTE",
+    country: medical.country,
+    city: medical.city,
+    residentialAddress: medical.residentialAddress,
+    riderPhone: companion.phone || medical.riderPhone,
+    age: null,
+    isOrganDonor: false,
+    medicalFindings: companion.relationship ? `Acompañante habitual (${companion.relationship}) de ${medical.fullName}` : null,
+    hasGuardian: false,
+    rescueNotes: companion.phone ? `Teléfono directo del acompañante: ${companion.phone}` : null,
+    frequentLocation: medical.frequentLocation,
+    vehicleInfo: medical.vehicleInfo,
+    emergencyContacts: medical.emergencyContacts,
+  } : medical;
 
   // RAMA 4 — Ficha médica real de alto contraste solar (SAFE 2026)
   return (
@@ -313,6 +344,43 @@ export default function EmergencyPage({ params }: PageProps) {
           )}
         </div>
       </div>
+
+      {/* Selector Táctil Dual Conductor / Acompañante para Paramédicos */}
+      {hasCompanion && (
+        <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2 p-1.5 bg-brand-bg-alt border border-brand-border-subtle rounded-xl shadow-xs">
+            <button
+              type="button"
+              onClick={() => { setActiveTab("rider"); triggerHaptic("light"); }}
+              className={`min-h-[44px] py-2.5 px-3 rounded-lg font-sans text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                activeTab === "rider"
+                  ? "bg-brand-white text-brand-navy-dark shadow-xs border border-brand-navy-dark ring-1 ring-brand-navy-dark"
+                  : "text-brand-text-muted hover:text-brand-navy-dark"
+              }`}
+            >
+              <span>🏍️ {t.emergency.riderTab}</span>
+              <span className="truncate max-w-[110px]">({medical.fullName})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setActiveTab("companion"); triggerHaptic("light"); }}
+              className={`min-h-[44px] py-2.5 px-3 rounded-lg font-sans text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                activeTab === "companion"
+                  ? "bg-brand-white text-brand-accent shadow-xs border border-brand-accent ring-1 ring-brand-accent"
+                  : "text-brand-text-muted hover:text-brand-accent"
+              }`}
+            >
+              <span>👥 {t.emergency.companionTab}</span>
+              <span className="truncate max-w-[110px]">({companion?.fullName})</span>
+            </button>
+          </div>
+          {activeTab === "companion" && (
+            <p className="font-sans text-[11px] text-brand-text-muted text-center italic">
+              ℹ️ {t.emergency.companionNotice}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* 2. Banner de Estado del Despacho y Ubicación Satelital */}
       {alertResult?.locationOrigin === "PENDING_GPS" && (
@@ -352,14 +420,14 @@ export default function EmergencyPage({ params }: PageProps) {
       )}
 
       {/* 3. Ficha Médica de Alto Contraste Solar con Donante, Notas y Ubicación */}
-      <EmergencyClinicalDetails medical={medical} updatedAtLabel={updatedAtLabel} />
+      <EmergencyClinicalDetails medical={displayedMedical} updatedAtLabel={updatedAtLabel} />
 
       {/* 4. Panel de Acciones Críticas (Llamar, WhatsApp, Maps, Copiar Enlace) */}
       <EmergencyActionPanel
-        riderName={medical.fullName}
-        bloodType={medical.bloodType}
+        riderName={displayedMedical.fullName}
+        bloodType={displayedMedical.bloodType}
         googleMapsUrl={alertResult?.googleMapsUrl ?? null}
-        emergencyNumber={medical.emergencyNumber ?? null}
+        emergencyNumber={displayedMedical.emergencyNumber ?? null}
         contacts={medical.emergencyContacts}
       />
 

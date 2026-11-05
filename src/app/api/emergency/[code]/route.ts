@@ -126,6 +126,7 @@ export async function GET(
                 frequentLocation: true,
                 vehicleInfo: true,
                 emergencyContacts: true,
+                companionData: true,
                 updatedAt: true,
               },
             },
@@ -180,6 +181,17 @@ export async function GET(
       isPrimary: c.isPrimary ?? false,
     }));
 
+    // 8b. Extracción y ofuscación de datos del acompañante si está activo
+    const rawComp = device.user.medicalProfile.companionData as Record<string, unknown> | null;
+    let companion: Record<string, unknown> | null = null;
+    if (rawComp && rawComp.isEnabled === true && typeof rawComp.fullName === "string" && rawComp.fullName.trim().length > 0) {
+      companion = {
+        ...rawComp,
+        nationalIdMasked: maskNationalId(String(rawComp.nationalId || "")),
+      };
+      delete companion.nationalId;
+    }
+
     // 9. Respuesta exitosa con la ficha médica protegida.
     return successResponse({
       device: {
@@ -210,6 +222,7 @@ export async function GET(
         frequentLocation: device.user.medicalProfile.frequentLocation,
         vehicleInfo: device.user.medicalProfile.vehicleInfo,
         emergencyContacts: contacts,
+        companion,
       },
       updatedAt: device.user.medicalProfile.updatedAt.toISOString(),
     });

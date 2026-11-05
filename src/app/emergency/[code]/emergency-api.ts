@@ -50,6 +50,23 @@ export class HumanApiError extends Error {
   }
 }
 
+export interface PublicCompanionDTO {
+  isEnabled: boolean;
+  fullName: string;
+  nationalIdMasked?: string;
+  relationship?: string;
+  phone?: string;
+  bloodType: string;
+  allergies?: string | null;
+  chronicConditions?: string | null;
+  medications?: string | null;
+  insuranceInfo?: string | null;
+  photoUrl?: string | null;
+  idCardFrontUrl?: string | null;
+  idCardBackUrl?: string | null;
+  birthDate?: string | null;
+}
+
 /**
  * Forma exacta y certificada de la respuesta de GET /api/emergency/{code}:
  * estado del dispositivo, ficha médica con cédula ofuscada (PII protegida),
@@ -84,6 +101,7 @@ export interface PublicEmergencyProfileDTO {
     frequentLocation?: string | null;
     vehicleInfo?: string | null;
     emergencyContacts: PublicEmergencyContactDTO[];
+    companion?: PublicCompanionDTO | null;
   };
   updatedAt: string;
 }

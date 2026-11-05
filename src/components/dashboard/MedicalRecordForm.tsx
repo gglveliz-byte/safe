@@ -45,10 +45,7 @@
 
 import React from "react";
 import { useLocale } from "@/hooks/useLocale";
-import {
-  type MedicalProfileData,
-  type EmergencyContact,
-} from "@/lib/api-client";
+import { type MedicalProfileData, type EmergencyContact } from "@/lib/api-client";
 import { BLOOD_TYPES } from "@/lib/schemas/common.schema";
 import { IncidentCard } from "@/components/ui/IncidentCard";
 import { IncidentButton } from "@/components/ui/IncidentButton";
@@ -56,20 +53,15 @@ import { CloudinaryPhotoPicker } from "@/components/medical/CloudinaryPhotoPicke
 import { ContactsRepeater } from "@/components/medical/ContactsRepeater";
 import { CountrySelect } from "@/components/ui/CountrySelect";
 import { IdCardPhotoPicker } from "@/components/medical/IdCardPhotoPicker";
+import { CompanionSection } from "@/components/dashboard/CompanionSection";
 
 /** Props públicos del formulario de edición de la ficha médica. */
 export interface MedicalRecordFormProps {
-  /** Perfil médico en edición (estado 100% dinámico del orquestador). */
   profile: MedicalProfileData;
-  /** Callback de actualización inmutable del perfil. */
   onProfileChange: (profile: MedicalProfileData) => void;
-  /** Callback de envío del formulario (persiste en el orquestador). */
   onSubmit: (event: React.FormEvent) => void;
-  /** Guardado en curso: deshabilita controles y conmuta el texto del botón. */
   isSaving: boolean;
-  /** Mensaje transitorio de éxito (cadena vacía oculta el banner). */
   noticeMessage: string;
-  /** Mensaje transitorio de error (cadena vacía oculta el banner). */
   errorMessage: string;
 }
 
@@ -445,6 +437,13 @@ export function MedicalRecordForm({
           </div>
         </div>
       </IncidentCard>
+
+      {/* Sección de Acompañante Habitual / Copiloto */}
+      <CompanionSection
+        companion={profile.companionData}
+        onChange={(companionData) => onProfileChange({ ...profile, companionData })}
+        disabled={isSaving}
+      />
 
       {/* Repetidor Dinámico de Contactos de Aviso Inmediato */}
       <ContactsRepeater

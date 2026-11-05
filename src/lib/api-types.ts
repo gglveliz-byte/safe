@@ -26,6 +26,26 @@ export interface EmergencyContact {
   isPrimary?: boolean;
 }
 
+export interface CompanionData {
+  isEnabled: boolean;
+  fullName: string;
+  nationalId?: string;
+  relationship?: string;
+  phone?: string;
+  bloodType: string;
+  allergies?: string | null;
+  chronicConditions?: string | null;
+  medications?: string | null;
+  insuranceInfo?: string | null;
+  photoUrl?: string | null;
+  photoPublicId?: string | null;
+  idCardFrontUrl?: string | null;
+  idCardFrontPublicId?: string | null;
+  idCardBackUrl?: string | null;
+  idCardBackPublicId?: string | null;
+  birthDate?: string | null;
+}
+
 export interface MedicalProfileData {
   fullName: string;
   nationalId: string;
@@ -57,6 +77,7 @@ export interface MedicalProfileData {
   frequentLocation?: string | null;
   vehicleInfo?: string | null;
   locale?: "es" | "en" | null;
+  companionData?: CompanionData | null;
   contacts: EmergencyContact[];
   emergencyContacts?: EmergencyContact[];
 }
@@ -109,6 +130,7 @@ export interface DashboardResponse {
     frequentLocation?: string | null;
     vehicleInfo?: string | null;
   locale?: "es" | "en" | null;
+  companionData?: CompanionData | null;
     emergencyContacts: EmergencyContact[];
     consentAcceptedAt?: string;
     consentVersion?: string;
