@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     return successResponse(
       {
         sent: true,
-        message: "Si el correo está registrado en SAFE, hemos enviado las instrucciones de restablecimiento.",
+        message: "Si el correo está registrado en ALTUS-CHIP, hemos enviado las instrucciones de restablecimiento.",
       },
       200,
     );

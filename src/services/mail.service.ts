@@ -146,7 +146,7 @@ function obtainTransporter(settings: MailSettings): Transporter {
  */
 function buildFromAddress(settings: MailSettings): string {
   const cleanName =
-    settings.fromName.replace(/["<>\r\n]/g, " ").replace(/\s+/g, " ").trim() || "SAFE";
+    settings.fromName.replace(/["<>\r\n]/g, " ").replace(/\s+/g, " ").trim() || "ALTUS-CHIP";
   return `"${cleanName}" <${settings.user}>`;
 }
 

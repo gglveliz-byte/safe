@@ -20,7 +20,7 @@ import React from "react";
 import Image from "next/image";
 import { useLocale } from "@/hooks/useLocale";
 
-const HELMET_IMAGE_URL = "/branding/safe-badge-helmet.jpg";
+const HELMET_IMAGE_URL = "/branding/altuschip-badge-helmet.jpg";
 
 export function HelmetHeroCard() {
   const { t } = useLocale();

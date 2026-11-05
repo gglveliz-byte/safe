@@ -6,7 +6,7 @@
   <!-- Cruz médica en blanco -->
   <rect x="242" y="136" width="28" height="88" fill="#ffffff" rx="4"/>
   <rect x="212" y="166" width="88" height="28" fill="#ffffff" rx="4"/>
-  <!-- Tipografía Times Serif Broadhseet -->
-  <text x="256" y="375" font-family="'Times New Roman', Times, serif" font-size="92" font-weight="bold" fill="#000000" text-anchor="middle" letter-spacing="4">SAFE</text>
-  <text x="256" y="425" font-family="Arial, sans-serif" font-size="24" font-weight="600" fill="#000000" text-anchor="middle" letter-spacing="3">EMERGENCY LEDGER</text>
+  <!-- Tipografía Oficial ALTUS-CHIP -->
+  <text x="256" y="375" font-family="'Times New Roman', Times, serif" font-size="64" font-weight="bold" fill="#000000" text-anchor="middle" letter-spacing="2">ALTUS-CHIP</text>
+  <text x="256" y="425" font-family="Arial, sans-serif" font-size="24" font-weight="600" fill="#000000" text-anchor="middle" letter-spacing="2">RESPALDO MÉDICO</text>
 </svg>

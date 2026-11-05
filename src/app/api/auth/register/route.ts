@@ -69,7 +69,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (existingUser) {
       throw new AppError(
         "VALIDATION_ERROR",
-        "Este correo electrónico ya se encuentra registrado en SAFE.",
+        "Este correo electrónico ya se encuentra registrado en ALTUS-CHIP.",
         409,
       );
     }

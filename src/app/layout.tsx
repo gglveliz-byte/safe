@@ -37,18 +37,19 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "SAFE | Respaldo Médico en Carretera",
+  title: "ALTUS-CHIP | Respaldo Médico en Carretera",
   description:
     "Un boletín médico vital en tu casco que habla por ti cuando más lo necesitas. Ficha clínica de rescate y auxilio satelital en 1 segundo.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "SAFE",
+    title: "ALTUS-CHIP",
   },
   icons: {
-    icon: "/branding/safe-logo-dark.jpg",
-    apple: "/branding/safe-logo-dark.jpg",
+    icon: "/branding/altuschip-logo.png",
+    shortcut: "/branding/altuschip-logo.png",
+    apple: "/branding/altuschip-logo.png",
   },
 };
 

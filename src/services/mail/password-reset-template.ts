@@ -39,26 +39,26 @@ const FONT_ARIAL = "Arial, Helvetica, sans-serif";
 /** Diccionario editorial bilingüe para el correo de recuperación */
 const COPY = {
   es: {
-    subject: "[SAFE] Restablece tu contraseña de acceso",
+    subject: "[ALTUS-CHIP] Restablece tu contraseña de acceso",
     badge: "RECUPERACIÓN DE CUENTA",
     greeting: (name?: string) => (name ? `Hola, ${name}:` : "Estimado piloto:"),
     headline: "Solicitud para restablecer tu contraseña",
-    lead: "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en la red de auxilio SAFE. Si fuiste tú, presiona el botón inferior para ingresar una nueva clave.",
+    lead: "Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en la red de auxilio ALTUS-CHIP. Si fuiste tú, presiona el botón inferior para ingresar una nueva clave.",
     button: "Restablecer mi Contraseña",
     expirationNotice: "Por razones de seguridad médica y protección de cuenta, este enlace expirará en 15 minutos.",
     securityWarning: "Si tú no solicitaste este cambio, puedes ignorar este mensaje con total tranquilidad. Tu contraseña actual permanece segura y nadie ha accedido a tu ficha médica.",
-    footerNote: "SAFE · Respaldo Médico y Telemetría en Carretera para Motociclistas. Mensaje automático, no responder.",
+    footerNote: "ALTUS-CHIP · Respaldo Médico y Telemetría en Carretera para Motociclistas. Mensaje automático, no responder.",
   },
   en: {
-    subject: "[SAFE] Reset your access password",
+    subject: "[ALTUS-CHIP] Reset your access password",
     badge: "ACCOUNT RECOVERY",
     greeting: (name?: string) => (name ? `Hello, ${name}:` : "Dear rider:"),
     headline: "Password Reset Request",
-    lead: "We received a request to reset your password on the SAFE emergency ledger. If this was you, please click the button below to set a new password.",
+    lead: "We received a request to reset your password on the ALTUS-CHIP emergency ledger. If this was you, please click the button below to set a new password.",
     button: "Reset My Password",
     expirationNotice: "For medical security and account safety, this link will expire in 15 minutes.",
     securityWarning: "If you did not request this change, you can safely ignore this email. Your current password remains secure and your medical ledger has not been accessed.",
-    footerNote: "SAFE · Emergency Medical & Real-Time GPS Ledger for Riders. Automated notification, do not reply.",
+    footerNote: "ALTUS-CHIP · Emergency Medical & Real-Time GPS Ledger for Riders. Automated notification, do not reply.",
   },
 };
 
@@ -101,7 +101,7 @@ export function buildPasswordResetEmailContent(
               </span>
             </td>
             <td style="text-align: right; vertical-align: middle;">
-              <span style="font-family: ${FONT_TIMES}; font-size: 20px; font-weight: bold; letter-spacing: -0.02em; color: ${COLOR_INK};">SAFE</span>
+              <span style="font-family: ${FONT_TIMES}; font-size: 20px; font-weight: bold; letter-spacing: -0.02em; color: ${COLOR_INK};">ALTUS-CHIP</span>
             </td>
           </tr>
         </table>
@@ -171,7 +171,7 @@ export function buildPasswordResetEmailContent(
 </body>
 </html>`;
 
-  const text = `SAFE - RECUPERACION DE CUENTA / ACCOUNT RECOVERY
+  const text = `ALTUS-CHIP - RECUPERACION DE CUENTA / ACCOUNT RECOVERY
 ==================================================
 
 ${primary.greeting(recipientName)}

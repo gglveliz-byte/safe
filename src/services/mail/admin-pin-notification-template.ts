@@ -50,16 +50,16 @@ export function buildAdminPinNotificationEmail(data: AdminPinNotificationData): 
   // Enlace directo a WhatsApp con mensaje pre-cargado
   const whatsappMessage = encodeURIComponent(
     isEn
-      ? `Hello ${firstName}, your SAFE activation PIN for kit ${data.deviceCode} is: ${data.pin}. Enter it in your dashboard to activate your helmet.`
-      : `Hola ${firstName}, tu código PIN de activación SAFE para tu kit ${data.deviceCode} es: ${data.pin}. Ingrésalo en tu panel para activar tu casco.`,
+      ? `Hello ${firstName}, your AltusChip activation PIN for kit ${data.deviceCode} is: ${data.pin}. Enter it in your dashboard to activate your helmet.`
+      : `Hola ${firstName}, tu código PIN de activación AltusChip para tu kit ${data.deviceCode} es: ${data.pin}. Ingrésalo en tu panel para activar tu casco.`,
   );
   const whatsappUrl = cleanPhone
     ? `https://wa.me/${cleanPhone}?text=${whatsappMessage}`
     : "";
 
   const subject = isEn
-    ? `🔑 SAFE ADMIN: Activation PIN for ${data.deviceCode} (${data.fullName})`
-    : `🔑 SAFE ADMIN: PIN de Activación para ${data.deviceCode} (${data.fullName})`;
+    ? `🔑 ALTUS-CHIP ADMIN: Activation PIN for ${data.deviceCode} (${data.fullName})`
+    : `🔑 ALTUS-CHIP ADMIN: PIN de Activación para ${data.deviceCode} (${data.fullName})`;
 
   const html = `<!DOCTYPE html>
 <html lang="${isEn ? "en" : "es"}">
@@ -82,7 +82,7 @@ export function buildAdminPinNotificationEmail(data: AdminPinNotificationData): 
                   <td>
                     <div style="display: inline-block; background-color: #15365B; border: 1px solid #2F648F; border-radius: 6px; padding: 4px 10px; margin-bottom: 12px;">
                       <span style="font-family: monospace; font-size: 11px; font-weight: bold; color: #FF5138; text-transform: uppercase; letter-spacing: 2px;">
-                        ⛑️ SAFE · ${isEn ? "ASSISTED ACTIVATION PROTOCOL" : "PROTOCOLO DE ACTIVACIÓN ASISTIDA"}
+                        ⛑️ ALTUS-CHIP · ${isEn ? "ASSISTED ACTIVATION PROTOCOL" : "PROTOCOLO DE ACTIVACIÓN ASISTIDA"}
                       </span>
                     </div>
                     <h1 style="margin: 0; font-family: Georgia, serif; font-size: 24px; line-height: 1.25; font-weight: bold; color: #FFFFFF;">
@@ -184,12 +184,12 @@ export function buildAdminPinNotificationEmail(data: AdminPinNotificationData): 
                   <td align="center">
                     <a href="mailto:${data.riderEmail}?subject=${encodeURIComponent(
                       isEn
-                        ? `Your SAFE Activation PIN (${data.deviceCode})`
-                        : `Tu PIN de Activación SAFE (${data.deviceCode})`,
+                        ? `Your AltusChip Activation PIN (${data.deviceCode})`
+                        : `Tu PIN de Activación AltusChip (${data.deviceCode})`,
                     )}&body=${encodeURIComponent(
                       isEn
-                        ? `Hello ${firstName},\n\nYour 6-digit activation PIN for kit ${data.deviceCode} is: ${data.pin}\n\nEnter it in your dashboard to activate your helmet.\n\nSAFE Support`
-                        : `Hola ${firstName},\n\nTu PIN de 6 dígitos para activar tu kit ${data.deviceCode} es: ${data.pin}\n\nIngrésalo en tu panel para activar tu casco.\n\nSoporte SAFE`,
+                        ? `Hello ${firstName},\n\nYour 6-digit activation PIN for kit ${data.deviceCode} is: ${data.pin}\n\nEnter it in your dashboard to activate your helmet.\n\nAltusChip Support`
+                        : `Hola ${firstName},\n\nTu PIN de 6 dígitos para activar tu kit ${data.deviceCode} es: ${data.pin}\n\nIngrésalo en tu panel para activar tu casco.\n\nSoporte AltusChip`,
                     )}" style="display: inline-block; background-color: #F8FAFC; border: 1px solid #D7E3F0; color: #0B1F3A; font-size: 13px; font-weight: 600; text-align: center; text-decoration: none; padding: 10px 20px; border-radius: 8px;">
                       ✉️ ${isEn ? "Send PIN via Email" : "Enviar PIN por Correo Electrónico"}
                     </a>
@@ -211,7 +211,7 @@ export function buildAdminPinNotificationEmail(data: AdminPinNotificationData): 
           <tr>
             <td style="background-color: #F8FAFC; border-top: 1px solid #D7E3F0; padding: 16px 24px; text-align: center;">
               <span style="font-size: 11px; font-weight: 600; color: #5C718A;">
-                SAFE — Emergency Medical & Real-Time GPS Ledger for Riders
+                ALTUS-CHIP — Respaldo Médico y Telemetría en Carretera
               </span>
             </td>
           </tr>
@@ -223,7 +223,7 @@ export function buildAdminPinNotificationEmail(data: AdminPinNotificationData): 
 </html>`;
 
   const text = isEn
-    ? `SAFE ADMIN — ASSISTED ACTIVATION PROTOCOL
+    ? `ALTUS-CHIP ADMIN — ASSISTED ACTIVATION PROTOCOL
 --------------------------------------------------
 Kit Registered: ${data.deviceCode}
 Rider: ${data.fullName}
@@ -236,8 +236,8 @@ ${whatsappUrl ? `WhatsApp Direct Link:\n${whatsappUrl}\n\n` : ""}
 Instructions:
 Share this 6-digit PIN with the rider so they can complete kit activation in their dashboard.
 
-SAFE Automated Admin Notification`
-    : `SAFE ADMIN — PROTOCOLO DE ACTIVACIÓN ASISTIDA
+ALTUS-CHIP Automated Admin Notification`
+    : `ALTUS-CHIP ADMIN — PROTOCOLO DE ACTIVACIÓN ASISTIDA
 --------------------------------------------------
 Kit Registrado: ${data.deviceCode}
 Motociclista: ${data.fullName}
@@ -250,7 +250,7 @@ ${whatsappUrl ? `Enlace Directo WhatsApp:\n${whatsappUrl}\n\n` : ""}
 Instrucciones:
 Comparte este PIN de 6 dígitos con el motociclista para que complete la activación de su casco en el panel.
 
-Notificación Administrativa Automática SAFE`;
+Notificación Administrativa Automática ALTUS-CHIP`;
 
   return { subject, html, text };
 }

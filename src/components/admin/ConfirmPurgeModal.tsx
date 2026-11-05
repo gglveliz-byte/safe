@@ -60,7 +60,8 @@ export function ConfirmPurgeModal({
 
   if (!isOpen) return null;
 
-  const isUnlocked = confirmWord.trim().toUpperCase() === "SAFE";
+  const normalizedWord = confirmWord.trim().toUpperCase();
+  const isUnlocked = normalizedWord === "ALTUS-CHIP" || normalizedWord === "ALTUSCHIP" || normalizedWord === "SAFE";
 
   const handleConfirm = async () => {
     if (!isUnlocked || isPurging) return;
@@ -133,7 +134,7 @@ export function ConfirmPurgeModal({
             type="text"
             value={confirmWord}
             onChange={(e) => setConfirmWord(e.target.value)}
-            placeholder="SAFE"
+            placeholder="ALTUS-CHIP"
             autoComplete="off"
             disabled={isPurging}
             className="safe-input-focus h-11 px-4 bg-brand-white border border-brand-border-field rounded-lg font-mono text-center text-sm font-bold tracking-widest text-brand-navy-dark placeholder-brand-text-muted"

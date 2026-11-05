@@ -49,7 +49,7 @@ export function buildChipInactiveHtml(): string {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex" />
-    <title>SAFE — Casco no registrado · Helmet not registered</title>
+    <title>ALTUS-CHIP — Chip no registrado · Chip not registered</title>
     <style>
       /* Tokens del sistema de diseño 'Incident': plano, editorial, sin gradientes. */
       * { box-sizing: border-box; }
@@ -135,21 +135,21 @@ export function buildChipInactiveHtml(): string {
   <body>
     <main class="card">
       <div class="beacon" aria-hidden="true"></div>
-      <p class="micro">SAFE · Estado del casco · Helmet status</p>
+      <p class="micro">ALTUS-CHIP · Estado del chip · Chip status</p>
 
-      <h1>Este casco no está registrado o fue dado de baja</h1>
-      <p class="headline-en" lang="en">This helmet is not registered or was deactivated</p>
+      <h1>Este chip no está registrado o fue dado de baja</h1>
+      <p class="headline-en" lang="en">This chip is not registered or was deactivated</p>
 
       <hr class="rule" />
 
       <p class="body-text">
-        El código que escaneaste no pertenece a un casco activo de SAFE. Puede que
-        el conductor aún no haya completado el registro de su kit, o que este casco
+        El código que escaneaste no pertenece a un chip activo de ALTUS-CHIP. Puede que
+        el conductor aún no haya completado el registro de su kit, o que este chip
         haya sido reportado como perdido, robado o reemplazado.
       </p>
       <p class="body-text" lang="en">
-        The code you scanned does not belong to an active SAFE helmet. The rider may
-        not have finished registering the kit yet, or this helmet may have been
+        The code you scanned does not belong to an active ALTUS-CHIP device. The rider may
+        not have finished registering the kit yet, or this chip may have been
         reported as lost, stolen or replaced.
       </p>
       <p class="body-text">

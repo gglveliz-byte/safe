@@ -67,7 +67,7 @@ export async function register(): Promise<void> {
     // variable ausente o inválida SIN incluir valores sensibles.
     console.error(error instanceof Error ? error.message : String(error));
     console.error(
-      "[SAFE] Arranque abortado: corrija las variables de entorno listadas y vuelva a iniciar el servidor.",
+      "[ALTUS-CHIP] Arranque abortado: corrija las variables de entorno listadas y vuelva a iniciar el servidor.",
     );
     // Fallo inmediato y ruidoso: jamás un servidor a medias en producción.
     process.exit(1);

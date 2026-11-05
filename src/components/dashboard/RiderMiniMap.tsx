@@ -184,7 +184,7 @@ export function RiderMiniMap({
         {embedUrl && (
           <iframe
             key={`${roundedLat}-${roundedLng}-${mapMode}`}
-            title="Ubicación GPS Motocicleta SAFE"
+            title="Ubicación GPS Motocicleta AltusChip"
             src={embedUrl}
             width="100%"
             height="100%"

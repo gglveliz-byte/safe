@@ -279,7 +279,7 @@ export function NfcBurstWriterModal({
               {t.admin.nfcWriterTitle}
             </h3>
             <span className="hidden sm:inline font-sans text-[10px] font-bold uppercase tracking-wider text-brand-text-muted bg-brand-bg-alt px-2 py-0.5 rounded border border-brand-border-subtle">
-              SAFE 2026 Engine
+              ALTUS-CHIP Engine
             </span>
           </div>
 

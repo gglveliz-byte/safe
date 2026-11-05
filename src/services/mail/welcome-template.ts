@@ -50,11 +50,11 @@ export interface WelcomeEmailPayload {
 
 const COPY = {
   es: {
-    subject: "🛡️ ¡Bienvenido a SAFE! Tu respaldo médico en carretera comienza aquí",
+    subject: "🛡️ ¡Bienvenido a ALTUS-CHIP! Tu respaldo médico en carretera comienza aquí",
     badge: "PROTOCOLO DE RESCATE VIAL 2026",
-    title: (name: string) => `¡Bienvenido a SAFE, ${name}!`,
+    title: (name: string) => `¡Bienvenido a ALTUS-CHIP, ${name}!`,
     subtitle: "Tu cuenta de piloto ha sido registrada con éxito en la red de asistencia médica para motociclistas.",
-    lead: "En carretera, cada segundo cuenta. Ahora que eres parte de SAFE, tienes acceso a un protocolo de protección que habla por ti ante cualquier emergencia, comunicando tus datos vitales y ubicación satelital a paramédicos y familiares.",
+    lead: "En carretera, cada segundo cuenta. Ahora que eres parte de ALTUS-CHIP, tienes acceso a un protocolo de protección que habla por ti ante cualquier emergencia, comunicando tus datos vitales y ubicación satelital a paramédicos y familiares.",
     stepsTitle: "PASOS PARA ACTIVAR TU PROTECCIÓN 24/7:",
     step1Title: "1. Inicia sesión en tu panel",
     step1Desc: "Accede con tu correo registrado y la contraseña que creaste.",
@@ -70,15 +70,15 @@ const COPY = {
     ctaButton: "Iniciar Sesión en mi Panel",
     needHelp: "¿Tienes dudas o necesitas asistencia con tu kit?",
     supportTeam: "Nuestro equipo técnico está listo para ayudarte en",
-    footerText: "SAFE — Emergency Medical & Real-Time GPS Ledger for Riders. Edición 2026.",
+    footerText: "ALTUS-CHIP — Respaldo Médico y Telemetría en Carretera. Edición 2026.",
     footerAuto: "Mensaje institucional automático de confirmación de registro. No responder directamente a esta dirección.",
   },
   en: {
-    subject: "🛡️ Welcome to SAFE! Your roadside medical backup starts here",
+    subject: "🛡️ Welcome to ALTUS-CHIP! Your roadside medical backup starts here",
     badge: "ROADSIDE RESCUE PROTOCOL 2026",
-    title: (name: string) => `Welcome to SAFE, ${name}!`,
+    title: (name: string) => `Welcome to ALTUS-CHIP, ${name}!`,
     subtitle: "Your rider account has been successfully registered on the emergency medical network.",
-    lead: "On the road, every second counts. As part of SAFE, you now have access to a protective ledger that speaks for you in any incident, delivering your vital medical data and GPS coordinates to paramedics and loved ones.",
+    lead: "On the road, every second counts. As part of ALTUS-CHIP, you now have access to a protective ledger that speaks for you in any incident, delivering your vital medical data and GPS coordinates to paramedics and loved ones.",
     stepsTitle: "STEPS TO ACTIVATE YOUR 24/7 PROTECTION:",
     step1Title: "1. Sign in to your dashboard",
     step1Desc: "Log in using your registered email and the password you created.",
@@ -94,7 +94,7 @@ const COPY = {
     ctaButton: "Sign In to My Dashboard",
     needHelp: "Have questions or need assistance with your kit?",
     supportTeam: "Our technical support team is ready to help at",
-    footerText: "SAFE — Emergency Medical & Real-Time GPS Ledger for Riders. Edition 2026.",
+    footerText: "ALTUS-CHIP — Emergency Medical & Real-Time GPS Ledger for Riders. Edition 2026.",
     footerAuto: "Automated account confirmation notification. Do not reply directly to this email.",
   },
 };
@@ -130,7 +130,7 @@ export function buildWelcomeEmailContent(payload: WelcomeEmailPayload): EmailCon
             </td>
             <td align="right" style="vertical-align: middle;">
               <span style="font-family: ${FONT_SERIF}; font-size: 20px; font-weight: bold; color: #FFFFFF; letter-spacing: -0.02em;">
-                SAFE
+                ALTUS-CHIP
               </span>
             </td>
           </tr>

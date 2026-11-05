@@ -1,6 +1,6 @@
 {
-  "name": "SAFE — Rescate Médico y Auxilio Vial",
-  "short_name": "SAFE",
+  "name": "ALTUS-CHIP — Rescate Médico y Auxilio Vial",
+  "short_name": "ALTUS-CHIP",
   "description": "Ficha médica de emergencia y auxilio satelital en tiempo real para motociclistas.",
   "start_url": "/",
   "display": "standalone",
@@ -9,9 +9,9 @@
   "theme_color": "#0B1F3A",
   "icons": [
     {
-      "src": "/branding/safe-logo-dark.jpg",
+      "src": "/branding/altuschip-logo.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

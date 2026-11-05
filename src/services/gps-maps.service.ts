@@ -36,7 +36,7 @@ const ZOOM_CONTRATO = "744m";
 const MAX_NOMBRE = 80;
 
 /** Etiqueta genérica de auxilio cuando el perfil no aporta nombre utilizable. */
-const ETIQUETA_SIN_NOMBRE = "Piloto SAFE";
+const ETIQUETA_SIN_NOMBRE = "Piloto AltusChip";
 
 /**
  * Paquete de ubicación directa listo para despachar una emergencia.
@@ -194,7 +194,7 @@ function limpiarNombre(riderName: string): string {
  */
 function construirTextoWhatsapp(nombre: string, dms: string, enlace: string): string {
   return [
-    "\u{1F6A8} *ALERTA MÉDICA SAFE / SAFE MEDICAL ALERT* \u{1F6A8}",
+    "\u{1F6A8} *ALERTA MÉDICA ALTUS-CHIP / ALTUS-CHIP MEDICAL ALERT* \u{1F6A8}",
     "",
     `*ES:* El casco de *${nombre}* fue escaneado en carretera y requiere auxilio médico inmediato.`,
     `*EN:* The helmet of *${nombre}* was scanned on route and needs immediate medical assistance.`,
