@@ -448,7 +448,7 @@ export async function sendEmergencyWhatsAppAlerts(
   const apiKey = getNeuroApiKey();
   if (!apiKey || payload.contacts.length === 0) return { sentCount: 0, errors: [] };
 
-  const tplName = (templateName || process.env.NEUROAPI_EMERGENCY_TEMPLATE || "alerta_emergencia_safe").trim();
+  const tplName = (templateName || process.env.NEUROAPI_EMERGENCY_TEMPLATE || "alerta_emergencia_altuschip").trim();
   let sentCount = 0;
   const errors: string[] = [];
 
@@ -457,9 +457,13 @@ export async function sendEmergencyWhatsAppAlerts(
       const cleanPhone = formatE164Phone(contact.phone);
       if (cleanPhone.length < 8) continue;
 
+      // Formato elegante unificado en {{1}}: familiar + piloto juntos
+      const unifiedRecipient = contact.relation
+        ? `${contact.name} (${contact.relation} de ${payload.riderName})`
+        : `${contact.name} (familiar de ${payload.riderName})`;
+
       const bodyParameters = [
-        contact.name,
-        payload.riderName,
+        unifiedRecipient,
         payload.bloodType || "Desconocido",
         payload.googleMapsUrl || "Ubicación satelital en proceso",
       ];
