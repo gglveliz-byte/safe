@@ -51,9 +51,10 @@ export function FeedbackManager() {
       const res = await fetch("/api/admin/feedback");
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.message || "Error al cargar testimonios.");
+        throw new Error(data.message || data.error?.message || "Error al cargar testimonios.");
       }
-      setFeedbacks(data.feedbacks || []);
+      const list = data.data?.feedbacks || data.feedbacks || [];
+      setFeedbacks(list);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error al conectar con la base de datos.";
       setErrorMessage(msg);
@@ -83,7 +84,7 @@ export function FeedbackManager() {
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.message || "Error al actualizar estado.");
+        throw new Error(data.message || data.error?.message || "Error al actualizar estado.");
       }
 
       setFeedbacks((prev) =>
@@ -126,7 +127,7 @@ export function FeedbackManager() {
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.message || "Error al eliminar comentario.");
+        throw new Error(data.message || data.error?.message || "Error al eliminar comentario.");
       }
 
       setFeedbacks((prev) => prev.filter((f) => f.id !== id));
@@ -284,3 +285,4 @@ export function FeedbackManager() {
     </div>
   );
 }
+

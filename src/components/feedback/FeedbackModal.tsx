@@ -79,7 +79,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.message || "Error al enviar comentario.");
+        throw new Error(data.error?.message || data.message || "Error al enviar comentario.");
       }
 
       triggerHaptic("success");
@@ -265,3 +265,4 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     </div>
   );
 }
+

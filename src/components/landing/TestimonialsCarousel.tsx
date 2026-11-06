@@ -82,8 +82,9 @@ export function TestimonialsCarousel({ onOpenFeedback }: { onOpenFeedback?: () =
       .then((res) => res.json())
       .then((data) => {
         if (!isMounted) return;
-        if (data?.success && Array.isArray(data.testimonials) && data.testimonials.length > 0) {
-          setTestimonials(data.testimonials);
+        const list = data.data?.testimonials || data.testimonials;
+        if (data?.success && Array.isArray(list) && list.length > 0) {
+          setTestimonials(list);
         }
       })
       .catch(() => {
@@ -268,3 +269,4 @@ export function TestimonialsCarousel({ onOpenFeedback }: { onOpenFeedback?: () =
     </section>
   );
 }
+

@@ -98,3 +98,4 @@ export async function DELETE(request: Request): Promise<NextResponse> {
     return handleApiError(error, "admin.feedback.delete");
   }
 }
+
