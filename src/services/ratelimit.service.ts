@@ -106,8 +106,8 @@ export const RATE_LIMITS: {
   /** Consulta pública de ficha médica por IP: 60 lecturas por minuto. */
   publicEmergencyIp: { scope: "public-emergency-ip", maxAttempts: 60, windowSeconds: 60, blockSeconds: 120 },
 
-  /** Subida de fotos de rostro a Cloudinary por IP: 10 imágenes cada 5 min. */
-  uploadIp: { scope: "upload-ip", maxAttempts: 10, windowSeconds: 300, blockSeconds: 600 },
+  /** Subida de fotos y documentos a Cloudinary por IP: 50 imágenes cada 5 min. */
+  uploadIp: { scope: "upload-ip", maxAttempts: 50, windowSeconds: 300, blockSeconds: 60 },
 
   /** Gateway de casco físico (/r/[code]) por IP: 60 escaneos por minuto. */
   gatewayIp: { scope: "gateway-ip", maxAttempts: 60, windowSeconds: 60, blockSeconds: 120 },

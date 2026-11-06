@@ -20,6 +20,8 @@
  * ==============================================================================
  */
 
+import { COUNTRIES } from "@/lib/countries-data";
+
 export interface CountryEmergencyService {
   /** Código ISO del país en mayúsculas (ej: EC, CO, PE, ES, US) */
   countryCode: string;
@@ -170,13 +172,61 @@ const DEFAULT_SERVICE: Omit<CountryEmergencyService, "countryCode"> = {
 };
 
 /**
- * Resuelve la central de emergencia oficial según el código ISO del país.
+ * Normaliza cualquier entrada de país (código ISO 2, nombre en español, nombre en inglés, etc.)
+ * a su código ISO 3166-1 alfa-2 estándar en mayúsculas (ej: "EC", "CO", "ES", "PE", "US").
+ */
+export function normalizeCountryCode(input?: string | null): string {
+  if (!input) return "EC";
+  const trimmed = input.trim();
+  if (!trimmed) return "EC";
+
+  const upper = trimmed.toUpperCase();
+  // 1. Si ya es un código ISO directo de 2 letras registrado en el catálogo
+  if (COUNTRY_SERVICES[upper]) {
+    return upper;
+  }
+
+  // 2. Normalización de tildes para búsqueda flexible
+  const normalized = trimmed
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  // 3. Buscar en el catálogo de COUNTRIES por nombre español o inglés
+  const match = COUNTRIES.find((c) => {
+    if (c.code.toUpperCase() === upper) return true;
+    const normEs = c.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const normEn = c.nameEn.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return normEs === normalized || normEn === normalized;
+  });
+
+  if (match && COUNTRY_SERVICES[match.code.toUpperCase()]) {
+    return match.code.toUpperCase();
+  }
+
+  // 4. Mapeos fonéticos y variantes comunes
+  if (normalized.includes("colomb")) return "CO";
+  if (normalized.includes("ecuad")) return "EC";
+  if (normalized.includes("espan") || normalized.includes("spain")) return "ES";
+  if (normalized.includes("peru")) return "PE";
+  if (normalized.includes("mexic")) return "MX";
+  if (normalized.includes("chile")) return "CL";
+  if (normalized.includes("argentin")) return "AR";
+  if (normalized.includes("unite") || normalized.includes("estad") || normalized === "usa") return "US";
+  if (normalized.includes("canad")) return "CA";
+  if (normalized.includes("brasil") || normalized.includes("brazil")) return "BR";
+
+  return upper.length === 2 ? upper : "EC";
+}
+
+/**
+ * Resuelve la central de emergencia oficial según el código ISO o nombre del país.
  *
- * @param countryCode Código de 2 letras (ej. "EC", "CO", "ES", "US").
+ * @param countryCode Código de 2 letras (ej. "EC", "CO", "ES", "US") o nombre completo.
  * @returns Configuración completa de la central con número y rótulo bilingüe.
  */
 export function resolveCountryEmergency(countryCode?: string | null): CountryEmergencyService {
-  const cleanCode = (countryCode || "EC").trim().toUpperCase();
+  const cleanCode = normalizeCountryCode(countryCode);
   const service = COUNTRY_SERVICES[cleanCode] || DEFAULT_SERVICE;
   return {
     countryCode: cleanCode,

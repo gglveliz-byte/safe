@@ -244,25 +244,8 @@ export function MedicalRecordForm({
             />
           </div>
 
-          {/* Central de Emergencias Oficial (Automática por País) */}
-          <div className="flex flex-col gap-1 sm:col-span-2 bg-brand-bg-alt/70 p-3 rounded-lg border border-brand-border-subtle">
-            <span className="font-sans text-xs font-semibold text-brand-navy-dark flex items-center gap-1.5">
-              <span>🚨</span> {t.dashboard.emergencyNumberLabel}
-            </span>
-            <div className="flex items-center justify-between flex-wrap gap-2 pt-0.5">
-              <span className="font-sans text-xs font-medium text-brand-navy-dark">
-                {resolveCountryEmergency(profile.country).agencyName}
-              </span>
-              <span className="font-mono text-xs font-bold px-2 py-0.5 bg-brand-white border border-brand-accent/30 text-brand-accent rounded">
-                Línea: {resolveCountryEmergency(profile.country).number}
-              </span>
-            </div>
-            <p className="font-sans text-[11px] text-brand-text-muted pt-0.5">
-              {t.dashboard.emergencyNumberHelp}
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
+          {/* País de Residencia */}
+          <div className="flex flex-col gap-1.5 sm:col-span-1">
             <label className="font-sans text-xs font-semibold text-brand-navy-dark">
               {t.activate.countryLabel}
             </label>
@@ -270,9 +253,27 @@ export function MedicalRecordForm({
               value={profile.country || "EC"}
               onChange={(code) => {
                 const svc = resolveCountryEmergency(code);
-                onProfileChange({ ...profile, country: code, emergencyNumber: svc.number });
+                onProfileChange({ ...profile, country: svc.countryCode, emergencyNumber: svc.number });
               }}
             />
+          </div>
+
+          {/* Central de Emergencias Oficial (Automática y Reactiva en Tiempo Real) */}
+          <div className="flex flex-col justify-center gap-1 sm:col-span-2 bg-brand-bg-alt/70 p-3 rounded-lg border border-brand-border-subtle">
+            <span className="font-sans text-xs font-semibold text-brand-navy-dark flex items-center gap-1.5">
+              <span>🚨</span> {t.dashboard.emergencyNumberLabel}
+            </span>
+            <div className="flex items-center justify-between flex-wrap gap-2 pt-0.5">
+              <span className="font-sans text-xs font-bold text-brand-navy-dark">
+                {resolveCountryEmergency(profile.country).agencyName}
+              </span>
+              <span className="font-mono text-xs font-extrabold px-2 py-0.5 bg-brand-white border border-brand-accent/30 text-brand-accent rounded shadow-xs">
+                Línea: {resolveCountryEmergency(profile.country).number}
+              </span>
+            </div>
+            <p className="font-sans text-[11px] text-brand-text-muted pt-0.5">
+              {t.dashboard.emergencyNumberHelp}
+            </p>
           </div>
 
           <div className="flex flex-col gap-1.5">

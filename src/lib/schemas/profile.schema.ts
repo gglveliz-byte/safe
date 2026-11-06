@@ -120,7 +120,13 @@ export const ProfileUpdateSchema = z
     insuranceInfo: z.string().trim().max(200).optional(),
 
     /** Teléfono directo de auxilio médico del motociclista. */
-    emergencyNumber: PhoneSchema.optional(),
+    emergencyNumber: z
+      .string()
+      .trim()
+      .min(3, "El número de auxilio debe tener al menos 3 dígitos.")
+      .max(30, "El número de auxilio no puede superar los 30 caracteres.")
+      .optional()
+      .nullable(),
 
     /** Beneficiario del chip: SELF (Para Mí), CHILD, PARTNER, FAMILY, OTHER */
     beneficiaryType: z.enum(["SELF", "CHILD", "PARTNER", "FAMILY", "OTHER"]).optional(),

@@ -19,9 +19,10 @@
 
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { COUNTRIES, CountryItem } from "@/lib/countries-data";
 import { useLocale } from "@/hooks/useLocale";
+import { normalizeCountryCode } from "@/lib/country-emergency";
 
 export interface CountrySelectProps {
   value: string; // ISO 2-letter code (ej. "EC", "CO", "MX")
@@ -44,6 +45,10 @@ export function CountrySelect({
 }: CountrySelectProps) {
   const { locale, t } = useLocale();
 
+  const normalizedValue = useMemo(() => {
+    return normalizeCountryCode(value);
+  }, [value]);
+
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const code = e.target.value;
     const item = COUNTRIES.find((c) => c.code === code) || COUNTRIES[0];
@@ -56,7 +61,7 @@ export function CountrySelect({
     <div className="relative w-full">
       <select
         id={id}
-        value={value}
+        value={normalizedValue}
         onChange={handleChange}
         disabled={disabled}
         required={required}
