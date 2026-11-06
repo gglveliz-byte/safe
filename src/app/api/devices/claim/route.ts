@@ -36,6 +36,7 @@ import {
   successResponse,
 } from "@/lib/api-response";
 import { ClaimDeviceSchema } from "@/lib/schemas/activate.schema";
+import { resolveCodeFallback } from "@/services/device-code.service";
 import {
   clearThrottle,
   ensureThrottleAllowed,
@@ -93,6 +94,22 @@ export async function POST(request: Request): Promise<NextResponse> {
           activationPinHash: true,
         },
       });
+
+      if (!device) {
+        const fallback = resolveCodeFallback(targetCode);
+        if (fallback) {
+          device = await db.device.findUnique({
+            where: { code: fallback },
+            select: {
+              id: true,
+              code: true,
+              status: true,
+              userId: true,
+              activationPinHash: true,
+            },
+          });
+        }
+      }
 
       if (!device || device.status === "DISABLED") {
         throw new AppError(

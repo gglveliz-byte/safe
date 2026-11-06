@@ -59,6 +59,7 @@ import {
 import { getClientIp } from "@/lib/request";
 import { logEvent } from "@/lib/logger";
 import { EmergencyAlertSchema } from "@/lib/schemas/emergency.schema";
+import { resolveCodeFallback } from "@/services/device-code.service";
 import {
   EMERGENCY_ALERT_IP_POLICY,
   consumeThrottle,
@@ -119,38 +120,51 @@ export async function POST(request: Request): Promise<NextResponse> {
     const input = await parseJsonBody(request, EmergencyAlertSchema);
 
     // 4. Búsqueda del dispositivo con su perfil médico y usuario asociado.
-    const device = await db.device.findUnique({
-      where: { code: input.code },
-      select: {
-        id: true,
-        code: true,
-        status: true,
-        userId: true,
-        lastAlertAt: true,
-        lastAlertLat: true,
-        lastAlertLng: true,
-        user: {
-          select: {
-            id: true,
-            isActive: true,
-            lastKnownLat: true,
-            lastKnownLng: true,
-            medicalProfile: {
-              select: {
-                fullName: true,
-                bloodType: true,
-                allergies: true,
-                chronicConditions: true,
-                medications: true,
-                emergencyContacts: true,
-                locale: true,
-                companionData: true,
-              },
+    const alertDeviceSelect = {
+      id: true,
+      code: true,
+      status: true,
+      userId: true,
+      lastAlertAt: true,
+      lastAlertLat: true,
+      lastAlertLng: true,
+      user: {
+        select: {
+          id: true,
+          isActive: true,
+          lastKnownLat: true,
+          lastKnownLng: true,
+          medicalProfile: {
+            select: {
+              fullName: true,
+              bloodType: true,
+              allergies: true,
+              chronicConditions: true,
+              medications: true,
+              emergencyContacts: true,
+              locale: true,
+              companionData: true,
             },
           },
         },
       },
+    };
+
+    let device = await db.device.findUnique({
+      where: { code: input.code },
+      select: alertDeviceSelect,
     });
+
+    // Retrocompatibilidad con escaneos de chips NFC físicos (SAFE-XXXX <-> ALTUS-XXXX)
+    if (!device) {
+      const fallbackCode = resolveCodeFallback(input.code);
+      if (fallbackCode) {
+        device = await db.device.findUnique({
+          where: { code: fallbackCode },
+          select: alertDeviceSelect,
+        });
+      }
+    }
 
     // 5. Casco inexistente o no activo → 404 (no se revela si existe pero está inactivo).
     if (!device || device.status !== "ACTIVE" || device.user?.isActive === false) {

@@ -48,6 +48,7 @@ import {
 import { getClientIp } from "@/lib/request";
 import { DeviceCodeParamSchema } from "@/lib/schemas/common.schema";
 import { EmergencyScanQuerySchema } from "@/lib/schemas/emergency.schema";
+import { resolveCodeFallback } from "@/services/device-code.service";
 import {
   consumeThrottle,
   GATEWAY_IP_POLICY,
@@ -179,7 +180,7 @@ export async function GET(
     //    chip "zombi" (ACTIVE sin cuenta tras un borrado, hallazgo H-04).
     //    No se expone información sensible del rider en este endpoint.
     // ─────────────────────────────────────────────────────────────────
-    const device = await db.device.findUnique({
+    let device = await db.device.findUnique({
       where: { code: validatedCode },
       select: {
         code: true,
@@ -188,6 +189,22 @@ export async function GET(
         user: { select: { isActive: true } },
       },
     });
+
+    // Retrocompatibilidad con chips NFC físicos grabados con SAFE-XXXX o ALTUS-XXXX
+    if (!device) {
+      const fallbackCode = resolveCodeFallback(validatedCode);
+      if (fallbackCode) {
+        device = await db.device.findUnique({
+          where: { code: fallbackCode },
+          select: {
+            code: true,
+            status: true,
+            userId: true,
+            user: { select: { isActive: true } },
+          },
+        });
+      }
+    }
 
     // ─────────────────────────────────────────────────────────────────
     // 4. CASCO INEXISTENTE O DESACTIVADO → 404 HTML BILINGÜE (hallazgo H-03)
@@ -213,7 +230,7 @@ export async function GET(
     const origin = resolveRequestOrigin(request);
 
     if (device.status === "UNCLAIMED" || !device.userId) {
-      const activateUrl = new URL(`/activate/${validatedCode}`, origin);
+      const activateUrl = new URL(`/activate/${device.code}`, origin);
       const pinParam = request.nextUrl.searchParams.get("pin");
       if (pinParam) {
         activateUrl.searchParams.set("pin", pinParam.trim());
@@ -232,7 +249,7 @@ export async function GET(
     //    fuente de escaneo (NFC/QR/direct).
     // ─────────────────────────────────────────────────────────────────
     if (device.status === "ACTIVE") {
-      const emergencyPath = `/emergency/${validatedCode}${v ? `?v=${v}` : ""}`;
+      const emergencyPath = `/emergency/${device.code}${v ? `?v=${v}` : ""}`;
       const emergencyUrl = new URL(emergencyPath, origin);
       return NextResponse.redirect(emergencyUrl, 307);
     }

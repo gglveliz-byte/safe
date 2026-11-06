@@ -86,3 +86,18 @@ export async function resolveNextFolioSequence(
 
   return maxSequence + 1;
 }
+
+/**
+ * Normaliza y resuelve el código alterno o su variante canónica (ej. SAFE-0001 <-> ALTUS-0001)
+ * para garantizar retrocompatibilidad transparente con antenas NFC físicas grabadas previamente.
+ */
+export function resolveCodeFallback(code: string): string | null {
+  const clean = code.trim().toUpperCase();
+  if (clean.startsWith("SAFE-")) {
+    return clean.replace(/^SAFE-/, "ALTUS-");
+  }
+  if (clean.startsWith("ALTUS-")) {
+    return clean.replace(/^ALTUS-/, "SAFE-");
+  }
+  return null;
+}

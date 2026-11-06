@@ -42,6 +42,7 @@ import {
   sendAdminPinNotificationEmail,
 } from "@/services/mail.service";
 import { getAdminPinDispatchConfig } from "@/services/settings.service";
+import { resolveCodeFallback } from "@/services/device-code.service";
 import {
   RATE_LIMITS,
   enforceNotBlocked,
@@ -113,10 +114,20 @@ export async function POST(request: Request): Promise<NextResponse> {
       // Si el registro proviene del escaneo de un kit físico, lo reservamos (status sigue UNCLAIMED hasta validar PIN)
       if (input.deviceCode) {
         const cleanCode = input.deviceCode.trim().toUpperCase();
-        const candidate = await tx.device.findUnique({
+        let candidate = await tx.device.findUnique({
           where: { code: cleanCode },
           select: { id: true, status: true, userId: true },
         });
+
+        if (!candidate) {
+          const fallback = resolveCodeFallback(cleanCode);
+          if (fallback) {
+            candidate = await tx.device.findUnique({
+              where: { code: fallback },
+              select: { id: true, status: true, userId: true },
+            });
+          }
+        }
 
         if (candidate && candidate.status === "UNCLAIMED" && !candidate.userId) {
           await tx.device.update({
@@ -147,10 +158,21 @@ export async function POST(request: Request): Promise<NextResponse> {
         .then(async (config) => {
           if (!config.enabled || !config.notificationEmail) return;
 
-          const device = await db.device.findUnique({
-            where: { code: input.deviceCode },
-            select: { activationPinEncrypted: true },
+          const devCode = input.deviceCode?.trim().toUpperCase();
+          let device = await db.device.findUnique({
+            where: { code: devCode },
+            select: { code: true, activationPinEncrypted: true },
           });
+
+          if (!device && devCode) {
+            const fallback = resolveCodeFallback(devCode);
+            if (fallback) {
+              device = await db.device.findUnique({
+                where: { code: fallback },
+                select: { code: true, activationPinEncrypted: true },
+              });
+            }
+          }
 
           if (!device?.activationPinEncrypted) return;
 
@@ -160,7 +182,7 @@ export async function POST(request: Request): Promise<NextResponse> {
             fullName: input.fullName,
             riderEmail: user.email,
             riderPhone: input.riderPhone,
-            deviceCode: input.deviceCode!,
+            deviceCode: device.code,
             pin: decryptedPin,
             locale: input.locale === "en" ? "en" : "es",
           });
