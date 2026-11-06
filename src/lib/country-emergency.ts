@@ -162,6 +162,48 @@ const COUNTRY_SERVICES: Record<string, Omit<CountryEmergencyService, "countryCod
     labelEs: "Llamar al 118",
     labelEn: "Call 118",
   },
+  CN: {
+    number: "120",
+    agencyName: "120 Ambulancias / 110 Policía (China)",
+    labelEs: "Llamar al 120 Ambulancias",
+    labelEn: "Call 120 Ambulance",
+  },
+  GB: {
+    number: "999",
+    agencyName: "999 Emergency Services (Reino Unido)",
+    labelEs: "Llamar al 999",
+    labelEn: "Call 999",
+  },
+  JP: {
+    number: "119",
+    agencyName: "119 Ambulancia y Bomberos (Japón)",
+    labelEs: "Llamar al 119 Ambulancia",
+    labelEn: "Call 119 Ambulance",
+  },
+  AU: {
+    number: "000",
+    agencyName: "000 Triple Zero (Australia)",
+    labelEs: "Llamar al 000",
+    labelEn: "Call 000",
+  },
+  FR: {
+    number: "112",
+    agencyName: "112 / 15 SAMU (Francia)",
+    labelEs: "Llamar al 112 SAMU",
+    labelEn: "Call 112 SAMU",
+  },
+  DE: {
+    number: "112",
+    agencyName: "112 Notruf Rettungsdienst (Alemania)",
+    labelEs: "Llamar al 112",
+    labelEn: "Call 112",
+  },
+  IT: {
+    number: "112",
+    agencyName: "112 Numero Unico Emergenze (Italia)",
+    labelEs: "Llamar al 112",
+    labelEn: "Call 112",
+  },
 };
 
 const DEFAULT_SERVICE: Omit<CountryEmergencyService, "countryCode"> = {
@@ -215,6 +257,13 @@ export function normalizeCountryCode(input?: string | null): string {
   if (normalized.includes("unite") || normalized.includes("estad") || normalized === "usa") return "US";
   if (normalized.includes("canad")) return "CA";
   if (normalized.includes("brasil") || normalized.includes("brazil")) return "BR";
+  if (normalized.includes("chin")) return "CN";
+  if (normalized.includes("japon") || normalized.includes("japan")) return "JP";
+  if (normalized.includes("reino unido") || normalized.includes("united kingdom") || normalized === "uk") return "GB";
+  if (normalized.includes("australi")) return "AU";
+  if (normalized.includes("franci") || normalized.includes("france")) return "FR";
+  if (normalized.includes("alemani") || normalized.includes("germany")) return "DE";
+  if (normalized.includes("itali") || normalized.includes("italy")) return "IT";
 
   return upper.length === 2 ? upper : "EC";
 }
