@@ -84,8 +84,9 @@ export async function GET(): Promise<NextResponse> {
       },
     });
 
-    // Si aún no hay testimonios aprobados en la base de datos, servir los iniciales
-    const testimonials = approved.length > 0 ? approved : FALLBACK_TESTIMONIALS;
+    // Unificamos TODO en el mismo carrusel: primero los testimonios reales aprobados por el admin,
+    // y a continuación los 3 testimonios base curados para que salgan todos juntos sin separarse
+    const testimonials = [...approved, ...FALLBACK_TESTIMONIALS];
 
     return successResponse({
       testimonials,

@@ -90,21 +90,6 @@ export function IncidentNavbar() {
             <span>{t.nav.support}</span>
           </a>
 
-          {/* Botón sutil de Opinión / Feedback (Sin emojis) */}
-          <button
-            type="button"
-            onClick={() => {
-              triggerHaptic("light");
-              setFeedbackModalOpen(true);
-            }}
-            className="px-3 py-1.5 rounded-md text-[13px] font-medium text-brand-navy-dark bg-brand-bg-alt/70 hover:bg-brand-white border border-brand-border-subtle hover:border-brand-border-strong transition-all duration-150 inline-flex items-center gap-1.5 cursor-pointer shadow-2xs group"
-          >
-            <svg className="w-3.5 h-3.5 text-amber-500 fill-amber-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-            <span>{locale === "es" ? "Opinión" : "Feedback"}</span>
-          </button>
-
           {/* Iniciar Sesión */}
           <Link
             href="/login"
@@ -126,7 +111,7 @@ export function IncidentNavbar() {
             type="button"
             onClick={handleLanguageSwitch}
             aria-label={t.common.languageToggle}
-            className="min-h-[44px] px-3.5 py-1.5 text-[12px] font-semibold text-brand-navy-dark bg-brand-bg-alt hover:bg-brand-white border border-brand-border-subtle hover:border-brand-border-strong rounded-md transition-all duration-150 active:scale-95 inline-flex items-center gap-2 cursor-pointer shadow-2xs group"
+            className="min-h-[38px] px-3.5 py-1.5 text-[12px] font-semibold text-brand-navy-dark bg-brand-bg-alt hover:bg-brand-white border border-brand-border-subtle hover:border-brand-border-strong rounded-md transition-all duration-150 active:scale-95 inline-flex items-center gap-2 cursor-pointer shadow-2xs group"
           >
             <svg className="w-4 h-4 text-brand-nav-blue flex-shrink-0 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 21a9 9 0 100-18 9 9 0 000 18zM3.6 9h16.8M3.6 15h16.8M12 3a14.3 14.3 0 000 18 14.3 14.3 0 000-18z" />
@@ -135,6 +120,22 @@ export function IncidentNavbar() {
             <span className="font-bold text-brand-navy-dark uppercase text-[12px]">
               {locale === "es" ? "Español (EN)" : "English (ES)"}
             </span>
+          </button>
+
+          {/* Botón Pequeño y Elegante de Opinión / Feedback al lado de Idioma */}
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic("light");
+              setFeedbackModalOpen(true);
+            }}
+            title={locale === "es" ? "Danos tu opinión para mejorar el servicio" : "Share your feedback to help us improve"}
+            className="min-h-[38px] px-2.5 py-1 text-[11px] font-semibold text-brand-text-desc hover:text-brand-navy-dark bg-brand-bg-alt/70 hover:bg-brand-white border border-brand-border-subtle hover:border-brand-border-strong rounded-md transition-all duration-150 inline-flex items-center gap-1.5 cursor-pointer shadow-2xs group active:scale-95"
+          >
+            <svg className="w-3.5 h-3.5 text-amber-500 fill-amber-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+            <span>{locale === "es" ? "Opinión" : "Feedback"}</span>
           </button>
         </nav>
 
@@ -177,22 +178,6 @@ export function IncidentNavbar() {
             <span>{t.nav.support}</span>
           </a>
 
-          {/* Opinar / Feedback en Móvil (Sin emojis) */}
-          <button
-            type="button"
-            onClick={() => {
-              triggerHaptic("light");
-              closeMobileMenu();
-              setFeedbackModalOpen(true);
-            }}
-            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-md text-sm font-medium text-brand-navy-dark hover:bg-brand-bg-alt active:bg-brand-nav-active transition-colors text-left"
-          >
-            <svg className="w-4 h-4 text-amber-500 fill-amber-400" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-            <span>{locale === "es" ? "Danos tu opinión" : "Share your feedback"}</span>
-          </button>
-
           {/* Iniciar Sesión en Móvil */}
           <Link
             href="/login"
@@ -209,8 +194,8 @@ export function IncidentNavbar() {
             {t.nav.login}
           </Link>
 
-          {/* Selector de Idioma en Móvil */}
-          <div className="pt-3 border-t border-brand-separator flex flex-col gap-2">
+          {/* Selector de Idioma y Botón de Opinión en Móvil */}
+          <div className="pt-3 border-t border-brand-separator flex flex-col gap-2.5">
             <div className="flex items-center gap-2 text-xs text-brand-text-muted">
               <svg className="w-4 h-4 text-brand-nav-blue flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 21a9 9 0 100-18 9 9 0 000 18zM3.6 9h16.8M3.6 15h16.8M12 3a14.3 14.3 0 000 18 14.3 14.3 0 000-18z" />
@@ -231,6 +216,22 @@ export function IncidentNavbar() {
               <span className="text-brand-accent font-semibold flex items-center gap-1">
                 {locale === "es" ? "Cambiar a English →" : "Switch to Español →"}
               </span>
+            </button>
+
+            {/* Opinar / Feedback en Móvil (pequeño y elegante junto a idioma) */}
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic("light");
+                closeMobileMenu();
+                setFeedbackModalOpen(true);
+              }}
+              className="w-full min-h-[40px] px-4 py-2 rounded-md text-xs font-semibold text-brand-navy-dark bg-brand-white border border-brand-border-subtle hover:bg-brand-bg-alt active:bg-brand-nav-active transition-all flex items-center justify-center gap-2 shadow-2xs"
+            >
+              <svg className="w-3.5 h-3.5 text-amber-500 fill-amber-400" viewBox="0 0 24 24">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              <span>{locale === "es" ? "Danos tu opinión" : "Share your feedback"}</span>
             </button>
           </div>
         </div>

@@ -85,6 +85,7 @@ export function TestimonialsCarousel({ onOpenFeedback }: { onOpenFeedback?: () =
         const list = data.data?.testimonials || data.testimonials;
         if (data?.success && Array.isArray(list) && list.length > 0) {
           setTestimonials(list);
+          setCurrentIndex((prev) => (prev >= list.length ? 0 : prev));
         }
       })
       .catch(() => {
@@ -119,7 +120,8 @@ export function TestimonialsCarousel({ onOpenFeedback }: { onOpenFeedback?: () =
     setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   }, [testimonials.length, triggerHaptic]);
 
-  const currentItem = testimonials[currentIndex] || testimonials[0];
+  const safeIndex = Math.min(Math.max(0, currentIndex), Math.max(0, testimonials.length - 1));
+  const currentItem = testimonials[safeIndex] || testimonials[0] || DEFAULT_FALLBACK[0];
 
   return (
     <section
@@ -156,7 +158,7 @@ export function TestimonialsCarousel({ onOpenFeedback }: { onOpenFeedback?: () =
         </div>
 
         {/* Tarjeta Central del Carrusel */}
-        <div className="w-full max-w-3xl min-h-[260px] bg-brand-white border border-brand-border-subtle rounded-2xl p-7 sm:p-10 shadow-lg relative flex flex-col justify-between transition-all duration-300">
+        <div className="w-full max-w-3xl min-h-[280px] bg-brand-white border border-brand-border-subtle rounded-2xl p-7 sm:p-10 shadow-lg relative flex flex-col justify-between transition-all duration-300">
           {/* Marca de comillas editorial en marca de agua */}
           <div
             className="absolute top-6 right-8 text-6xl font-serif text-brand-border-subtle/50 select-none pointer-events-none font-bold"
@@ -165,7 +167,7 @@ export function TestimonialsCarousel({ onOpenFeedback }: { onOpenFeedback?: () =
             “
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div key={currentItem.id} className="flex flex-col gap-4 animate-fadeIn">
             {/* Calificación por estrellas */}
             <div className="flex items-center justify-between">
               <StarRating value={currentItem.rating} readOnly size="md" />
@@ -178,14 +180,14 @@ export function TestimonialsCarousel({ onOpenFeedback }: { onOpenFeedback?: () =
             </div>
 
             {/* Texto de la opinión */}
-            <p className="font-serif text-lg sm:text-xl text-brand-navy-dark leading-relaxed italic pt-1">
+            <p className="font-serif text-lg sm:text-xl text-brand-navy-dark leading-relaxed italic pt-1 min-h-[64px]">
               "{currentItem.comment}"
             </p>
           </div>
 
           {/* Autor y datos del vehículo */}
           <div className="flex items-center justify-between pt-6 border-t border-brand-separator/60 mt-4 flex-wrap gap-3">
-            <div className="flex flex-col">
+            <div key={`author-${currentItem.id}`} className="flex flex-col animate-fadeIn">
               <strong className="font-sans text-sm font-bold text-brand-navy-dark">
                 {currentItem.name}
               </strong>
