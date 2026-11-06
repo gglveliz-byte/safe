@@ -25,7 +25,7 @@
 
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
@@ -33,13 +33,16 @@ import { HelmetHeroCard } from "@/components/landing/HelmetHeroCard";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { LocationAndMapSection } from "@/components/landing/LocationAndMapSection";
 import { GoldenHourSection } from "@/components/landing/GoldenHourSection";
+import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel";
 import { SocialAndContactSection } from "@/components/landing/SocialAndContactSection";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { FloatingWhatsAppButton } from "@/components/ui/FloatingWhatsAppButton";
+import { FeedbackModal } from "@/components/feedback/FeedbackModal";
 
 export default function HomePage() {
   const { t } = useLocale();
   const { triggerHaptic } = useHaptic();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   return (
     <div className="w-full bg-brand-white">
@@ -115,11 +118,17 @@ export default function HomePage() {
       {/* ══════════ SECCIÓN: EL PRINCIPIO DE LA HORA DORADA ══════════ */}
       <GoldenHourSection />
 
+      {/* ══════════ SECCIÓN: TESTIMONIOS Y EXPERIENCIA 5 ESTRELLAS ══════════ */}
+      <TestimonialsCarousel onOpenFeedback={() => setFeedbackOpen(true)} />
+
       {/* ══════════ SECCIÓN: REDES SOCIALES Y CONTACTO ══════════ */}
       <SocialAndContactSection />
 
       {/* ══════════ BOTÓN FLOTANTE OFICIAL DE WHATSAPP ══════════ */}
       <FloatingWhatsAppButton />
+
+      {/* ══════════ MODAL DE OPINIÓN Y RETROALIMENTACIÓN ══════════ */}
+      <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </div>
   );
 }

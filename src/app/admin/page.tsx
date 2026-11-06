@@ -32,7 +32,6 @@ import {
   type AdminBatchSummary,
   type AdminRiderItem,
 } from "@/lib/api-client";
-import { IncidentHairline } from "@/components/ui/IncidentHairline";
 import { QrPrintSheet } from "@/components/admin/QrPrintSheet";
 import { NfcBurstWriterModal } from "@/components/admin/NfcBurstWriterModal";
 import { BatchDeviceList } from "@/components/admin/BatchDeviceList";
@@ -44,12 +43,13 @@ import { CreateBatchModal } from "@/components/admin/CreateBatchModal";
 import { ConfirmPurgeModal } from "@/components/admin/ConfirmPurgeModal";
 import { WhatsAppManager } from "@/components/admin/WhatsAppManager";
 import { PinDispatchSettingsCard } from "@/components/admin/PinDispatchSettingsCard";
+import { FeedbackManager } from "@/components/admin/FeedbackManager";
 
-type AdminTab = "riders" | "qr" | "whatsapp";
+type AdminTab = "riders" | "qr" | "whatsapp" | "feedback";
 
 export default function AdminPage() {
   const router = useRouter();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { triggerHaptic } = useHaptic();
 
   // Estados de carga y navegación
@@ -261,10 +261,7 @@ export default function AdminPage() {
         <div className="flex items-center flex-wrap gap-2.5">
           <button
             type="button"
-            onClick={() => {
-              triggerHaptic("light");
-              setShowCreateBatchModal(true);
-            }}
+            onClick={() => { triggerHaptic("light"); setShowCreateBatchModal(true); }}
             className="min-h-[42px] inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-brand-navy-dark hover:bg-brand-navy-secondary text-white text-xs font-semibold rounded-lg shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-brand-nav-blue cursor-pointer"
           >
             <span>+</span>
@@ -273,14 +270,11 @@ export default function AdminPage() {
 
           <button
             type="button"
-            onClick={() => {
-              triggerHaptic("light");
-              setShowPurgeModal(true);
-            }}
+            onClick={() => { triggerHaptic("light"); setShowPurgeModal(true); }}
             className="min-h-[42px] inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-rose-50 border border-brand-accent/30 hover:bg-brand-accent hover:text-white text-brand-accent text-xs font-semibold rounded-lg shadow-xs transition-all cursor-pointer"
             title={t.admin.purgeSubtitle}
           >
-            <span>🚨</span>
+            <span className="font-mono text-xs font-bold">!</span>
             <span>{t.admin.purgeButton}</span>
           </button>
         </div>
@@ -298,7 +292,7 @@ export default function AdminPage() {
 
       {errorMessage && (
         <div role="alert" className="p-3 bg-rose-50 border border-brand-accent/30 rounded-lg text-xs text-brand-accent font-sans text-center font-medium">
-          ⚠️ {errorMessage}
+          [!] {errorMessage}
         </div>
       )}
 
@@ -361,6 +355,25 @@ export default function AdminPage() {
             </svg>
             <span>WhatsApp Cloud</span>
           </button>
+
+          <button
+            type="button"
+            role="tab"
+            id="admin-tab-feedback"
+            aria-selected={activeTab === "feedback"}
+            aria-controls="admin-panel-feedback"
+            onClick={() => setActiveTab("feedback")}
+            className={`min-h-[38px] px-3.5 py-1.5 inline-flex items-center gap-2 rounded-lg font-sans text-xs font-bold transition-all cursor-pointer ${
+              activeTab === "feedback"
+                ? "bg-brand-navy-dark text-white shadow-xs"
+                : "text-brand-text-desc hover:text-brand-navy-dark hover:bg-brand-bg-alt"
+            }`}
+          >
+            <svg className="w-3.5 h-3.5 fill-amber-400 flex-shrink-0" viewBox="0 0 24 24">
+              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+            </svg>
+            <span>{locale === "en" ? "Reviews" : "Reseñas"}</span>
+          </button>
         </div>
 
         {/* Métricas compactas integradas */}
@@ -378,22 +391,7 @@ export default function AdminPage() {
             errorMessage={ridersError}
             onRefresh={() => void loadRiders()}
             onUserStatusChanged={(userId, isActive) => {
-              setRiders((prev) =>
-                prev.map((r) =>
-                  r.id === userId
-                    ? {
-                        ...r,
-                        isActive,
-                        device: r.device
-                          ? {
-                              ...r.device,
-                              status: isActive ? "ACTIVE" : "DISABLED",
-                            }
-                          : null,
-                      }
-                    : r,
-                ),
-              );
+              setRiders((prev) => prev.map((r) => r.id === userId ? { ...r, isActive, device: r.device ? { ...r.device, status: isActive ? "ACTIVE" : "DISABLED" } : null } : r));
               setNotice(t.admin.accountStatusChangedNotice);
               setTimeout(() => setNotice(""), 4000);
               void loadRiders();
@@ -421,32 +419,24 @@ export default function AdminPage() {
 
           {selectedBatchName && (
             <BatchDeviceList
-                devices={devices}
-                selectedBatchName={selectedBatchName}
-                isLoadingDevices={isLoadingDevices}
-                onSelectNfc={(device) => {
-                  setNfcModalMode("write");
-                  setSelectedDeviceForNfc(device);
-                }}
-                onSelectWipeNfc={(device) => {
-                  setNfcModalMode("wipe");
-                  setSelectedDeviceForNfc(device);
-                }}
-                onStartBurstWriting={(batchDevices) => {
-                  if (batchDevices.length === 0) return;
-                  const firstPending = batchDevices.find((d) => !d.isNfcEncoded) || batchDevices[0];
-                  setNfcModalMode("write");
-                  setSelectedDeviceForNfc(firstPending);
-                }}
-                onPrintQr={() => setShowPrintSheet(true)}
-                onDeviceDeleted={() => {
-                  setDeleteNotice(t.admin.deviceDeletedNotice);
-                  setTimeout(() => setDeleteNotice(""), 4000);
-                  void loadBatches();
-                  void loadBatchDevices(selectedBatchName);
-                }}
-                onBatchDeleted={handleBatchDeleted}
-              />
+              devices={devices}
+              selectedBatchName={selectedBatchName}
+              isLoadingDevices={isLoadingDevices}
+              onSelectNfc={(device) => { setNfcModalMode("write"); setSelectedDeviceForNfc(device); }}
+              onSelectWipeNfc={(device) => { setNfcModalMode("wipe"); setSelectedDeviceForNfc(device); }}
+              onStartBurstWriting={(batchDevices) => {
+                const firstPending = batchDevices.find((d) => !d.isNfcEncoded) || batchDevices[0];
+                if (firstPending) { setNfcModalMode("write"); setSelectedDeviceForNfc(firstPending); }
+              }}
+              onPrintQr={() => setShowPrintSheet(true)}
+              onDeviceDeleted={() => {
+                setDeleteNotice(t.admin.deviceDeletedNotice);
+                setTimeout(() => setDeleteNotice(""), 4000);
+                void loadBatches();
+                void loadBatchDevices(selectedBatchName);
+              }}
+              onBatchDeleted={handleBatchDeleted}
+            />
           )}
         </div>
       )}
@@ -455,6 +445,13 @@ export default function AdminPage() {
       {activeTab === "whatsapp" && (
         <div id="admin-panel-whatsapp" role="tabpanel" aria-labelledby="admin-tab-whatsapp" className="flex flex-col gap-4">
           <WhatsAppManager />
+        </div>
+      )}
+
+      {/* Área 4: Moderación de Reseñas y Testimonios */}
+      {activeTab === "feedback" && (
+        <div id="admin-panel-feedback" role="tabpanel" aria-labelledby="admin-tab-feedback" className="flex flex-col gap-4">
+          <FeedbackManager />
         </div>
       )}
 

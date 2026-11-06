@@ -24,6 +24,7 @@ import { usePathname } from "next/navigation";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
 import { BrandLogo } from "@/components/ui/BrandLogo";
+import { FeedbackModal } from "@/components/feedback/FeedbackModal";
 
 const SUPPORT_EMAIL = "info@altuschip.com";
 
@@ -48,9 +49,11 @@ export function IncidentNavbar() {
   };
 
   const isLoginActive = pathname === "/login";
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-brand-white/95 backdrop-blur-md border-b border-brand-border-subtle transition-all duration-300">
+    <>
+      <header className="sticky top-0 z-50 bg-brand-white/95 backdrop-blur-md border-b border-brand-border-subtle transition-all duration-300">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 h-[68px] md:h-[72px] flex items-center justify-between">
         {/* Isotipo & Marca Editorial */}
         <Link
@@ -86,6 +89,21 @@ export function IncidentNavbar() {
             </svg>
             <span>{t.nav.support}</span>
           </a>
+
+          {/* Botón sutil de Opinión / Feedback (Sin emojis) */}
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic("light");
+              setFeedbackModalOpen(true);
+            }}
+            className="px-3 py-1.5 rounded-md text-[13px] font-medium text-brand-navy-dark bg-brand-bg-alt/70 hover:bg-brand-white border border-brand-border-subtle hover:border-brand-border-strong transition-all duration-150 inline-flex items-center gap-1.5 cursor-pointer shadow-2xs group"
+          >
+            <svg className="w-3.5 h-3.5 text-amber-500 fill-amber-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+            <span>{locale === "es" ? "Opinión" : "Feedback"}</span>
+          </button>
 
           {/* Iniciar Sesión */}
           <Link
@@ -159,6 +177,22 @@ export function IncidentNavbar() {
             <span>{t.nav.support}</span>
           </a>
 
+          {/* Opinar / Feedback en Móvil (Sin emojis) */}
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic("light");
+              closeMobileMenu();
+              setFeedbackModalOpen(true);
+            }}
+            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-md text-sm font-medium text-brand-navy-dark hover:bg-brand-bg-alt active:bg-brand-nav-active transition-colors text-left"
+          >
+            <svg className="w-4 h-4 text-amber-500 fill-amber-400" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+            <span>{locale === "es" ? "Danos tu opinión" : "Share your feedback"}</span>
+          </button>
+
           {/* Iniciar Sesión en Móvil */}
           <Link
             href="/login"
@@ -202,5 +236,10 @@ export function IncidentNavbar() {
         </div>
       )}
     </header>
+    <FeedbackModal
+      isOpen={feedbackModalOpen}
+      onClose={() => setFeedbackModalOpen(false)}
+    />
+  </>
   );
 }
