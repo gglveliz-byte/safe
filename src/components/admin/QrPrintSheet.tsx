@@ -31,10 +31,17 @@ export interface QrPrintSheetProps {
   batchName: string;
   devices: AdminDeviceItem[];
   hidePin?: boolean;
+  hideCode?: boolean;
   onClose?: () => void;
 }
 
-export function QrPrintSheet({ batchName, devices, hidePin = false, onClose }: QrPrintSheetProps) {
+export function QrPrintSheet({
+  batchName,
+  devices,
+  hidePin = false,
+  hideCode = false,
+  onClose,
+}: QrPrintSheetProps) {
   const { t } = useLocale();
 
   // Control de montaje en cliente para creación segura del Portal
@@ -42,6 +49,9 @@ export function QrPrintSheet({ batchName, devices, hidePin = false, onClose }: Q
 
   // Modo Ocultar PIN (Entrega Asistida) sincronizado y alternable en caliente
   const [isHidePin, setIsHidePin] = useState(hidePin);
+
+  // Modo Ocultar Folio / Código de QR alternable en caliente
+  const [isHideCode, setIsHideCode] = useState(hideCode);
 
   // URL base dinámica (auto-detectada de LAN / VPS con capacidad de ajuste)
   const [targetBaseUrl, setTargetBaseUrl] = useState(() => resolvePublicBaseUrl());
@@ -274,19 +284,34 @@ export function QrPrintSheet({ batchName, devices, hidePin = false, onClose }: Q
               )}
             </div>
 
-            {/* Alternador interactivo en vivo: Ocultar PIN en Stickers */}
-            <label className="inline-flex items-center gap-2 px-3 py-1 bg-brand-bg-alt hover:bg-brand-nav-active border border-brand-border-subtle rounded-lg cursor-pointer transition-colors select-none">
-              <input
-                type="checkbox"
-                checked={isHidePin}
-                onChange={(e) => setIsHidePin(e.target.checked)}
-                className="w-4 h-4 text-brand-accent rounded border-brand-border-field focus:ring-brand-nav-blue cursor-pointer"
-              />
-              <span className="font-sans text-xs font-semibold text-brand-navy-dark flex items-center gap-1.5">
-                <span>{isHidePin ? "🔒" : "👁️"}</span>
-                <span>{t.admin.pinDispatchSheetToggle}</span>
-              </span>
-            </label>
+            {/* Alternadores interactivos en vivo: Ocultar PIN y Ocultar Código de QR */}
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="inline-flex items-center gap-2 px-3 py-1 bg-brand-bg-alt hover:bg-brand-nav-active border border-brand-border-subtle rounded-lg cursor-pointer transition-colors select-none">
+                <input
+                  type="checkbox"
+                  checked={isHidePin}
+                  onChange={(e) => setIsHidePin(e.target.checked)}
+                  className="w-4 h-4 text-brand-accent rounded border-brand-border-field focus:ring-brand-nav-blue cursor-pointer"
+                />
+                <span className="font-sans text-xs font-semibold text-brand-navy-dark flex items-center gap-1.5">
+                  <span>{isHidePin ? "🔒" : "👁️"}</span>
+                  <span>{t.admin.pinDispatchSheetToggle}</span>
+                </span>
+              </label>
+
+              <label className="inline-flex items-center gap-2 px-3 py-1 bg-brand-bg-alt hover:bg-brand-nav-active border border-brand-border-subtle rounded-lg cursor-pointer transition-colors select-none">
+                <input
+                  type="checkbox"
+                  checked={isHideCode}
+                  onChange={(e) => setIsHideCode(e.target.checked)}
+                  className="w-4 h-4 text-brand-accent rounded border-brand-border-field focus:ring-brand-nav-blue cursor-pointer"
+                />
+                <span className="font-sans text-xs font-semibold text-brand-navy-dark flex items-center gap-1.5">
+                  <span>{isHideCode ? "🏷️" : "👁️"}</span>
+                  <span>{t.admin.codeDispatchSheetToggle}</span>
+                </span>
+              </label>
+            </div>
           </div>
         </header>
 
@@ -343,21 +368,25 @@ export function QrPrintSheet({ batchName, devices, hidePin = false, onClose }: Q
                   )}
                 </div>
 
-                {/* Folio y Clave de Activación Raspable (solo visible en modo estándar; en modo asistido queda 100% blanco y limpio) */}
-                {!isHidePin && device.activationPin ? (
+                {/* Pie del Sticker: Código de Folio y/o Clave PIN según selección independiente */}
+                {!isHideCode || (!isHidePin && device.activationPin) ? (
                   <div className="w-full pt-1.5 border-t border-brand-separator flex flex-col items-center">
-                    <span className="font-mono text-xs font-bold text-brand-navy-dark tracking-widest">
-                      {device.code}
-                    </span>
-                    <span className="font-sans text-[10px] text-brand-text-desc mt-0.5">
-                      {t.admin.pinLabel}:{" "}
-                      <strong className="font-mono tracking-widest font-semibold text-brand-navy-dark">
-                        {device.activationPin}
-                      </strong>
-                    </span>
+                    {!isHideCode && (
+                      <span className="font-mono text-xs font-bold text-brand-navy-dark tracking-widest">
+                        {device.code}
+                      </span>
+                    )}
+                    {!isHidePin && device.activationPin && (
+                      <span className="font-sans text-[10px] text-brand-text-desc mt-0.5">
+                        {t.admin.pinLabel}:{" "}
+                        <strong className="font-mono tracking-widest font-semibold text-brand-navy-dark">
+                          {device.activationPin}
+                        </strong>
+                      </span>
+                    )}
                   </div>
                 ) : (
-                  /* En Modo Entrega Asistida: espacio totalmente blanco, limpio y sin textos irrelevantes */
+                  /* Espacio totalmente blanco y limpio cuando ambos están ocultos */
                   <div className="w-full min-h-[14px]" aria-hidden="true" />
                 )}
               </div>

@@ -338,6 +338,7 @@ export const en: Dictionary = {
     pinDispatchInactiveDesc: "The confidential 6-digit PIN is visibly printed on physical cards for in-person handoff.",
     pinHiddenLabel: "Administrator Activation",
     pinDispatchSheetToggle: "Hide PIN on stickers (Assisted Mode)",
+    codeDispatchSheetToggle: "Hide QR Folio / Code",
     statusActive: "ACTIVE",
     statusInactive: "INACTIVE",
   },

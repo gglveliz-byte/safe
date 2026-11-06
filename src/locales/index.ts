@@ -331,6 +331,7 @@ export interface Dictionary {
     pinDispatchInactiveDesc: string;
     pinHiddenLabel: string;
     pinDispatchSheetToggle: string;
+    codeDispatchSheetToggle: string;
     statusActive: string;
     statusInactive: string;
   };

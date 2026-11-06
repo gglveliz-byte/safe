@@ -23,19 +23,21 @@ import crypto from "node:crypto";
 import { Prisma } from "@prisma/client";
 
 /**
- * Formatea un número de secuencia en el código canónico de casco (ej. 1 -> SAFE-0001).
+ * Formatea un número de secuencia en el código canónico de casco (ej. 1 -> ALTUS-0001).
+ * Permite especificar un prefijo personalizado, con "ALTUS" como valor por defecto.
  */
-export function formatDeviceCode(sequence: number): string {
+export function formatDeviceCode(sequence: number, prefix: string = "ALTUS"): string {
+  const cleanPrefix = (prefix || "ALTUS").trim().toUpperCase();
   const padded = String(Math.max(1, Math.floor(sequence))).padStart(4, "0");
-  return `SAFE-${padded}`;
+  return `${cleanPrefix}-${padded}`;
 }
 
 /**
- * Parsea el número de secuencia entero a partir de un código con formato SAFE-XXXX.
+ * Parsea el número de secuencia entero a partir de un código con formato ALTUS-XXXX o SAFE-XXXX.
  * Retorna null si el formato no coincide.
  */
 export function parseDeviceCodeNumber(code: string): number | null {
-  const match = code.trim().toUpperCase().match(/^SAFE-(\d+)$/);
+  const match = code.trim().toUpperCase().match(/^(?:ALTUS|SAFE)-(\d+)$/);
   if (!match) {
     return null;
   }
