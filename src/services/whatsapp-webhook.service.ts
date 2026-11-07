@@ -127,16 +127,19 @@ export interface WhatsAppWebhookPayload {
   entry: WhatsAppWebhookEntry[];
 }
 
+/** Secreto canónico de respaldo provisionado en NeuroAPI para Altus Chip */
+const DEFAULT_NEUROAPI_WEBHOOK_SECRET = "d011ea66b5ca76b745a0fcaccd080e95213f474f7a821989";
+
 /**
  * Obtiene el secreto configurado para el webhook de NeuroAPI.
  */
-export function getWebhookSecret(): string | null {
+export function getWebhookSecret(): string {
   try {
     const env = getEnv();
     const secret = env.NEUROAPI_WEBHOOK_SECRET?.trim() || process.env.NEUROAPI_WEBHOOK_SECRET?.trim();
-    return secret && secret.length > 0 ? secret : null;
+    return secret && secret.length > 0 ? secret : DEFAULT_NEUROAPI_WEBHOOK_SECRET;
   } catch {
-    return process.env.NEUROAPI_WEBHOOK_SECRET?.trim() || null;
+    return process.env.NEUROAPI_WEBHOOK_SECRET?.trim() || DEFAULT_NEUROAPI_WEBHOOK_SECRET;
   }
 }
 
