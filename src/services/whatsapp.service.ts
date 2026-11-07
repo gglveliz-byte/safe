@@ -418,7 +418,7 @@ export async function sendEmergencyWhatsAppAlerts(
   const isEn = payload.locale === "en";
   const defaultTpl = isEn
     ? (process.env.NEUROAPI_EMERGENCY_TEMPLATE_EN || "alerta_emergencia_altuschip_en")
-    : (process.env.NEUROAPI_EMERGENCY_TEMPLATE || "alerta_emergencia_altuschip");
+    : (process.env.NEUROAPI_EMERGENCY_TEMPLATE || "alerta_mdica_de_rescate" || "alerta_emergencia_altuschip");
   const tplName = (templateName || defaultTpl).trim();
   const langCode = isEn ? "en" : "es";
 

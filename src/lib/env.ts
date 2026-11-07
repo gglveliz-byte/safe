@@ -78,6 +78,10 @@ export interface ServerEnv {
   NEUROAPI_PHONE_NUMBER_ID?: string;
   /** Secreto criptográfico HMAC-SHA256 para validación de Webhooks inbound de WhatsApp / NeuroAPI. */
   NEUROAPI_WEBHOOK_SECRET?: string;
+  /** Nombre exacto de la plantilla oficial en español de Meta (ej: alerta_mdica_de_rescate). */
+  NEUROAPI_EMERGENCY_TEMPLATE?: string;
+  /** Nombre exacto de la plantilla oficial en inglés de Meta (ej: alerta_emergencia_altuschip_en). */
+  NEUROAPI_EMERGENCY_TEMPLATE_EN?: string;
 }
 
 /** Longitud mínima exigida al secreto de firma de sesiones. */
@@ -311,6 +315,8 @@ const serverEnvSchema = z.object({
   NEUROAPI_KEY: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()),
   NEUROAPI_PHONE_NUMBER_ID: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()),
   NEUROAPI_WEBHOOK_SECRET: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()),
+  NEUROAPI_EMERGENCY_TEMPLATE: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()),
+  NEUROAPI_EMERGENCY_TEMPLATE_EN: z.preprocess(emptyToUndefined, z.string().trim().min(1).optional()),
 });
 
 /**
