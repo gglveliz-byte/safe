@@ -18,6 +18,8 @@ export interface WhatsAppStatusDTO {
   isConfigured: boolean;
   hasPhoneNumberId: boolean;
   portalUrl: string;
+  isConnected?: boolean;
+  officialNumber?: ConnectedPhoneNumberDTO;
 }
 
 export interface ConnectedPhoneNumberDTO {

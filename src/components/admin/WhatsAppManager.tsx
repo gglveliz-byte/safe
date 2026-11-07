@@ -144,7 +144,9 @@ export function WhatsAppManager() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span
-              className={`w-2.5 h-2.5 rounded-full ${status?.isConfigured ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}
+              className={`w-2.5 h-2.5 rounded-full ${
+                status?.isConnected ? "bg-emerald-500 animate-pulse" : status?.isConfigured ? "bg-amber-500" : "bg-rose-500"
+              }`}
               aria-hidden="true"
             />
             <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-navy-dark leading-tight">
@@ -152,11 +154,19 @@ export function WhatsAppManager() {
             </h2>
           </div>
           <p className="font-sans text-xs text-brand-text-desc">
-            {isLoadingStatus
-              ? "Verificando conexión..."
-              : status?.isConfigured
-                ? "Línea oficial objetivo: (593) 959 057 138 · Pendiente de vincular por Coexistencia."
-                : "Se requiere configurar la API Key de WhatsApp en las variables del servidor."}
+            {isLoadingStatus ? (
+              "Verificando conexión en vivo con NeuroAPI..."
+            ) : status?.isConnected && status.officialNumber ? (
+              <span className="text-emerald-700 font-semibold flex items-center gap-1.5 flex-wrap">
+                <span>✓ Conectado a Meta Cloud API:</span>
+                <span className="underline">{status.officialNumber.wabaName} ({status.officialNumber.phoneNumber})</span>
+                <span className="font-mono text-[11px] text-brand-text-muted">ID: {status.officialNumber.phoneNumberId}</span>
+              </span>
+            ) : status?.isConfigured ? (
+              "Línea oficial objetivo: (593) 959 057 138 · Pendiente de vincular."
+            ) : (
+              "Se requiere configurar la API Key de WhatsApp en las variables del servidor."
+            )}
           </p>
         </div>
 
@@ -292,20 +302,34 @@ export function WhatsAppManager() {
             })}
           </div>
         ) : (
-          /* Estado cuando la línea oficial aún no ha sido conectada o no tiene plantillas */
+          /* Estado cuando la línea oficial está conectada pero no tiene plantillas creadas en Meta */
           <div className="bg-brand-white border border-brand-border-subtle rounded-xl p-5 sm:p-6 shadow-xs flex flex-col gap-4">
             <div className="flex items-start gap-3">
-              <span className="text-2xl">📋</span>
+              <span className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center font-bold text-sm shrink-0">
+                ✓
+              </span>
               <div>
                 <h4 className="font-serif text-base font-bold text-brand-navy-dark">
-                  Línea Oficial: (593) 959 057 138 · Pendiente de Conexión
+                  {status?.isConnected
+                    ? `Línea Oficial Conectada: ${status.officialNumber?.wabaName || "Altus Chip Emergencia Medica"} (${status.officialNumber?.phoneNumber || "+593 95 905 7138"})`
+                    : "Línea Oficial: (593) 959 057 138 · Pendiente de Conexión"}
                 </h4>
                 <p className="font-sans text-xs text-brand-text-desc mt-1 leading-relaxed">
-                  Para emitir notificaciones oficiales y sincronizar plantillas con tu número de Ecuador:
-                  <br />
-                  1. Pulsa el botón verde <strong>&quot;Conectar WhatsApp (Coexistencia)&quot;</strong> arriba para vincular tu WhatsApp Business en Meta.
-                  <br />
-                  2. Una vez completado el flujo oficial, tus plantillas aprobadas se cargarán automáticamente.
+                  {status?.isConnected ? (
+                    <>
+                      Tu número oficial de WhatsApp Business está <strong>conectado y activo en Meta Cloud API</strong> a través de NeuroAPI (ID: <code>{status.officialNumber?.phoneNumberId || "1331750313364147"}</code>).
+                      <br />
+                      Actualmente no tienes plantillas registradas en Meta Business Suite. Puedes registrar tus plantillas oficiales de rescate o ingresar el nombre de tu plantilla abajo para probar el envío.
+                    </>
+                  ) : (
+                    <>
+                      Para emitir notificaciones oficiales y sincronizar plantillas con tu número de Ecuador:
+                      <br />
+                      1. Pulsa el botón verde <strong>&quot;Conectar WhatsApp (Coexistencia)&quot;</strong> arriba para vincular tu WhatsApp Business en Meta.
+                      <br />
+                      2. Una vez completado el flujo oficial, tus plantillas aprobadas se cargarán automáticamente.
+                    </>
+                  )}
                 </p>
               </div>
             </div>

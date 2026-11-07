@@ -19,7 +19,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth";
 import { handleApiError, successResponse } from "@/lib/api-response";
-import { getNeuroApiKey } from "@/services/whatsapp.service";
+import { getNeuroApiKey, listConnectedPhoneNumbers, type ConnectedPhoneNumber } from "@/services/whatsapp.service";
 import { getEnv } from "@/lib/env";
 
 export const runtime = "nodejs";
@@ -32,12 +32,36 @@ export async function GET(request: Request): Promise<NextResponse> {
     const env = getEnv();
 
     const isConfigured = Boolean(apiKey && apiKey.length > 5);
+    let isConnected = false;
+    let officialNumber: ConnectedPhoneNumber | undefined = undefined;
+
+    if (isConfigured) {
+      try {
+        const numbersRes = await listConnectedPhoneNumbers();
+        if (numbersRes.success && numbersRes.numbers.length > 0) {
+          const targetId = env.NEUROAPI_PHONE_NUMBER_ID?.trim() || "1331750313364147";
+          const matched =
+            numbersRes.numbers.find(
+              (n) => n.phoneNumberId === targetId || n.phoneNumber.includes("959057138"),
+            ) || numbersRes.numbers[0];
+
+          if (matched) {
+            isConnected = matched.tokenStatus === "active" || Boolean(matched.phoneNumberId);
+            officialNumber = matched;
+          }
+        }
+      } catch {
+        // En caso de fallo transitorio en la consulta externa, conservar estado seguro
+      }
+    }
 
     return successResponse(
       {
         isConfigured,
-        hasPhoneNumberId: Boolean(env.NEUROAPI_PHONE_NUMBER_ID),
+        hasPhoneNumberId: Boolean(env.NEUROAPI_PHONE_NUMBER_ID || officialNumber?.phoneNumberId),
         portalUrl: "https://neurochat.com.ec/neuroapi/api-keys",
+        isConnected,
+        officialNumber,
       },
       200,
     );
