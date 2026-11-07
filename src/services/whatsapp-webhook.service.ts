@@ -79,6 +79,18 @@ export interface WhatsAppInboundStatus {
   }>;
 }
 
+/** Estructura de eco de mensaje enviado desde la app móvil por un agente */
+export interface WhatsAppInboundEchoMessage {
+  from: string;
+  to: string;
+  id: string;
+  timestamp: string;
+  type: string;
+  text?: {
+    body: string;
+  };
+}
+
 /** Contenido del cambio en el objeto entry */
 export interface WhatsAppWebhookChangeValue {
   messaging_product?: string;
@@ -93,6 +105,7 @@ export interface WhatsAppWebhookChangeValue {
     wa_id?: string;
   }>;
   messages?: WhatsAppInboundMessage[];
+  message_echoes?: WhatsAppInboundEchoMessage[];
   statuses?: WhatsAppInboundStatus[];
 }
 
@@ -239,7 +252,9 @@ export async function processWhatsAppWebhookPayload(
     if (!Array.isArray(entry.changes)) continue;
 
     for (const change of entry.changes) {
-      if (change.field !== "messages" || !change.value) continue;
+      const isMessagesField = change.field === "messages";
+      const isEchoesField = change.field === "smb_message_echoes";
+      if ((!isMessagesField && !isEchoesField) || !change.value) continue;
 
       const value = change.value;
       const phoneId = value.metadata?.phone_number_id || "desconocido";
@@ -291,8 +306,107 @@ export async function processWhatsAppWebhookPayload(
           );
         }
       }
+
+      // 3. Procesar ecos de mensajes enviados desde el celular (Coexistencia con WhatsApp Business App)
+      if (Array.isArray(value.message_echoes)) {
+        for (const echo of value.message_echoes) {
+          processedMessages++;
+
+          logEvent("info", "Eco de agente de WhatsApp recibido (mensaje enviado desde app móvil)", {
+            phoneId,
+            displayPhone,
+            from: echo.from,
+            to: echo.to,
+            messageId: echo.id,
+            type: echo.type,
+            hasText: Boolean(echo.text?.body),
+            timestamp: echo.timestamp,
+          });
+        }
+      }
     }
   }
 
   return { processedMessages, processedStatuses };
 }
+
+/**
+ * Registra o actualiza programáticamente el Webhook en NeuroAPI mediante POST /neuroapi/messaging/webhooks/api
+ */
+export async function registerWebhookViaApi(params?: {
+  phoneNumberId?: string;
+  customUrl?: string;
+  customSecret?: string;
+}): Promise<{ success: boolean; data?: unknown; error?: string }> {
+  try {
+    const env = getEnv();
+    const apiKey = env.NEUROAPI_KEY?.trim() || process.env.NEUROAPI_KEY?.trim();
+    if (!apiKey) {
+      return { success: false, error: "NEUROAPI_KEY no configurada en el servidor" };
+    }
+
+    const secret = params?.customSecret || getWebhookSecret();
+    if (!secret) {
+      return { success: false, error: "NEUROAPI_WEBHOOK_SECRET no configurado en el servidor" };
+    }
+
+    const url = params?.customUrl || `${env.NEXT_PUBLIC_APP_URL}/api/webhook/whatsapp`;
+
+    // 1. Obtener el otp_phone_number_id de la línea en NeuroAPI
+    const numbersRes = await fetch("https://api.neurochat.com.ec/api/v1/neuroapi/messaging/webhooks/numbers", {
+      headers: { "x-api-key": apiKey },
+      cache: "no-store",
+    });
+
+    if (!numbersRes.ok) {
+      return { success: false, error: `Error ${numbersRes.status} al consultar números en NeuroAPI` };
+    }
+
+    const numbersData = await numbersRes.json();
+    const numbersList = Array.isArray(numbersData.data) ? numbersData.data : [];
+    const targetId = params?.phoneNumberId || env.NEUROAPI_PHONE_NUMBER_ID?.trim() || "1331750313364147";
+
+    const matched =
+      numbersList.find(
+        (n: Record<string, unknown>) =>
+          n.phone_number_id === targetId || String(n.phone_number || "").includes("959057138"),
+      ) || numbersList[0];
+
+    if (!matched || !matched.otp_phone_number_id) {
+      return { success: false, error: "No se encontró el otp_phone_number_id correspondiente en NeuroAPI" };
+    }
+
+    // 2. Provisionar el webhook vía API
+    const regRes = await fetch("https://api.neurochat.com.ec/api/v1/neuroapi/messaging/webhooks/api", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        otp_phone_number_id: matched.otp_phone_number_id,
+        url,
+        secret,
+        is_active: true,
+      }),
+    });
+
+    const regData = await regRes.json();
+    if (!regRes.ok || !regData.success) {
+      return { success: false, error: regData.message || `Error ${regRes.status} al registrar webhook vía API` };
+    }
+
+    logEvent("info", "Webhook de WhatsApp provisionado exitosamente vía API en NeuroAPI", {
+      url,
+      otpPhoneNumberId: matched.otp_phone_number_id,
+      webhookId: regData.data?.id,
+    });
+
+    return { success: true, data: regData.data };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logEvent("error", "Excepción al registrar webhook vía API en NeuroAPI", { error: msg });
+    return { success: false, error: msg };
+  }
+}
+

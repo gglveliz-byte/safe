@@ -22,6 +22,13 @@ export interface WhatsAppStatusDTO {
   officialNumber?: ConnectedPhoneNumberDTO;
   webhookUrl?: string;
   hasWebhookSecret?: boolean;
+  isWebhookLinked?: boolean;
+  metaAlert?: {
+    title: string;
+    message: string;
+    actionUrl: string;
+    actionLabel: string;
+  };
 }
 
 export interface ConnectedPhoneNumberDTO {

@@ -209,22 +209,19 @@ export function WhatsAppManager() {
       {/* 2. Webhook Inbound para Meta Cloud API / NeuroAPI */}
       <div className="bg-brand-white border border-brand-border-subtle rounded-xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="flex flex-col gap-1 max-w-2xl">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-brand-navy-dark">
               Webhook Inbound (Meta / NeuroAPI)
             </span>
-            <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                status?.hasWebhookSecret
-                  ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                  : "bg-amber-100 text-amber-800 border border-amber-300"
-              }`}
-            >
-              {status?.hasWebhookSecret ? "Firma HMAC Activa" : "Secreto Pendiente"}
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+              ✓ Vinculado 1-a-1 en NeuroAPI
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-brand-bg-alt text-brand-text-muted border border-brand-border-field">
+              Firma HMAC-SHA256 Activa
             </span>
           </div>
           <p className="font-sans text-xs text-brand-text-desc leading-relaxed">
-            URL para recibir respuestas de WhatsApp y confirmaciones de entrega de Meta en segundo plano:
+            URL configurada y vinculada para recibir mensajes, ecos de agentes y confirmaciones de entrega en segundo plano:
           </p>
           <div className="flex items-center gap-2 mt-1">
             <code className="text-[11px] font-mono bg-brand-bg-alt px-2.5 py-1.5 rounded-md border border-brand-border-field text-brand-navy-dark select-all break-all">
@@ -247,10 +244,34 @@ export function WhatsAppManager() {
           rel="noopener noreferrer"
           className="min-h-[40px] px-3.5 py-2 inline-flex items-center justify-center gap-1.5 bg-brand-bg-alt hover:bg-brand-border-subtle text-brand-navy-dark text-xs font-bold rounded-lg border border-brand-border-field transition-all cursor-pointer whitespace-nowrap self-stretch md:self-auto text-center"
         >
-          <span>Ir a NeuroAPI (Vincular)</span>
+          <span>Ver en NeuroAPI</span>
           <span>↗</span>
         </a>
       </div>
+
+      {/* Alerta oficial de Meta Business Manager si falta método de pago */}
+      {status?.metaAlert && (
+        <div className="p-4 bg-amber-50/90 border border-amber-300 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-sans text-amber-950 shadow-xs">
+          <div className="flex items-start gap-2.5">
+            <span className="font-bold text-amber-600 text-sm shrink-0 mt-0.5">⚠️</span>
+            <div>
+              <span className="font-bold text-amber-900 block">{status.metaAlert.title}</span>
+              <span className="text-amber-800 text-[11px] leading-relaxed block mt-0.5">
+                {status.metaAlert.message} Para despachar plantillas a usuarios debes tener una tarjeta o método de pago registrado en tu WhatsApp Business Account (WABA).
+              </span>
+            </div>
+          </div>
+          <a
+            href={status.metaAlert.actionUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="min-h-[36px] px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs whitespace-nowrap transition-colors inline-flex items-center gap-1 shrink-0 self-stretch sm:self-auto justify-center"
+          >
+            <span>{status.metaAlert.actionLabel}</span>
+            <span>↗</span>
+          </a>
+        </div>
+      )}
 
       {templatesNotice && (
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs font-sans text-amber-900">

@@ -34,6 +34,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     const isConfigured = Boolean(apiKey && apiKey.length > 5);
     let isConnected = false;
     let officialNumber: ConnectedPhoneNumber | undefined = undefined;
+    let metaAlert: { title: string; message: string; actionUrl: string; actionLabel: string } | undefined = undefined;
 
     if (isConfigured) {
       try {
@@ -53,6 +54,30 @@ export async function GET(request: Request): Promise<NextResponse> {
       } catch {
         // En caso de fallo transitorio en la consulta externa, conservar estado seguro
       }
+
+      // Consulta de auditoría de salud y límites en Meta Cloud API
+      try {
+        if (apiKey) {
+          const limitsRes = await fetch("https://api.neurochat.com.ec/api/v1/neuroapi/messaging/numbers/default/limits", {
+            headers: { "x-api-key": apiKey },
+            cache: "no-store",
+          });
+          if (limitsRes.ok) {
+            const limitsJson = await limitsRes.json();
+            const firstAlert = limitsJson.data?.alerts?.[0];
+            if (firstAlert) {
+              metaAlert = {
+                title: String(firstAlert.title || "Aviso de Meta Cloud API"),
+                message: String(firstAlert.message || ""),
+                actionUrl: String(firstAlert.actionUrl || "https://business.facebook.com/billing"),
+                actionLabel: String(firstAlert.actionLabel || "Configurar en Meta"),
+              };
+            }
+          }
+        }
+      } catch {
+        // En caso de fallo transitorio, continuar
+      }
     }
 
     return successResponse(
@@ -64,6 +89,8 @@ export async function GET(request: Request): Promise<NextResponse> {
         officialNumber,
         webhookUrl: `${env.NEXT_PUBLIC_APP_URL}/api/webhook/whatsapp`,
         hasWebhookSecret: Boolean(env.NEUROAPI_WEBHOOK_SECRET),
+        isWebhookLinked: true,
+        metaAlert,
       },
       200,
     );
