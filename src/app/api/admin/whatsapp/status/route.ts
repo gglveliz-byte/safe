@@ -62,6 +62,8 @@ export async function GET(request: Request): Promise<NextResponse> {
         portalUrl: "https://neurochat.com.ec/neuroapi/api-keys",
         isConnected,
         officialNumber,
+        webhookUrl: `${env.NEXT_PUBLIC_APP_URL}/api/webhook/whatsapp`,
+        hasWebhookSecret: Boolean(env.NEUROAPI_WEBHOOK_SECRET),
       },
       200,
     );

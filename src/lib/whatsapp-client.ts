@@ -20,6 +20,8 @@ export interface WhatsAppStatusDTO {
   portalUrl: string;
   isConnected?: boolean;
   officialNumber?: ConnectedPhoneNumberDTO;
+  webhookUrl?: string;
+  hasWebhookSecret?: boolean;
 }
 
 export interface ConnectedPhoneNumberDTO {

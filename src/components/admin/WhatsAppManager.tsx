@@ -48,6 +48,17 @@ export function WhatsAppManager() {
 
   // Modal para usar plantilla y enviar notificación
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplateDTO | null>(null);
+  const [copiedWebhook, setCopiedWebhook] = useState(false);
+
+  const handleCopyWebhook = () => {
+    const url = status?.webhookUrl || "https://altuschip.com/api/webhook/whatsapp";
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      void navigator.clipboard.writeText(url);
+    }
+    setCopiedWebhook(true);
+    triggerHaptic("success");
+    setTimeout(() => setCopiedWebhook(false), 2000);
+  };
 
   // Cargar estado inicial del servidor
   const loadStatus = useCallback(async () => {
@@ -193,6 +204,52 @@ export function WhatsAppManager() {
             <span>{isLoadingTemplates ? "Consultando..." : "Consultar Plantillas"}</span>
           </button>
         </div>
+      </div>
+
+      {/* 2. Webhook Inbound para Meta Cloud API / NeuroAPI */}
+      <div className="bg-brand-white border border-brand-border-subtle rounded-xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex flex-col gap-1 max-w-2xl">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-brand-navy-dark">
+              Webhook Inbound (Meta / NeuroAPI)
+            </span>
+            <span
+              className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                status?.hasWebhookSecret
+                  ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                  : "bg-amber-100 text-amber-800 border border-amber-300"
+              }`}
+            >
+              {status?.hasWebhookSecret ? "Firma HMAC Activa" : "Secreto Pendiente"}
+            </span>
+          </div>
+          <p className="font-sans text-xs text-brand-text-desc leading-relaxed">
+            URL para recibir respuestas de WhatsApp y confirmaciones de entrega de Meta en segundo plano:
+          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <code className="text-[11px] font-mono bg-brand-bg-alt px-2.5 py-1.5 rounded-md border border-brand-border-field text-brand-navy-dark select-all break-all">
+              {status?.webhookUrl || "https://altuschip.com/api/webhook/whatsapp"}
+            </code>
+            <button
+              type="button"
+              onClick={handleCopyWebhook}
+              className="min-h-[32px] px-2.5 py-1 text-[11px] font-bold rounded bg-brand-bg-alt hover:bg-brand-border-subtle border border-brand-border-field text-brand-navy-dark transition-colors cursor-pointer shrink-0"
+              title="Copiar URL del Webhook"
+            >
+              {copiedWebhook ? "✓ Copiado" : "Copiar URL"}
+            </button>
+          </div>
+        </div>
+
+        <a
+          href="https://neurochat.com.ec/neuroapi/cloud-api"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="min-h-[40px] px-3.5 py-2 inline-flex items-center justify-center gap-1.5 bg-brand-bg-alt hover:bg-brand-border-subtle text-brand-navy-dark text-xs font-bold rounded-lg border border-brand-border-field transition-all cursor-pointer whitespace-nowrap self-stretch md:self-auto text-center"
+        >
+          <span>Ir a NeuroAPI (Vincular)</span>
+          <span>↗</span>
+        </a>
       </div>
 
       {templatesNotice && (
