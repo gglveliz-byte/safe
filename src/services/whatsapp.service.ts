@@ -308,10 +308,24 @@ export async function sendWhatsAppNotification(
       body: JSON.stringify(payload),
     });
 
-    const data = await response.json();
+    const rawText = await response.text();
+    let data: Record<string, unknown> = {};
+    try {
+      data = JSON.parse(rawText) as Record<string, unknown>;
+    } catch {
+      logEvent("warn", "NeuroAPI respondió con cuerpo no-JSON", {
+        status: response.status,
+        snippet: rawText.slice(0, 120),
+      });
+      return {
+        success: false,
+        error: `Servicio de WhatsApp ocupado o reiniciándose (código ${response.status}). Intente nuevamente.`,
+        errorCode: response.status,
+      };
+    }
 
     if (!response.ok || !data.success) {
-      const errorMsg = data.message || `Error ${response.status} de NeuroAPI`;
+      const errorMsg = String(data.message || `Error ${response.status} de NeuroAPI`);
       logEvent("warn", "Fallo al enviar notificación de WhatsApp", {
         status: response.status,
         error: errorMsg,
@@ -321,21 +335,24 @@ export async function sendWhatsAppNotification(
       return {
         success: false,
         error: errorMsg,
-        errorCode: data.error_code || response.status,
+        errorCode:
+          typeof data.error_code === "string" || typeof data.error_code === "number"
+            ? data.error_code
+            : response.status,
       };
     }
 
+    const resData = data.data as Record<string, unknown> | undefined;
+    const messageId = typeof resData?.message_id === "string" ? resData.message_id : undefined;
+    const status = typeof resData?.status === "string" ? resData.status : "sent";
+
     logEvent("info", "Notificación WhatsApp despachada exitosamente vía NeuroAPI", {
-      messageId: data.data?.message_id,
+      messageId,
       plantilla: params.templateName,
       telefonoOfuscado: cleanTo.slice(0, 4) + "***",
     });
 
-    return {
-      success: true,
-      messageId: data.data?.message_id,
-      status: data.data?.status || "sent",
-    };
+    return { success: true, messageId, status };
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     logEvent("error", "Excepción al contactar NeuroAPI para envío de WhatsApp", { error: errorMsg });
@@ -357,38 +374,22 @@ export async function createWhatsAppConnectSession(
   returnUrl: string,
 ): Promise<{ success: boolean; url?: string; error?: string }> {
   const apiKey = getNeuroApiKey();
-  if (!apiKey) {
-    return { success: false, error: "No hay una API Key de NeuroAPI configurada en el sistema." };
-  }
+  if (!apiKey) return { success: false, error: "No hay una API Key de NeuroAPI configurada en el sistema." };
 
   try {
     const response = await fetch(`${NEUROAPI_BASE_URL}/neuroapi/connect/sessions`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-      },
-      body: JSON.stringify({
-        service_type: "whatsapp_cloud_api",
-        return_url: returnUrl,
-      }),
+      headers: { "Content-Type": "application/json", "x-api-key": apiKey },
+      body: JSON.stringify({ service_type: "whatsapp_cloud_api", return_url: returnUrl }),
     });
 
     const data = await response.json();
     if (!response.ok || !data.success) {
-      return {
-        success: false,
-        error: data.error || data.message || "Error al iniciar sesión de conexión con Meta.",
-      };
+      return { success: false, error: data.error || data.message || "Error al iniciar sesión de conexión con Meta." };
     }
-
-    return {
-      success: true,
-      url: data.data?.url,
-    };
+    return { success: true, url: data.data?.url };
   } catch (err: unknown) {
-    const errorMsg = err instanceof Error ? err.message : String(err);
-    return { success: false, error: errorMsg };
+    return { success: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
 
