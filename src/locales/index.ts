@@ -137,6 +137,12 @@ export interface Dictionary {
     pinNoticeNeedsPin: string;
     pinAutoDetectedBadge: string;
     waitingAdvisorPinNotice: string;
+    introBadge: string;
+    introTitle: string;
+    introSubtitle: string;
+    introContinueButton: string;
+    introSkipButton: string;
+    introReplayButton: string;
   };
   dashboard: {
     title: string;
@@ -393,6 +399,13 @@ export interface Dictionary {
     card3Footer: string;
     helmetTagBadge: string;
     helmetTagStatus: string;
+    videoBadge: string;
+    videoAriaLabel: string;
+    videoPlay: string;
+    videoPause: string;
+    videoUnmute: string;
+    videoMute: string;
+    videoFullscreen: string;
     demoModalTitle: string;
     demoModalId: string;
     demoBloodTypeLabel: string;

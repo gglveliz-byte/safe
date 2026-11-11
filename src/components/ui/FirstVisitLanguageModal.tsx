@@ -48,6 +48,13 @@ export function FirstVisitLanguageModal() {
     }
   }, []);
 
+  const closeAndNotify = () => {
+    setIsOpen(false);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("altus:lang-modal-closed"));
+    }
+  };
+
   const handleSelectLanguage = (chosenLocale: Locale) => {
     triggerHaptic("success");
     try {
@@ -58,7 +65,7 @@ export function FirstVisitLanguageModal() {
       // Fallback silencioso
     }
     setLocale(chosenLocale);
-    setIsOpen(false);
+    closeAndNotify();
   };
 
   const handleDismiss = () => {
@@ -67,7 +74,7 @@ export function FirstVisitLanguageModal() {
     } catch {
       // Fallback silencioso
     }
-    setIsOpen(false);
+    closeAndNotify();
   };
 
   if (!mounted || !isOpen) return null;

@@ -25,7 +25,7 @@
  * ==============================================================================
  */
 
-const CACHE_NAME = 'altuschip-cache-v3';
+const CACHE_NAME = 'altuschip-cache-v4';
 
 // Recursos críticos para arranque offline
 const PRECACHE_RESOURCES = [
@@ -126,6 +126,17 @@ self.addEventListener('fetch', (event) => {
 
   // Las rutas de API ordinarias viajan directo al servidor sin caché del SW
   if (url.pathname.startsWith('/api/') && !url.pathname.startsWith('/api/emergency/')) {
+    return;
+  }
+
+  // No interceptar streaming multimedia ni peticiones parciales (HTTP 206 Range)
+  // para garantizar reproducción fluida de video en Chrome y Safari iOS
+  if (
+    request.headers.has('range') ||
+    url.pathname.startsWith('/media/') ||
+    url.pathname.endsWith('.mp4') ||
+    url.pathname.endsWith('.webm')
+  ) {
     return;
   }
 

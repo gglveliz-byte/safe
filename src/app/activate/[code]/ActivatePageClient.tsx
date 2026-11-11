@@ -40,6 +40,8 @@ import { BrandLogo } from "@/components/ui/BrandLogo";
 import { IncidentAlertBanner } from "@/components/ui/IncidentAlertBanner";
 import { PhoneInputWithCountry } from "@/components/ui/PhoneInputWithCountry";
 import { useActivateForm } from "./activate-form";
+import { ActivationIntroVideo } from "./ActivationIntroVideo";
+import { useActivationIntro } from "./use-activation-intro";
 
 export interface ActivatePageClientProps {
   code: string;
@@ -72,6 +74,7 @@ export function ActivatePageClient({
   const effectiveAssistedMode = initialPin.length === 6 ? false : isAssistedMode;
 
   // Detección de cuenta ya registrada previamente en espera de PIN
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [existingPending, setExistingPending] = useState<{
     fullName: string;
     email: string;
@@ -101,6 +104,9 @@ export function ActivatePageClient({
       })
       .catch(() => {
         // Visitante nuevo sin sesión
+      })
+      .finally(() => {
+        if (isMounted) setSessionChecked(true);
       });
     return () => {
       isMounted = false;
@@ -108,6 +114,8 @@ export function ActivatePageClient({
   }, [code, router]);
 
   const isRegistered = Boolean(form.successResult || existingPending);
+  const { waitingForLanguage, showIntroVideo, dismissIntro, replayIntro } =
+    useActivationIntro(code, sessionChecked, isRegistered);
 
   const registeredData = form.successResult
     ? {
@@ -134,94 +142,13 @@ export function ActivatePageClient({
     if (pinError) setPinError(null);
   };
 
-  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setPinError(null);
-
-    const cleanPin = pin.trim();
-
-    // =========================================================================
-    // FLUJO 1: MODALIDAD NORMAL (Con PIN en mano / QR)
-    // =========================================================================
-    if (!effectiveAssistedMode && !isRegistered) {
-      if (cleanPin.length !== 6) {
-        setPinError(t.activate.errorPinInvalid);
-        triggerHaptic("warning");
-        pinInputRef.current?.focus();
-        return;
-      }
-
-      triggerHaptic("light");
-      const ok = await form.submit();
-      if (!ok) {
-        triggerHaptic("error");
-        return;
-      }
-
-      // Registro exitoso -> vincular PIN inmediatamente
-      setIsPinSubmitting(true);
-      try {
-        const res = await apiClient.claimDevice({
-          code,
-          pin: cleanPin,
-        });
-
-        if (!res.success) {
-          throw new Error(res.message || t.activate.errorPinInvalid);
-        }
-
-        triggerHaptic("success");
-        router.push("/dashboard");
-        return;
-      } catch (err: unknown) {
-        triggerHaptic("error");
-        const msg = err instanceof Error ? err.message : t.activate.errorPinInvalid;
-        setPinError(msg);
-        if (errorRef.current) {
-          errorRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      } finally {
-        setIsPinSubmitting(false);
-      }
-      return;
-    }
-
-    // =========================================================================
-    // FLUJO 2: MODALIDAD ASISTIDA (Paso 1: Solicitar código al asesor)
-    // =========================================================================
-    if (effectiveAssistedMode && !isRegistered) {
-      triggerHaptic("light");
-      const ok = await form.submit();
-      if (ok) {
-        triggerHaptic("success");
-      } else {
-        triggerHaptic("error");
-      }
-      return;
-    }
-
-    // =========================================================================
-    // PASO 2 POST-REGISTRO: Activar cuenta con PIN recibido del asesor
-    // =========================================================================
-    if (cleanPin.length !== 6) {
-      setPinError(t.activate.errorPinInvalid);
-      triggerHaptic("warning");
-      pinInputRef.current?.focus();
-      return;
-    }
-
+  const claimWithPin = async (cleanPin: string) => {
     setIsPinSubmitting(true);
-    triggerHaptic("light");
     try {
-      const res = await apiClient.claimDevice({
-        code,
-        pin: cleanPin,
-      });
-
+      const res = await apiClient.claimDevice({ code, pin: cleanPin });
       if (!res.success) {
         throw new Error(res.message || t.activate.errorPinInvalid);
       }
-
       triggerHaptic("success");
       router.push("/dashboard");
     } catch (err: unknown) {
@@ -236,7 +163,61 @@ export function ActivatePageClient({
     }
   };
 
+  const ensureValidPin = (cleanPin: string): boolean => {
+    if (cleanPin.length === 6) return true;
+    setPinError(t.activate.errorPinInvalid);
+    triggerHaptic("warning");
+    pinInputRef.current?.focus();
+    return false;
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setPinError(null);
+
+    const cleanPin = pin.trim();
+
+    if (!effectiveAssistedMode && !isRegistered) {
+      if (!ensureValidPin(cleanPin)) return;
+      triggerHaptic("light");
+      const ok = await form.submit();
+      if (!ok) {
+        triggerHaptic("error");
+        return;
+      }
+      await claimWithPin(cleanPin);
+      return;
+    }
+
+    if (effectiveAssistedMode && !isRegistered) {
+      triggerHaptic("light");
+      const ok = await form.submit();
+      triggerHaptic(ok ? "success" : "error");
+      return;
+    }
+
+    if (!ensureValidPin(cleanPin)) return;
+    triggerHaptic("light");
+    await claimWithPin(cleanPin);
+  };
+
   const activeErrorMessage = pinError || form.errorMessage;
+
+  if (!sessionChecked || waitingForLanguage) {
+    return (
+      <div className="w-full min-h-[60vh] flex items-center justify-center">
+        <span
+          className="w-6 h-6 rounded-full border-2 border-brand-navy-dark border-t-transparent animate-spin"
+          aria-hidden="true"
+        />
+      </div>
+    );
+  }
+
+  // Mostrar el video oficial únicamente en el primer escaneo QR/NFC antes de registrarse
+  if (showIntroVideo) {
+    return <ActivationIntroVideo code={code} onContinue={dismissIntro} />;
+  }
 
   return (
     <div className="w-full max-w-xl mx-auto px-4 py-8 sm:py-12 min-h-[100dvh] flex flex-col gap-6 animate-fadeInUp">
@@ -251,9 +232,26 @@ export function ActivatePageClient({
         <h1 className="font-serif text-2xl sm:text-3xl font-bold text-brand-navy-dark">
           {t.activate.registerTitle}
         </h1>
-        <p className="font-sans text-xs sm:text-sm text-brand-text-desc">
-          {t.activate.registerSubtitle}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-sans text-xs sm:text-sm text-brand-text-desc">
+            {t.activate.registerSubtitle}
+          </p>
+          {!isRegistered && (
+            <button
+              type="button"
+              onClick={() => {
+                triggerHaptic("light");
+                replayIntro();
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-sans font-semibold text-brand-nav-blue hover:text-brand-navy-dark underline underline-offset-2 min-h-[36px] cursor-pointer"
+            >
+              <svg className="w-3.5 h-3.5 text-brand-accent" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              <span>{t.activate.introReplayButton}</span>
+            </button>
+          )}
+        </div>
       </section>
 
       {/* Formulario Unificado guiado por el Servidor */}

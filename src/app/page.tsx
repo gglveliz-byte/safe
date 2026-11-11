@@ -7,13 +7,13 @@
  * DESCRIPCIÓN:
  * Portada institucional y técnica de la plataforma SAFE bajo la estética
  * 'Technical Broadsheet 2026'. Presenta el boletín médico vital en el casco,
- * la visualización con radares sónar activos sobre NFC/QR, el modal interactivo
- * de ficha médica de emergencia (demo), el flujo funcional en carretera en 3 pasos y la cita de la Hora Dorada.
+ * el reproductor oficial de video vertical 9:16, el punto de atención con mapa,
+ * el flujo funcional en carretera en 3 pasos y la cita de la Hora Dorada.
  *
  * ENTRADAS: diccionario bilingüe vía useLocale.
  * SALIDAS: navegación real y apertura de modales accesibles.
- * DEPENDENCIAS: HelmetHeroCard, HowItWorksSection,
- *               GoldenHourSection, DemoMedicalModal.
+ * DEPENDENCIAS: HeroVideoCard, HowItWorksSection, LocationAndMapSection,
+ *               GoldenHourSection, TestimonialsCarousel, SocialAndContactSection.
  *
  * LEYES DE INGENIERÍA:
  * - Límite estricto < 500 líneas (módulo < 220 líneas).
@@ -29,7 +29,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useLocale } from "@/hooks/useLocale";
 import { useHaptic } from "@/hooks/useHaptic";
-import { HelmetHeroCard } from "@/components/landing/HelmetHeroCard";
+import { HeroVideoCard } from "@/components/landing/HeroVideoCard";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { LocationAndMapSection } from "@/components/landing/LocationAndMapSection";
 import { GoldenHourSection } from "@/components/landing/GoldenHourSection";
@@ -47,7 +47,7 @@ export default function HomePage() {
   return (
     <div className="w-full bg-brand-white">
       {/* ══════════════════ HERO SECTION (BROADSHEET 2026) ══════════════════ */}
-      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-10 md:pt-16 pb-12 md:pb-16 overflow-hidden">
+      <section className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 md:pt-12 pb-10 md:pb-12 overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           {/* Columna Izquierda: Información Editorial (aprox. 58%) */}
           <div className="lg:col-span-7 flex flex-col justify-center">
@@ -101,9 +101,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Columna Derecha: Tarjeta Fotográfica con Radares Sónar */}
+          {/* Columna Derecha: Video Spot Oficial ALTUS-CHIP (9:16) */}
           <div className="lg:col-span-5 flex justify-center items-center">
-            <HelmetHeroCard />
+            <HeroVideoCard />
           </div>
         </div>
       </section>
