@@ -8,7 +8,7 @@
 
 export const landingEn = {
   heroHeadline: "A vital medical broadsheet on your helmet that speaks for you when you cannot.",
-  heroSubheadline: "In a roadside motorcycle crash, first responders and witnesses access your blood type, severe allergies, and emergency contacts in 1 second, alerting your family with exact GPS coordinates.",
+  heroSubheadline: "If you are riding alone or accompanied by family or friends and an unforeseen event causes an accident leaving you unconscious, immobilized, or unable to speak, the NFC chip and QR code on your helmet or vehicle speaks for you immediately. Upon arrival, paramedics scan the code with their smartphone to instantly view your vital data: full name, national ID, city, blood type, pre-existing conditions, and your preferred insurance or hospital for ambulance transport. Simultaneously, the system automatically alerts up to 3 registered emergency contacts via phone call, SMS, and WhatsApp with your real-time GPS location. Fully guaranteed against impacts and severe rain, backed by 24/7 technical support, and completely free of weekly or monthly subscriptions: a single lifetime payment to safeguard your life and your loved ones.",
   activateCta: "Activate My Helmet Now",
   exploreEmergencyCta: "View Demonstration Rescue Sheet",
   badgeText: "2026 ROADSIDE RESCUE PROTOCOL",

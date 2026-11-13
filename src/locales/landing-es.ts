@@ -8,7 +8,7 @@
 
 export const landingEs = {
   heroHeadline: "Un boletín médico vital en tu casco que habla por ti cuando más lo necesitas.",
-  heroSubheadline: "En caso de accidente en carretera, cualquier paramédico o testigo obtiene tu tipo de sangre, alergias y contactos en 1 segundo, notificando a tus familiares con tu ubicación exacta.",
+  heroSubheadline: "Si estás conduciendo solo o acompañado por un familiar o amigo y ante un imprevisto sufres un accidente vial que te deje inconsciente, inmovilizado o sin poder hablar, el chip NFC y código QR instalado en tu casco o vehículo habla de inmediato por ti. Al llegar a la escena, el paramédico escanea el código con su teléfono y obtiene al instante tus datos personales: nombre completo, cédula de ciudadanía, ciudad, tipo de sangre, enfermedades preexistentes y el seguro médico u hospital prioritario para tu traslado en ambulancia. En ese mismo instante, el sistema notifica de forma automática a tus 3 familiares registrados mediante llamada, mensaje de texto y WhatsApp con tu ubicación satelital en tiempo real. Máxima resistencia garantizada contra impactos y lluvia, soporte técnico y atención al cliente 24/7, y cero suscripciones semanales o mensuales: un único pago vitalicio para salvar tu vida y la de tus seres queridos.",
   activateCta: "Activar mi Casco Ahora",
   exploreEmergencyCta: "Ver Ficha de Demostración",
   badgeText: "PROTOCOLO DE RESCATE VIAL 2026",
