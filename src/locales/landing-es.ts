@@ -7,7 +7,8 @@
  */
 
 export const landingEs = {
-  heroHeadline: "Un boletín médico vital en tu casco que habla por ti cuando más lo necesitas.",
+  heroServiceLabel: "Servicio que Ofrecemos",
+  heroHeadline: "Altus Chip Emergencia Médica",
   heroSubheadline: "Si estás conduciendo solo o acompañado por un familiar o amigo y ante un imprevisto sufres un accidente vial que te deje inconsciente, inmovilizado o sin poder hablar, el chip NFC y código QR instalado en tu casco o vehículo habla de inmediato por ti. Al llegar a la escena, el paramédico escanea el código con su teléfono y obtiene al instante tus datos personales: nombre completo, cédula de ciudadanía, ciudad, tipo de sangre, enfermedades preexistentes y el seguro médico u hospital prioritario para tu traslado en ambulancia. En ese mismo instante, el sistema notifica de forma automática a tus 3 familiares registrados mediante llamada, mensaje de texto y WhatsApp con tu ubicación satelital en tiempo real. Máxima resistencia garantizada contra impactos y lluvia, soporte técnico y atención al cliente 24/7, y cero suscripciones semanales o mensuales: un único pago vitalicio para salvar tu vida y la de tus seres queridos.",
   activateCta: "Activar mi Casco Ahora",
   exploreEmergencyCta: "Ver Ficha de Demostración",
@@ -66,5 +67,18 @@ export const landingEs = {
   demoContact2Phone: "+34 910 222 333",
   demoNotice: "Esta es una vista previa de la interfaz optimizada que se despliega inmediatamente en el smartphone de cualquier rescatista al escanear tu casco.",
   demoClose: "Cerrar Demostración",
+  shareWebsiteBtn: "Compartir Web & QR",
+  shareWebsiteModalTitle: "Compartir Altus-Chip",
+  shareWebsiteModalSubtitle: "Difunde el sistema de rescate vial o escanea el código para ingresar directo desde tu móvil.",
+  shareQrInstruction: "Apunta con la cámara de tu celular al código QR para entrar directo a www.altuschip.com",
+  shareCopyLink: "Copiar Enlace",
+  shareLinkCopied: "¡Enlace copiado al portapapeles!",
+  shareViaWhatsApp: "WhatsApp",
+  shareViaFacebook: "Facebook",
+  shareViaX: "X (Twitter)",
+  shareViaTelegram: "Telegram",
+  shareNative: "Más opciones...",
+  shareClose: "Cerrar ventana",
+  floatingShareTooltip: "Compartir Página Web & QR",
 };
 

@@ -37,12 +37,15 @@ import { TestimonialsCarousel } from "@/components/landing/TestimonialsCarousel"
 import { SocialAndContactSection } from "@/components/landing/SocialAndContactSection";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { FloatingWhatsAppButton } from "@/components/ui/FloatingWhatsAppButton";
+import { FloatingShareButton } from "@/components/ui/FloatingShareButton";
+import { ShareWebsiteModal } from "@/components/ui/ShareWebsiteModal";
 import { FeedbackModal } from "@/components/feedback/FeedbackModal";
 
 export default function HomePage() {
   const { t } = useLocale();
   const { triggerHaptic } = useHaptic();
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   return (
     <div className="w-full bg-brand-white">
@@ -52,25 +55,32 @@ export default function HomePage() {
           {/* Columna Izquierda: Información Editorial (aprox. 58%) */}
           <div className="lg:col-span-7 flex flex-col justify-center">
             {/* Tag Superior con Baliza Sónar y Logotipo Oficial */}
-            <div className="flex items-center gap-3 mb-5 animate-fadeInDown">
+            <div className="flex items-center gap-3 mb-4 animate-fadeInDown">
               <BrandLogo size="xs" ringVariant="accent" />
               <span className="font-sans text-[11px] md:text-[12px] font-semibold text-brand-text-muted tracking-[0.14em] uppercase">
                 {t.landing.badgeText}
               </span>
             </div>
 
-            {/* Titular Principal en Serif Newsreader */}
-            <h1 className="font-serif font-bold text-[30px] sm:text-[38px] lg:text-[44px] leading-[1.14] text-brand-navy-dark mb-6 tracking-[-0.015em]">
+            {/* Subtítulo / Rótulo de Servicio Solicitado por el Cliente */}
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-sans text-[12px] sm:text-[13px] font-bold text-brand-accent tracking-[0.12em] uppercase">
+                {t.landing.heroServiceLabel}
+              </span>
+            </div>
+
+            {/* Titular Principal Moderado y Elegante (no tan grande) */}
+            <h1 className="font-serif font-bold text-[26px] sm:text-[32px] md:text-[36px] leading-[1.2] text-brand-navy-dark mb-5 tracking-[-0.01em]">
               {t.landing.heroHeadline}
             </h1>
 
             {/* Párrafo Descriptivo */}
-            <p className="font-sans text-[16px] sm:text-[17px] md:text-[18px] leading-[1.6] text-brand-text-desc max-w-[620px] mb-8 font-normal">
+            <p className="font-sans text-[15px] sm:text-[16px] md:text-[17px] leading-[1.62] text-brand-text-desc max-w-[620px] mb-8 font-normal">
               {t.landing.heroSubheadline}
             </p>
 
-            {/* Botón de Acción Principal */}
-            <div className="flex flex-wrap items-center gap-4">
+            {/* Fila de Acciones: Iniciar Sesión + Compartir Web & QR */}
+            <div className="flex flex-wrap items-center gap-3.5">
               <Link
                 href="/login"
                 onClick={() => triggerHaptic("light")}
@@ -86,6 +96,30 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
               </Link>
+
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic("light");
+                  setShareOpen(true);
+                }}
+                className="inline-flex items-center justify-center px-5 py-3.5 bg-white border border-brand-border-strong text-brand-navy-dark hover:bg-brand-nav-active hover:border-brand-navy-secondary text-[14px] md:text-[15px] font-semibold rounded-md shadow-sm hover:shadow transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-nav-blue"
+              >
+                <svg
+                  className="mr-2 w-4 h-4 text-brand-accent"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                  />
+                </svg>
+                <span>{t.landing.shareWebsiteBtn}</span>
+              </button>
             </div>
 
             {/* Micro-indicador de Confianza */}
@@ -124,8 +158,12 @@ export default function HomePage() {
       {/* ══════════ SECCIÓN: REDES SOCIALES Y CONTACTO ══════════ */}
       <SocialAndContactSection />
 
-      {/* ══════════ BOTÓN FLOTANTE OFICIAL DE WHATSAPP ══════════ */}
+      {/* ══════════ BOTONES FLOTANTES: COMPARTIR WEB/QR (SUPERIOR) Y WHATSAPP (BASE) ══════════ */}
+      <FloatingShareButton onClick={() => setShareOpen(true)} />
       <FloatingWhatsAppButton />
+
+      {/* ══════════ MODAL DE DIFUSIÓN WEB Y CÓDIGO QR OFICIAL ══════════ */}
+      <ShareWebsiteModal isOpen={shareOpen} onClose={() => setShareOpen(false)} />
 
       {/* ══════════ MODAL DE OPINIÓN Y RETROALIMENTACIÓN ══════════ */}
       <FeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />

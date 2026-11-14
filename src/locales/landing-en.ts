@@ -7,7 +7,8 @@
  */
 
 export const landingEn = {
-  heroHeadline: "A vital medical broadsheet on your helmet that speaks for you when you cannot.",
+  heroServiceLabel: "Our Medical Emergency Service",
+  heroHeadline: "Altus Chip Medical Emergency",
   heroSubheadline: "If you are riding alone or accompanied by family or friends and an unforeseen event causes an accident leaving you unconscious, immobilized, or unable to speak, the NFC chip and QR code on your helmet or vehicle speaks for you immediately. Upon arrival, paramedics scan the code with their smartphone to instantly view your vital data: full name, national ID, city, blood type, pre-existing conditions, and your preferred insurance or hospital for ambulance transport. Simultaneously, the system automatically alerts up to 3 registered emergency contacts via phone call, SMS, and WhatsApp with your real-time GPS location. Fully guaranteed against impacts and severe rain, backed by 24/7 technical support, and completely free of weekly or monthly subscriptions: a single lifetime payment to safeguard your life and your loved ones.",
   activateCta: "Activate My Helmet Now",
   exploreEmergencyCta: "View Demonstration Rescue Sheet",
@@ -66,5 +67,18 @@ export const landingEn = {
   demoContact2Phone: "+34 910 222 333",
   demoNotice: "This is a preview of the optimized roadside interface deployed immediately on any rescuer's smartphone when scanning your helmet.",
   demoClose: "Close Preview",
+  shareWebsiteBtn: "Share Web & QR",
+  shareWebsiteModalTitle: "Share Altus-Chip",
+  shareWebsiteModalSubtitle: "Spread the roadside rescue system or scan the QR code to open directly on your mobile device.",
+  shareQrInstruction: "Point your phone camera at this QR code to open www.altuschip.com instantly.",
+  shareCopyLink: "Copy Link",
+  shareLinkCopied: "Link copied to clipboard!",
+  shareViaWhatsApp: "WhatsApp",
+  shareViaFacebook: "Facebook",
+  shareViaX: "X (Twitter)",
+  shareViaTelegram: "Telegram",
+  shareNative: "More options...",
+  shareClose: "Close window",
+  floatingShareTooltip: "Share Website & QR",
 };
 

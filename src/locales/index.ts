@@ -362,6 +362,7 @@ export interface Dictionary {
     errorPasswordMinLength: string; goToLogin: string;
   };
   landing: {
+    heroServiceLabel: string;
     heroHeadline: string;
     heroSubheadline: string;
     activateCta: string;
@@ -421,6 +422,10 @@ export interface Dictionary {
     demoContact2Phone: string;
     demoNotice: string;
     demoClose: string;
+    shareWebsiteBtn: string; shareWebsiteModalTitle: string; shareWebsiteModalSubtitle: string;
+    shareQrInstruction: string; shareCopyLink: string; shareLinkCopied: string;
+    shareViaWhatsApp: string; shareViaFacebook: string; shareViaX: string;
+    shareViaTelegram: string; shareNative: string; shareClose: string; floatingShareTooltip: string;
   };
   legal: {
     termsTitle: string; termsSubtitle: string; privacyTitle: string; privacySubtitle: string; lastUpdated: string;
